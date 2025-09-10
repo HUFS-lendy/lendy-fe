@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -21,8 +22,20 @@ import {
   TableRow,
 } from "../components/ui/table";
 import { Checkbox } from "../components/ui/checkbox";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../components/ui/alert-dialog";
 
 const Lend = () => {
+  const navigate = useNavigate();
   return (
     <div className="bg-[#060a0c] w-screen h-full px-8">
       {/* 브래드크럼 */}
@@ -61,11 +74,38 @@ const Lend = () => {
           {/* 기자재 콘텐츠 */}
           <TabsContent value="기자재">
             <div className="mt-4">
-              <div className="flex justify-end mb-4">
-                <div className="bg-[#060a0c] hover:bg-neutral-700 cursor-pointer text-sm text-white border border-neutral-400 rounded-md px-3 py-1">
-                  대여
-                </div>
-              </div>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <div className="flex justify-end mb-4">
+                    <div className="bg-[#060a0c] hover:bg-neutral-700 cursor-pointer text-sm text-white border border-neutral-400 rounded-md px-3 py-1">
+                      대여
+                    </div>
+                  </div>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      기자재 - 아이패드 Air을 대여하시겠습니까?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="break-keep">
+                      반납 기한은 해당 학기 종강일까지이며, 기한 내 미반납 시
+                      일주일 간 이메일로 경고 메일이 발송되며 대여 서비스 내
+                      패널티가 부여될 수 있습니다.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="cursor-pointer">
+                      취소
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      className="cursor-pointer"
+                      onClick={() => navigate("/lending-state")}
+                    >
+                      대여
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
               <Table className="text-white text-center border border-neutral-700">
                 <TableHeader className="text-center border-b bg-[#11141b] hover:bg-[#11141b] border-neutral-700">
                   <TableHead></TableHead>
