@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import Logo from "../assets/cse-logo.png";
 import {
   Breadcrumb,
@@ -10,6 +11,7 @@ import {
 import { MdOutlineEdit } from "react-icons/md";
 
 const MyPage = () => {
+  const navigate = useNavigate();
   return (
     <div className="bg-[#060a0c] w-screen h-full px-8">
       {/* 브래드크럼 */}
@@ -49,7 +51,10 @@ const MyPage = () => {
         <div>
           <div className="text-lg font-bold mb-2">대여 관리</div>
           <div className="mx-2">
-            <div className="border-b border-neutral-500 text-lg py-3 cursor-pointer">
+            <div
+              onClick={() => navigate("/lending-state")}
+              className="border-b border-neutral-500 text-lg py-3 cursor-pointer"
+            >
               대여 현황
             </div>
           </div>
