@@ -13,7 +13,7 @@ import { MdOutlineEdit } from "react-icons/md";
 const MyPage = () => {
   const navigate = useNavigate();
   return (
-    <div className="bg-[#060a0c] w-screen h-full px-8">
+    <div className="bg-[#060a0c] w-screen h-screen px-8">
       {/* 브래드크럼 */}
       <div className="pt-20">
         <Breadcrumb>
@@ -63,10 +63,16 @@ const MyPage = () => {
         <div className="mb-32">
           <div className="text-lg font-bold mb-2">계정 관리</div>
           <div className="mx-2">
-            <div className="border-b border-neutral-500 text-lg py-3 cursor-pointer">
+            <div
+              onClick={() => navigate("/pw-change")}
+              className="border-b border-neutral-500 text-lg py-3 cursor-pointer"
+            >
               비밀번호 변경
             </div>
-            <div className="border-b border-neutral-500 text-lg py-3 cursor-pointer">
+            <div
+              onClick={() => navigate("/email-change")}
+              className="border-b border-neutral-500 text-lg py-3 cursor-pointer"
+            >
               이메일 변경
             </div>
           </div>
