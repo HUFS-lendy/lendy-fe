@@ -9,7 +9,7 @@ const Header = () => {
         items={[
           { label: "홈", href: "/" },
           { label: "대여 신청", href: "/lend" },
-          { label: "마이페이지", href: "/services" },
+          { label: "마이페이지", href: "/mypage" },
           { label: "유의사항", href: "/services" },
         ]}
         activeHref="/"
