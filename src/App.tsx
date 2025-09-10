@@ -4,6 +4,7 @@ import Layout from "./layout/Layout";
 import Lend from "./pages/Lend";
 import Login from "./pages/Login";
 import MyPage from "./pages/MyPage";
+import LendState from "./pages/LendState";
 
 function App() {
   const router = createBrowserRouter([
@@ -15,6 +16,7 @@ function App() {
         { element: <Lend />, path: "/lend" },
         { element: <Login />, path: "/login" },
         { element: <MyPage />, path: "/mypage" },
+        { element: <LendState />, path: "/lending-state" },
         // {
         //   path: "/community",
         //   children: [
