@@ -45,6 +45,9 @@ const Lend = () => {
         </Breadcrumb>
       </div>
       <div className="pt-8">
+        <div className="font-bold text-white text-3xl pb-8">
+          기자재 / 키트 대여 신청
+        </div>
         <Tabs defaultValue="기자재">
           {/* 탭 */}
           <TabsList className="bg-[#1e2427]">
