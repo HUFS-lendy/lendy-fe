@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Main from "./pages/Main";
 import Layout from "./layout/Layout";
 import Lend from "./pages/Lend";
+import Login from "./pages/Login";
 
 function App() {
   const router = createBrowserRouter([
@@ -11,6 +12,7 @@ function App() {
       children: [
         { element: <Main />, path: "/" },
         { element: <Lend />, path: "/lend" },
+        { element: <Login />, path: "/login" },
         // {
         //   path: "/community",
         //   children: [
