@@ -5,6 +5,7 @@ import Header from "./Header";
 const Layout = () => {
   const location = useLocation();
   const isHome = location.pathname === "/";
+  const isLogin = location.pathname === "/login";
 
   return (
     <div className="h-screen w-screen flex flex-col">
@@ -12,7 +13,7 @@ const Layout = () => {
       <div className="flex-grow">
         <Outlet />
       </div>
-      {!isHome && <Footer />}
+      {!isHome && !isLogin && <Footer />}
     </div>
   );
 };

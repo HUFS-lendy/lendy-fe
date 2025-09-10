@@ -122,6 +122,11 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+::selection {
+  background: #f1f1f1;
+  color: #000;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
