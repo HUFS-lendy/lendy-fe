@@ -10,7 +10,7 @@ const Header = () => {
           { label: "홈", href: "/" },
           { label: "대여 신청", href: "/lend" },
           { label: "마이페이지", href: "/mypage" },
-          { label: "유의사항", href: "/services" },
+          { label: "유의사항", href: "/notice" },
         ]}
         activeHref="/"
         className="custom-nav"

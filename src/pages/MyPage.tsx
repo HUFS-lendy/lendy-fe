@@ -41,7 +41,10 @@ const MyPage = () => {
           <div>202202465 | 컴퓨터공학부</div>
           <div className="flex items-center space-x-4">
             <div>lsy0476@hufs.ac.kr</div>
-            <MdOutlineEdit className="cursor-pointer" />
+            <MdOutlineEdit
+              onClick={() => navigate("/email-change")}
+              className="cursor-pointer"
+            />
           </div>
         </div>
       </div>
