@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from "react-router-dom";
 import Footer from "./Footer";
 import Header from "./Header";
+import { Toaster } from "../components/ui/sonner";
 
 const Layout = () => {
   const location = useLocation();
@@ -14,6 +15,7 @@ const Layout = () => {
         <Outlet />
       </div>
       {!isHome && !isLogin && <Footer />}
+      <Toaster position="top-right" duration={2500} />
     </div>
   );
 };
