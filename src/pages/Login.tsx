@@ -3,6 +3,7 @@ import { Card, CardContent, CardFooter } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import Logo from "../assets/cse-logo.png";
+import { toast } from "sonner";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -51,7 +52,10 @@ const Login = () => {
         </CardContent>
         <CardFooter className="flex-col gap-2 mt-4">
           <div
-            onClick={() => navigate("/")}
+            onClick={() => {
+              navigate("/");
+              toast("로그인 되었습니다.");
+            }}
             className="w-full border border-neutral-400 hover:bg-neutral-900 rounded-sm text-center py-1 cursor-pointer"
           >
             로그인
