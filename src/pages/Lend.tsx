@@ -33,6 +33,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../components/ui/alert-dialog";
+import { toast } from "sonner";
 
 const Lend = () => {
   const navigate = useNavigate();
@@ -84,13 +85,24 @@ const Lend = () => {
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>
+                    <AlertDialogTitle className="pb-4">
                       기자재 - 아이패드 Air을 대여하시겠습니까?
                     </AlertDialogTitle>
                     <AlertDialogDescription className="break-keep">
-                      반납 기한은 해당 학기 종강일까지이며, 기한 내 미반납 시
-                      일주일 간 이메일로 경고 메일이 발송되며 대여 서비스 내
-                      패널티가 부여될 수 있습니다.
+                      반납 기한은 해당{" "}
+                      <span className="font-bold">학기 종강일</span>까지이며,{" "}
+                      <span className="text-red-500">
+                        기한 내 미반납 시 일주일 간 이메일로 경고 메일이
+                        발송되며 대여 서비스 내 패널티가 부여
+                      </span>
+                      될 수 있습니다.
+                      <br />
+                      <br />
+                      ※ 대리 제출 및 수령 불가합니다.
+                      <br /> ※ 노트북과 아이패드 중복 대여가 불가합니다.
+                      <br />
+                      ※ 타학과와 휴학생은 대여 불가합니다. <br />※ 방학 중 대여
+                      및 연장 불가 합니다.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -99,7 +111,10 @@ const Lend = () => {
                     </AlertDialogCancel>
                     <AlertDialogAction
                       className="cursor-pointer"
-                      onClick={() => navigate("/lending-state")}
+                      onClick={() => {
+                        toast("대여 신청이 완료되었습니다.");
+                        navigate("/lending-state");
+                      }}
                     >
                       대여
                     </AlertDialogAction>
