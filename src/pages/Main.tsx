@@ -7,12 +7,7 @@ const Main = () => {
   return (
     <section className="relative w-full h-full bg-[#060a0c] overflow-hidden">
       {/* 배경 애니메이션 */}
-      <Threads
-        className="absolute inset-0"
-        amplitude={2.2}
-        distance={0.3}
-        enableMouseInteraction={false}
-      />
+      <Threads amplitude={2.2} distance={0.3} enableMouseInteraction={false} />
       <FadeContent
         blur={true}
         duration={1000}
