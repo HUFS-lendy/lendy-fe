@@ -1,3 +1,7 @@
+/*
+	Installed from https://reactbits.dev/ts/tailwind/
+*/
+
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { gsap } from "gsap";
@@ -187,13 +191,20 @@ const PillNav: React.FC<PillNavProps> = ({
     });
   };
 
+  // toggleMobileMenu 함수 수정
   const toggleMobileMenu = () => {
     const newState = !isMobileMenuOpen;
+    updateMobileMenuState(newState);
+  };
+
+  // 새로운 함수 추가 - 메뉴 상태와 햄버거 애니메이션을 함께 관리
+  const updateMobileMenuState = (newState: boolean) => {
     setIsMobileMenuOpen(newState);
 
     const hamburger = hamburgerRef.current;
     const menu = mobileMenuRef.current;
 
+    // 햄버거 애니메이션 업데이트
     if (hamburger) {
       const lines = hamburger.querySelectorAll(".hamburger-line");
       if (newState) {
@@ -205,6 +216,7 @@ const PillNav: React.FC<PillNavProps> = ({
       }
     }
 
+    // 메뉴 표시/숨김 애니메이션
     if (menu) {
       if (newState) {
         gsap.set(menu, { visibility: "visible" });
@@ -330,8 +342,12 @@ const PillNav: React.FC<PillNavProps> = ({
               const isActive = activeHref === item.href;
 
               const pillStyle: React.CSSProperties = {
-                background: "var(--pill-bg, #fff)",
-                color: "var(--pill-text, var(--base, #000))",
+                background: isActive
+                  ? "var(--base, #000)"
+                  : "var(--pill-bg, #fff)",
+                color: isActive
+                  ? "#ffffff"
+                  : "var(--pill-text, var(--base, #000))",
                 paddingLeft: "var(--pill-pad-x)",
                 paddingRight: "var(--pill-pad-x)",
               };
@@ -378,7 +394,7 @@ const PillNav: React.FC<PillNavProps> = ({
               );
 
               const basePillClasses =
-                "relative overflow-hidden inline-flex items-center justify-center h-full no-underline rounded-full box-border font-semibold text-[14px] leading-[0] uppercase tracking-[0.2px] whitespace-nowrap cursor-pointer px-0";
+                "relative overflow-hidden inline-flex items-center justify-center h-full no-underline rounded-full box-border font-semibold text-[16px] leading-[0] uppercase tracking-[0.2px] whitespace-nowrap cursor-pointer px-0";
 
               return (
                 <li key={item.href} role="none" className="flex h-full">
@@ -422,16 +438,16 @@ const PillNav: React.FC<PillNavProps> = ({
           style={{
             width: "var(--nav-h)",
             height: "var(--nav-h)",
-            background: "var(--base, #000)",
+            background: "#060a0c",
           }}
         >
           <span
             className="hamburger-line w-4 h-0.5 rounded origin-center transition-all duration-[10ms] ease-[cubic-bezier(0.25,0.1,0.25,1)]"
-            style={{ background: "var(--pill-bg, #fff)" }}
+            style={{ background: "#ffffff" }}
           />
           <span
             className="hamburger-line w-4 h-0.5 rounded origin-center transition-all duration-[10ms] ease-[cubic-bezier(0.25,0.1,0.25,1)]"
-            style={{ background: "var(--pill-bg, #fff)" }}
+            style={{ background: "#ffffff" }}
           />
         </button>
       </nav>
@@ -471,7 +487,7 @@ const PillNav: React.FC<PillNavProps> = ({
                     style={defaultStyle}
                     onMouseEnter={hoverIn}
                     onMouseLeave={hoverOut}
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={() => updateMobileMenuState(false)}
                   >
                     {item.label}
                   </Link>
@@ -482,7 +498,7 @@ const PillNav: React.FC<PillNavProps> = ({
                     style={defaultStyle}
                     onMouseEnter={hoverIn}
                     onMouseLeave={hoverOut}
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={() => updateMobileMenuState(false)}
                   >
                     {item.label}
                   </a>

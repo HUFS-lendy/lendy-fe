@@ -1,4 +1,8 @@
+import { useNavigate } from "react-router-dom";
+
 const Footer = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="bg-[#060a0c] text-white px-4">
       <img
@@ -20,6 +24,12 @@ const Footer = () => {
             <div className="font-bold">EMAIL</div>
             <div>ces@hufs.ac.kr</div>
           </div>
+        </div>
+        <div
+          onClick={() => navigate("/devices")}
+          className="hover:underline cursor-pointer"
+        >
+          관리자
         </div>
       </div>
     </div>

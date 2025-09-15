@@ -8,6 +8,7 @@ import LendState from "./pages/LendState";
 import PwChange from "./pages/PwChange";
 import EmailChange from "./pages/EmailChange";
 import Notice from "./pages/Notice";
+import Devices from "./pages/admin/Devices";
 
 function App() {
   const router = createBrowserRouter([
@@ -23,6 +24,7 @@ function App() {
         { element: <PwChange />, path: "/pw-change" },
         { element: <EmailChange />, path: "/email-change" },
         { element: <Notice />, path: "/notice" },
+        { element: <Devices />, path: "/devices" },
         // {
         //   path: "/community",
         //   children: [
