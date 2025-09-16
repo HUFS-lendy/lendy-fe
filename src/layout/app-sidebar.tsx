@@ -42,7 +42,6 @@ const items: NavItem[] = [
     icon: ToolCase,
     children: [
       { title: "키트 현황", url: "/admin/kits" },
-      { title: "키트 관리", url: "/admin/kits/manage" },
       { title: "미반납 확인", url: "/admin/loans" },
     ],
   },

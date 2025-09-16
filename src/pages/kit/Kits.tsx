@@ -58,7 +58,7 @@ const Kits = () => {
       <div className="pt-8">
         <div className="font-bold text-white text-3xl pb-8">실습키트 현황</div>
         <div className="flex space-x-4 justify-end">
-          {/* 기자재 추가 버튼 */}
+          {/* 키트 추가 버튼 */}
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <div className="border cursor-pointer px-3 py-1 rounded-sm hover:bg-neutral-400 hover:text-black border-neutral-400 text-sm">
