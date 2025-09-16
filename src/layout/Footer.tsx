@@ -26,7 +26,7 @@ const Footer = () => {
           </div>
         </div>
         <div
-          onClick={() => navigate("/devices")}
+          onClick={() => navigate("/admin")}
           className="hover:underline cursor-pointer"
         >
           관리자

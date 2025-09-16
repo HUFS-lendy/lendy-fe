@@ -1,4 +1,8 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
+} from "react-router-dom";
 import Main from "./pages/Main";
 import Layout from "./layout/Layout";
 import Lend from "./pages/Lend";
@@ -8,7 +12,10 @@ import LendState from "./pages/LendState";
 import PwChange from "./pages/PwChange";
 import EmailChange from "./pages/EmailChange";
 import Notice from "./pages/Notice";
-import Devices from "./pages/admin/Devices";
+import Devices from "./pages/admin/device/Devices";
+import Device from "./pages/admin/device/Device";
+import Kits from "./pages/kit/Kits";
+import Kit from "./pages/kit/kit";
 
 function App() {
   const router = createBrowserRouter([
@@ -24,14 +31,16 @@ function App() {
         { element: <PwChange />, path: "/pw-change" },
         { element: <EmailChange />, path: "/email-change" },
         { element: <Notice />, path: "/notice" },
-        { element: <Devices />, path: "/devices" },
-        // {
-        //   path: "/community",
-        //   children: [
-        //     { element: <Community />, index: true },
-        //     { element: <CommunityPost />, path: ":postId" },
-        //   ],
-        // },
+        {
+          path: "admin",
+          children: [
+            { index: true, element: <Navigate to="devices" replace /> },
+            { path: "devices", element: <Devices /> },
+            { path: "devices/:deviceId", element: <Device /> },
+            { path: "kits", element: <Kits /> },
+            { path: "kits/:kitId", element: <Kit /> },
+          ],
+        },
       ],
     },
   ]);
