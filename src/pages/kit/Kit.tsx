@@ -27,7 +27,6 @@ import {
 } from "../../components/ui/alert-dialog";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
-import { Combobox } from "../../components/ui/combobox";
 import { Checkbox } from "../../components/ui/checkbox";
 
 const Kit = () => {

@@ -32,18 +32,12 @@ const items: NavItem[] = [
     title: "기자재",
     icon: TabletSmartphone,
     defaultOpen: true,
-    children: [
-      { title: "기자재 현황", url: "/admin/devices" },
-      { title: "미반납 확인", url: "/admin/loans" },
-    ],
+    children: [{ title: "기자재 현황", url: "/admin/devices" }],
   },
   {
     title: "실습키트",
     icon: ToolCase,
-    children: [
-      { title: "키트 현황", url: "/admin/kits" },
-      { title: "미반납 확인", url: "/admin/loans" },
-    ],
+    children: [{ title: "키트 현황", url: "/admin/kits" }],
   },
   {
     title: "사용자 관리",
@@ -60,7 +54,7 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Admin</SidebarGroupLabel>
+          <SidebarGroupLabel>관리자</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) =>
