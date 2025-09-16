@@ -34,7 +34,6 @@ const items: NavItem[] = [
     defaultOpen: true,
     children: [
       { title: "기자재 현황", url: "/admin/devices" },
-      { title: "기자재 관리", url: "/admin/devices/manage" },
       { title: "미반납 확인", url: "/admin/loans" },
     ],
   },

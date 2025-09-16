@@ -16,7 +16,7 @@ import {
 } from "../../components/ui/table";
 const Kit = () => {
   return (
-    <div className="bg-[#060a0c] w-screen h-full px-8 text-white">
+    <div className="bg-[#060a0c] w-screen px-8 text-white">
       {/* 브래드크럼 */}
       <div className="pt-20">
         <Breadcrumb>
@@ -58,7 +58,12 @@ const Kit = () => {
               <TableHead className="text-white text-center">
                 코드 번호
               </TableHead>
-              <TableHead className="text-white text-center">상태</TableHead>
+              <TableHead className="text-white text-center">
+                대여 상태
+              </TableHead>
+              <TableHead className="text-white text-center">
+                반납 상태
+              </TableHead>
               <TableHead className="text-white text-center">대여일</TableHead>
               <TableHead className="text-white text-center">반납일</TableHead>
               <TableHead className="text-white text-center">대여자</TableHead>
@@ -69,6 +74,7 @@ const Kit = () => {
             <TableBody>
               <TableRow>
                 <TableCell>P20342</TableCell>
+                <TableCell>불량</TableCell>
                 <TableCell>대여중</TableCell>
                 <TableCell>2025-03-15</TableCell>
                 <TableCell>-</TableCell>
@@ -79,6 +85,7 @@ const Kit = () => {
               </TableRow>
               <TableRow>
                 <TableCell>P20343</TableCell>
+                <TableCell>-</TableCell>
                 <TableCell>반납 완료</TableCell>
                 <TableCell>2025-03-15</TableCell>
                 <TableCell>2025-06-20</TableCell>
@@ -89,6 +96,7 @@ const Kit = () => {
               </TableRow>
               <TableRow>
                 <TableCell>P20344</TableCell>
+                <TableCell>-</TableCell>
                 <TableCell>미반납</TableCell>
                 <TableCell>2025-03-15</TableCell>
                 <TableCell>-</TableCell>

@@ -22,6 +22,20 @@ import {
   PopoverContent,
 } from "../../../components/ui/popover";
 import { Textarea } from "../../../components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../../../components/ui/alert-dialog";
+import { Combobox } from "../../../components/ui/combobox";
+import { Checkbox } from "../../../components/ui/checkbox";
+
 const Device = () => {
   return (
     <div className="bg-[#060a0c] w-screen px-8 text-white">
@@ -57,9 +71,66 @@ const Device = () => {
         <div className="font-bold text-white text-3xl pb-8">
           아이패드 Air 상세 현황
         </div>
+        <div className="flex space-x-4 justify-end">
+          {/* 기자재 추가 버튼 */}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <div className="border cursor-pointer px-3 py-1 rounded-sm hover:bg-neutral-400 hover:text-black border-neutral-400 text-sm">
+                추가
+              </div>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>기자재 추가</AlertDialogTitle>
+                <AlertDialogDescription>
+                  아이패드 Air 새 기자재를 추가해보세요.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label className="pb-2">카테고리</Label>
+                  <Combobox />
+                </div>
+                <div>
+                  <Label className="pb-2">코드 번호</Label>
+                  <Input type="number" />
+                </div>
+              </div>
+              <AlertDialogFooter className="pt-8">
+                <AlertDialogCancel>취소</AlertDialogCancel>
+                <AlertDialogAction>추가</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          {/* 기자재 삭제 버튼 */}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <div className="border cursor-pointer px-3 py-1 rounded-sm hover:bg-red-400 hover:text-black border-red-400 text-sm text-red-300">
+                삭제
+              </div>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  아이패드 Air(A20342) 를 삭제하시겠습니까?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  기자재를 삭제하면 다시 되돌릴 수 없습니다.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>취소</AlertDialogCancel>
+                <AlertDialogAction className="bg-red-600 hover:bg-red-500 font-bold">
+                  삭제
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
         <div className="mt-4">
           <Table className="text-white text-center border border-neutral-700">
             <TableHeader className="text-center border-b bg-[#11141b] hover:bg-[#11141b] border-neutral-700">
+              <TableHead></TableHead>
               <TableHead className="text-white text-center">
                 코드 번호
               </TableHead>
@@ -76,6 +147,9 @@ const Device = () => {
             </TableHeader>
             <TableBody>
               <TableRow>
+                <TableCell>
+                  <Checkbox />
+                </TableCell>
                 <TableCell>A20342</TableCell>
                 <TableCell>-</TableCell>
                 <TableCell>대여중</TableCell>
@@ -85,6 +159,9 @@ const Device = () => {
                 <TableCell>lsy@hufs.ac.kr</TableCell>
               </TableRow>
               <TableRow>
+                <TableCell>
+                  <Checkbox />
+                </TableCell>
                 <TableCell>A20343</TableCell>
                 <TableCell>
                   <Popover>
@@ -129,6 +206,9 @@ const Device = () => {
                 <TableCell>jbj@hufs.ac.kr</TableCell>
               </TableRow>
               <TableRow>
+                <TableCell>
+                  <Checkbox />
+                </TableCell>
                 <TableCell>A20344</TableCell>
                 <TableCell>-</TableCell>
                 <TableCell>미반납</TableCell>
