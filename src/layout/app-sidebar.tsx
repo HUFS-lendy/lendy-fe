@@ -11,12 +11,12 @@ import {
   SidebarMenuSub,
   SidebarMenuSubItem,
   SidebarRail,
-} from "./sidebar";
+} from "../components/ui/sidebar";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "./collapsible";
+} from "../components/ui/collapsible";
 
 type NavItem = {
   title: string;
@@ -34,7 +34,7 @@ const items: NavItem[] = [
     defaultOpen: true,
     children: [
       { title: "기자재 현황", url: "/admin/devices" },
-      { title: "기자재 관리", url: "/admin/devices/new" },
+      { title: "기자재 관리", url: "/admin/devices/manage" },
       { title: "미반납 확인", url: "/admin/loans" },
     ],
   },
