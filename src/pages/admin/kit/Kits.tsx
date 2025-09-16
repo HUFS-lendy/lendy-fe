@@ -6,7 +6,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "../../components/ui/breadcrumb";
+} from "../../../components/ui/breadcrumb";
 import {
   Table,
   TableBody,
@@ -14,8 +14,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../../components/ui/table";
-import { Checkbox } from "../../components/ui/checkbox";
+} from "../../../components/ui/table";
+import { Checkbox } from "../../../components/ui/checkbox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,9 +26,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "../../components/ui/alert-dialog";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
+} from "../../../components/ui/alert-dialog";
+import { Input } from "../../../components/ui/input";
+import { Label } from "../../../components/ui/label";
 
 const Kits = () => {
   const navigate = useNavigate();

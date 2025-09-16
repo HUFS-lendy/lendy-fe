@@ -14,8 +14,8 @@ import EmailChange from "./pages/EmailChange";
 import Notice from "./pages/Notice";
 import Devices from "./pages/admin/device/Devices";
 import Device from "./pages/admin/device/Device";
-import Kits from "./pages/kit/Kits";
-import Kit from "./pages/kit/kit";
+import Kits from "./pages/admin/kit/Kits";
+import Kit from "./pages/admin/kit/Kit";
 import ManageDevices from "./pages/admin/device/ManageDevices";
 
 function App() {
