@@ -6,7 +6,7 @@ import { buttonVariants, type ButtonVariantProps } from "./button-variants";
 type Props = React.ComponentProps<"button"> &
   ButtonVariantProps & { asChild?: boolean };
 
-export default function Button({
+export function Button({
   className,
   variant,
   size,
