@@ -33,14 +33,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../../../components/ui/alert-dialog";
-import { Combobox } from "../../../components/ui/combobox";
+import { DeviceCategoryCombobox } from "../../../components/ui/DeviceCategory";
 import { Checkbox } from "../../../components/ui/checkbox";
 
 const Device = () => {
   return (
     <div className="bg-[#060a0c] w-screen px-8 text-white">
       {/* 브래드크럼 */}
-      <div className="pt-20">
+      <div className="pt-10">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -89,7 +89,7 @@ const Device = () => {
               <div className="space-y-4">
                 <div>
                   <Label className="pb-2">카테고리</Label>
-                  <Combobox />
+                  <DeviceCategoryCombobox />
                 </div>
                 <div>
                   <Label className="pb-2">코드 번호</Label>

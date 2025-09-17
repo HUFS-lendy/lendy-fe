@@ -17,6 +17,7 @@ import Device from "./pages/admin/device/Device";
 import Kits from "./pages/admin/kit/Kits";
 import Kit from "./pages/admin/kit/Kit";
 import ManageDevices from "./pages/admin/device/ManageDevices";
+import Users from "./pages/admin/user/Users";
 
 function App() {
   const router = createBrowserRouter([
@@ -41,6 +42,7 @@ function App() {
             { path: "devices/manage", element: <ManageDevices /> },
             { path: "kits", element: <Kits /> },
             { path: "kits/:kitId", element: <Kit /> },
+            { path: "users", element: <Users /> },
           ],
         },
       ],
