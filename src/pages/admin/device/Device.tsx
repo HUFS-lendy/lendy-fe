@@ -33,8 +33,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../../../components/ui/alert-dialog";
-import { DeviceCategoryCombobox } from "../../../components/ui/DeviceCategory";
 import { Checkbox } from "../../../components/ui/checkbox";
+import { DeviceStateCombobox } from "../../../components/ui/DeviceStateCombobox";
+import { toast } from "sonner";
 
 const Device = () => {
   return (
@@ -73,35 +74,97 @@ const Device = () => {
         </div>
         <div className="flex space-x-4 justify-end">
           {/* 기자재 추가 버튼 */}
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <div className="border cursor-pointer px-3 py-1 rounded-sm hover:bg-neutral-400 hover:text-black border-neutral-400 text-sm">
-                추가
-              </div>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>기자재 추가</AlertDialogTitle>
-                <AlertDialogDescription>
-                  아이패드 Air 새 기자재를 추가해보세요.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label className="pb-2">카테고리</Label>
-                  <DeviceCategoryCombobox />
+          <div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <div className="hover:bg-neutral-800 cursor-pointer border border-neutral-400 text-neutral-200 text-sm px-3 py-1 rounded-sm">
+                  수정
                 </div>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    2025-1 iPad Air 3 내용 수정
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    기기 대여 내용을 수정해보세요.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                {/* 수정 모달 테이블 */}
                 <div>
-                  <Label className="pb-2">코드 번호</Label>
-                  <Input type="number" />
+                  <Table className="text-center border border-neutral-200">
+                    <TableBody>
+                      <TableRow className="border-neutral-200 hover:bg-white">
+                        <TableCell className="w-1/6 bg-neutral-300">
+                          대여 ID
+                        </TableCell>
+                        <TableCell className="text-left px-6">1</TableCell>
+                      </TableRow>
+                      <TableRow className="border-neutral-200 hover:bg-white">
+                        <TableCell className="w-1/6 bg-neutral-300">
+                          분류
+                        </TableCell>
+                        <TableCell className="text-left px-6">태블릿</TableCell>
+                      </TableRow>
+                      <TableRow className="border-neutral-200 hover:bg-white">
+                        <TableCell className="w-1/6 bg-neutral-300">
+                          기기명
+                        </TableCell>
+                        <TableCell className="text-left px-4">
+                          <Input
+                            className="text-sm"
+                            readOnly
+                            value="iPad Air 3"
+                          />
+                        </TableCell>
+                      </TableRow>
+                      <TableRow className="border-neutral-200 hover:bg-white">
+                        <TableCell className="w-1/6 bg-neutral-300">
+                          코드번호
+                        </TableCell>
+                        <TableCell className="text-left px-4">
+                          <Input className="text-sm" value="A20342" />
+                        </TableCell>
+                      </TableRow>
+                      <TableRow className="border-neutral-200 hover:bg-white">
+                        <TableCell className="w-1/6 bg-neutral-300">
+                          이메일
+                        </TableCell>
+                        <TableCell className="text-left px-4">
+                          <Input
+                            className="text-sm"
+                            value="2025-1"
+                            placeholder="yyyy-1"
+                          />
+                        </TableCell>
+                      </TableRow>
+                      <TableRow className="border-neutral-200 hover:bg-white">
+                        <TableCell className="w-1/6 bg-neutral-300">
+                          대여 상태
+                        </TableCell>
+                        <TableCell className="text-left px-4">
+                          <DeviceStateCombobox />
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
                 </div>
-              </div>
-              <AlertDialogFooter className="pt-8">
-                <AlertDialogCancel>취소</AlertDialogCancel>
-                <AlertDialogAction>추가</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+                <AlertDialogFooter className="mt-4">
+                  <AlertDialogCancel className="cursor-pointer">
+                    취소
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() =>
+                      toast("해당 기기의 대여 상태가 수정되었습니다.")
+                    }
+                    className=" hover:bg-neutral-700 font-bold cursor-pointer"
+                  >
+                    수정
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
           {/* 기자재 삭제 버튼 */}
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -120,7 +183,10 @@ const Device = () => {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>취소</AlertDialogCancel>
-                <AlertDialogAction className="bg-red-600 hover:bg-red-500 font-bold">
+                <AlertDialogAction
+                  onClick={() => toast("해당 기기가 삭제되었습니다.")}
+                  className="bg-red-600 hover:bg-red-500 font-bold"
+                >
                   삭제
                 </AlertDialogAction>
               </AlertDialogFooter>

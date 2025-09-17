@@ -31,6 +31,7 @@ import { Checkbox } from "../../../components/ui/checkbox";
 import { Search } from "lucide-react";
 import { RoleCombobox } from "../../../components/ui/RoleCombobox";
 import { StateCombobox } from "../../../components/ui/StateCombobox";
+import { toast } from "sonner";
 
 const Users = () => {
   const navigte = useNavigate();
@@ -156,7 +157,12 @@ const Users = () => {
                   <AlertDialogCancel className="cursor-pointer">
                     취소
                   </AlertDialogCancel>
-                  <AlertDialogAction className=" hover:bg-neutral-700 font-bold cursor-pointer">
+                  <AlertDialogAction
+                    onClick={() =>
+                      toast("해당 사용자의 정보가 수정되었습니다.")
+                    }
+                    className=" hover:bg-neutral-700 font-bold cursor-pointer"
+                  >
                     수정
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -182,7 +188,10 @@ const Users = () => {
                   <AlertDialogCancel className="cursor-pointer">
                     취소
                   </AlertDialogCancel>
-                  <AlertDialogAction className="bg-red-600 hover:bg-red-500 font-bold cursor-pointer">
+                  <AlertDialogAction
+                    onClick={() => toast("해당 사용자가 삭제되었습니다.")}
+                    className="bg-red-600 hover:bg-red-500 font-bold cursor-pointer"
+                  >
                     삭제
                   </AlertDialogAction>
                 </AlertDialogFooter>

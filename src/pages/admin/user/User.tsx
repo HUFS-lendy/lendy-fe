@@ -29,6 +29,7 @@ import { Input } from "../../../components/ui/input";
 import { DeviceCategoryCombobox } from "../../../components/ui/DeviceCategory";
 import { Checkbox } from "../../../components/ui/checkbox";
 import { DeviceStateCombobox } from "../../../components/ui/DeviceStateCombobox";
+import { toast } from "sonner";
 
 const User = () => {
   return (
@@ -148,7 +149,12 @@ const User = () => {
                 <AlertDialogCancel className="cursor-pointer">
                   취소
                 </AlertDialogCancel>
-                <AlertDialogAction className=" hover:bg-neutral-700 font-bold cursor-pointer">
+                <AlertDialogAction
+                  onClick={() =>
+                    toast("사용자의 해당 대여 내용이 수정되었습니다.")
+                  }
+                  className=" hover:bg-neutral-700 font-bold cursor-pointer"
+                >
                   수정
                 </AlertDialogAction>
               </AlertDialogFooter>
@@ -175,7 +181,12 @@ const User = () => {
               <AlertDialogCancel className="cursor-pointer">
                 취소
               </AlertDialogCancel>
-              <AlertDialogAction className="bg-red-600 hover:bg-red-500 font-bold cursor-pointer">
+              <AlertDialogAction
+                onClick={() =>
+                  toast("사용자의 해당 대여 내용이 삭제되었습니다.")
+                }
+                className="bg-red-600 hover:bg-red-500 font-bold cursor-pointer"
+              >
                 삭제
               </AlertDialogAction>
             </AlertDialogFooter>

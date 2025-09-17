@@ -30,6 +30,7 @@ import {
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { DeviceCategoryCombobox } from "../../../components/ui/DeviceCategory";
+import { toast } from "sonner";
 
 const Devices = () => {
   const navigate = useNavigate();
@@ -92,7 +93,11 @@ const Devices = () => {
               </div>
               <AlertDialogFooter className="pt-8">
                 <AlertDialogCancel>취소</AlertDialogCancel>
-                <AlertDialogAction>추가</AlertDialogAction>
+                <AlertDialogAction
+                  onClick={() => toast("기자재가 추가되었습니다.")}
+                >
+                  추가
+                </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
@@ -114,7 +119,10 @@ const Devices = () => {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>취소</AlertDialogCancel>
-                <AlertDialogAction className="bg-red-600 hover:bg-red-500 font-bold">
+                <AlertDialogAction
+                  onClick={() => toast("해당 기자재가 삭제되었습니다.")}
+                  className="bg-red-600 hover:bg-red-500 font-bold"
+                >
                   삭제
                 </AlertDialogAction>
               </AlertDialogFooter>

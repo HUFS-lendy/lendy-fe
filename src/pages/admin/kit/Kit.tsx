@@ -25,9 +25,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../../../components/ui/alert-dialog";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "../../../components/ui/popover";
+import { Textarea } from "../../../components/ui/textarea";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Checkbox } from "../../../components/ui/checkbox";
+import { toast } from "sonner";
 
 const Kit = () => {
   return (
@@ -86,9 +93,14 @@ const Kit = () => {
                   <Input />
                 </div>
               </div>
+              {/* todo: 추가에서 수정으로 */}
               <AlertDialogFooter className="pt-8">
                 <AlertDialogCancel>취소</AlertDialogCancel>
-                <AlertDialogAction>추가</AlertDialogAction>
+                <AlertDialogAction
+                  onClick={() => toast("실습키트가 추가되었습니다.")}
+                >
+                  추가
+                </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
@@ -110,7 +122,10 @@ const Kit = () => {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>취소</AlertDialogCancel>
-                <AlertDialogAction className="bg-red-600 hover:bg-red-500 font-bold">
+                <AlertDialogAction
+                  onClick={() => toast("해당 실습키트가 삭제되었습니다.")}
+                  className="bg-red-600 hover:bg-red-500 font-bold"
+                >
                   삭제
                 </AlertDialogAction>
               </AlertDialogFooter>
@@ -143,7 +158,42 @@ const Kit = () => {
                   <Checkbox />
                 </TableCell>
                 <TableCell>P20342</TableCell>
-                <TableCell>불량</TableCell>
+                <TableCell>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <div className="hover:underline cursor-pointer">불량</div>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80">
+                      <div className="grid gap-4">
+                        <div className="space-y-2">
+                          <h4 className="leading-none font-medium">
+                            불량 상세 설명
+                          </h4>
+                        </div>
+                        <div className="grid gap-2">
+                          <div className="grid grid-cols-3 items-center gap-4">
+                            <Label>불량 종류</Label>
+                            <Input
+                              id="type"
+                              defaultValue="고장"
+                              readOnly
+                              className="col-span-2 h-8"
+                            />
+                          </div>
+                          <div className="grid grid-cols-3 gap-4">
+                            <Label>설명</Label>
+                            <Textarea
+                              id="maxWidth"
+                              defaultValue="홈 버튼이 눌리지 않습니다."
+                              readOnly
+                              className="col-span-2 h-8"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </TableCell>
                 <TableCell>대여중</TableCell>
                 <TableCell>2025-03-15</TableCell>
                 <TableCell>-</TableCell>
