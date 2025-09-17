@@ -33,7 +33,7 @@ const Kit = () => {
   return (
     <div className="bg-[#060a0c] w-screen px-8 text-white">
       {/* 브래드크럼 */}
-      <div className="pt-20">
+      <div className="pt-10">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>

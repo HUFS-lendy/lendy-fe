@@ -29,14 +29,14 @@ import {
 } from "../../../components/ui/alert-dialog";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
-import { Combobox } from "../../../components/ui/combobox";
+import { DeviceCategoryCombobox } from "../../../components/ui/DeviceCategory";
 
 const Devices = () => {
   const navigate = useNavigate();
   return (
     <div className="px-8 w-screen">
       {/* 브래드크럼 */}
-      <div className="pt-20">
+      <div className="pt-10">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -74,7 +74,7 @@ const Devices = () => {
               <div className="space-y-4">
                 <div>
                   <Label className="pb-2">카테고리</Label>
-                  <Combobox />
+                  <DeviceCategoryCombobox />
                 </div>
                 <div>
                   <Label className="pb-2">기자재명</Label>

@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { TabletSmartphone, User, ToolCase, ChevronRight } from "lucide-react";
 import {
   Sidebar,
@@ -44,17 +45,25 @@ const items: NavItem[] = [
     icon: User,
     children: [
       { title: "사용자 목록", url: "/admin/users" },
-      { title: "권한 설정", url: "/admin/roles" },
+      { title: "회원가입", url: "/admin/sign-up" },
     ],
   },
 ];
 
 export function AppSidebar() {
+  const navigate = useNavigate();
   return (
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>관리자</SidebarGroupLabel>
+          <SidebarGroupLabel
+            onClick={() => navigate("/")}
+            className="cursor-pointer"
+          >
+            홈으로 돌아가기 &gt;
+          </SidebarGroupLabel>
+          <div className="border-b mx-1 my-2 border-neutral-700"></div>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) =>

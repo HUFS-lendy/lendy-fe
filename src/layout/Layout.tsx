@@ -5,7 +5,7 @@ import { Toaster } from "../components/ui/sonner";
 
 // shadcn sidebar
 import { SidebarProvider, SidebarTrigger } from "../components/ui/sidebar";
-import { AppSidebar } from "./app-sidebar";
+import { AppSidebar } from "./Sidebar";
 
 const Layout = () => {
   const location = useLocation();

@@ -15,22 +15,26 @@ import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 
 const frameworks = [
   {
-    value: "태블릿",
-    label: "태블릿",
+    value: "ACTIVE",
+    label: "정상",
   },
   {
-    value: "노트북",
-    label: "노트북",
+    value: "SUSPENDED",
+    label: "만료됨",
+  },
+  {
+    value: "BANNED",
+    label: "정지됨",
   },
 ];
 
-export function Combobox() {
+export function StateCombobox() {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+      <PopoverTrigger className="border-none shadow-none" asChild>
         <Button
           variant="outline"
           role="combobox"
@@ -39,15 +43,15 @@ export function Combobox() {
         >
           {value
             ? frameworks.find((framework) => framework.value === value)?.label
-            : "카테고리 선택"}
+            : "상태 선택"}
           <ChevronsUpDown className="opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[200px] p-0">
         <Command>
-          <CommandInput placeholder="카테고리 선택" className="h-9" />
+          <CommandInput placeholder="상태 선택" className="h-9" />
           <CommandList>
-            <CommandEmpty>검색에 맞는 분류가 없습니다.</CommandEmpty>
+            <CommandEmpty>검색에 맞는 상태가 없습니다.</CommandEmpty>
             <CommandGroup>
               {frameworks.map((framework) => (
                 <CommandItem
