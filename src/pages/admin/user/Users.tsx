@@ -72,94 +72,126 @@ const Users = () => {
             className="border-neutral-400 pl-10 text-sm"
           />
         </div>
-        {/* 수정 버튼 */}
-        <div>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <div className="hover:bg-neutral-800 cursor-pointer border border-neutral-400 text-neutral-200 text-sm px-3 py-1 rounded-sm">
-                수정
-              </div>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>#1 이서연</AlertDialogTitle>
-                <AlertDialogDescription>
-                  사용자 정보를 수정해보세요.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              {/* 수정 모달 테이블 */}
-              <div>
-                <Table className="text-center border border-neutral-200">
-                  <TableBody>
-                    <TableRow className="border-neutral-200 hover:bg-white">
-                      <TableCell className="w-1/6 bg-neutral-300">
-                        아이디
-                      </TableCell>
-                      <TableCell className="text-left px-6">1</TableCell>
-                    </TableRow>
-                    <TableRow className="border-neutral-200 hover:bg-white">
-                      <TableCell className="w-1/6 bg-neutral-300">
-                        이름
-                      </TableCell>
-                      <TableCell className="text-left px-4">
-                        <Input className="text-sm" value="이서연" />
-                      </TableCell>
-                    </TableRow>
-                    <TableRow className="border-neutral-200 hover:bg-white">
-                      <TableCell className="w-1/6 bg-neutral-300">
-                        학번
-                      </TableCell>
-                      <TableCell className="text-left px-4">
-                        <Input className="text-sm" value="202202465" />
-                      </TableCell>
-                    </TableRow>
-                    <TableRow className="border-neutral-200 hover:bg-white">
-                      <TableCell className="w-1/6 bg-neutral-300">
-                        권한
-                      </TableCell>
-                      <TableCell className="text-left px-4">
-                        <RoleCombobox />
-                      </TableCell>
-                    </TableRow>
-                    <TableRow className="border-neutral-200 hover:bg-white">
-                      <TableCell className="w-1/6 bg-neutral-300">
-                        상태
-                      </TableCell>
-                      <TableCell className="text-left px-4">
-                        <StateCombobox />
-                      </TableCell>
-                    </TableRow>
-                    <TableRow className="border-neutral-200 hover:bg-white">
-                      <TableCell className="w-1/6 bg-neutral-300">
-                        이메일
-                      </TableCell>
-                      <TableCell className="text-left px-4">
-                        <Input className="text-sm" value="lsy0476@hufs.ac.kr" />
-                      </TableCell>
-                    </TableRow>
-                    <TableRow className="border-neutral-200 hover:bg-white">
-                      <TableCell className="w-1/6 bg-neutral-300">
-                        연락처
-                      </TableCell>
-                      <TableCell className="text-left px-4">
-                        <Input className="text-sm" value="010-2728-0476" />
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-              <AlertDialogFooter className="mt-4">
-                <AlertDialogCancel className="cursor-pointer">
-                  취소
-                </AlertDialogCancel>
-                <AlertDialogAction className=" hover:bg-neutral-700 font-bold cursor-pointer">
+        <div className="flex space-x-2">
+          {/* 수정 버튼 */}
+          <div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <div className="hover:bg-neutral-800 cursor-pointer border border-neutral-400 text-neutral-200 text-sm px-3 py-1 rounded-sm">
                   수정
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+                </div>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>#1 이서연</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    사용자 정보를 수정해보세요.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                {/* 수정 모달 테이블 */}
+                <div>
+                  <Table className="text-center border border-neutral-200">
+                    <TableBody>
+                      <TableRow className="border-neutral-200 hover:bg-white">
+                        <TableCell className="w-1/6 bg-neutral-300">
+                          아이디
+                        </TableCell>
+                        <TableCell className="text-left px-6">1</TableCell>
+                      </TableRow>
+                      <TableRow className="border-neutral-200 hover:bg-white">
+                        <TableCell className="w-1/6 bg-neutral-300">
+                          이름
+                        </TableCell>
+                        <TableCell className="text-left px-4">
+                          <Input className="text-sm" value="이서연" />
+                        </TableCell>
+                      </TableRow>
+                      <TableRow className="border-neutral-200 hover:bg-white">
+                        <TableCell className="w-1/6 bg-neutral-300">
+                          학번
+                        </TableCell>
+                        <TableCell className="text-left px-4">
+                          <Input className="text-sm" value="202202465" />
+                        </TableCell>
+                      </TableRow>
+                      <TableRow className="border-neutral-200 hover:bg-white">
+                        <TableCell className="w-1/6 bg-neutral-300">
+                          권한
+                        </TableCell>
+                        <TableCell className="text-left px-4">
+                          <RoleCombobox />
+                        </TableCell>
+                      </TableRow>
+                      <TableRow className="border-neutral-200 hover:bg-white">
+                        <TableCell className="w-1/6 bg-neutral-300">
+                          상태
+                        </TableCell>
+                        <TableCell className="text-left px-4">
+                          <StateCombobox />
+                        </TableCell>
+                      </TableRow>
+                      <TableRow className="border-neutral-200 hover:bg-white">
+                        <TableCell className="w-1/6 bg-neutral-300">
+                          이메일
+                        </TableCell>
+                        <TableCell className="text-left px-4">
+                          <Input
+                            className="text-sm"
+                            value="lsy0476@hufs.ac.kr"
+                          />
+                        </TableCell>
+                      </TableRow>
+                      <TableRow className="border-neutral-200 hover:bg-white">
+                        <TableCell className="w-1/6 bg-neutral-300">
+                          연락처
+                        </TableCell>
+                        <TableCell className="text-left px-4">
+                          <Input className="text-sm" value="010-2728-0476" />
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+                <AlertDialogFooter className="mt-4">
+                  <AlertDialogCancel className="cursor-pointer">
+                    취소
+                  </AlertDialogCancel>
+                  <AlertDialogAction className=" hover:bg-neutral-700 font-bold cursor-pointer">
+                    수정
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+          {/* 삭제 버튼 */}
+          <div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <div className="border cursor-pointer px-3 py-1 rounded-sm hover:bg-red-400 hover:text-black border-red-400 text-sm text-red-300">
+                  삭제
+                </div>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    #1 이서연을 삭제하시겠습니까?
+                  </AlertDialogTitle>
+                </AlertDialogHeader>
+
+                <AlertDialogFooter className="mt-4">
+                  <AlertDialogCancel className="cursor-pointer">
+                    취소
+                  </AlertDialogCancel>
+                  <AlertDialogAction className="bg-red-600 hover:bg-red-500 font-bold cursor-pointer">
+                    삭제
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
       </div>
+
       {/* 사용자 테이블 */}
       <div className="mt-4">
         <Table className="text-white text-center border border-neutral-700">

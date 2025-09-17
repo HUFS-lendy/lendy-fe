@@ -56,13 +56,15 @@ const User = () => {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage className="text-white">이서연</BreadcrumbPage>
+              <BreadcrumbPage className="text-white">
+                이서연의 대여 기록
+              </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
       </div>
       {/* 제목 */}
-      <div className="pt-8 pb-4">
+      <div className="pt-8">
         <div className="font-bold text-white text-3xl pb-4">이서연</div>
       </div>
       <div className="flex space-x-4 justify-end">
