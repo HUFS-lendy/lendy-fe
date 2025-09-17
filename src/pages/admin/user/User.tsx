@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -27,16 +26,13 @@ import {
   AlertDialogTrigger,
 } from "../../../components/ui/alert-dialog";
 import { Input } from "../../../components/ui/input";
+import { DeviceCategoryCombobox } from "../../../components/ui/DeviceCategory";
 import { Checkbox } from "../../../components/ui/checkbox";
-import { Search } from "lucide-react";
-import { RoleCombobox } from "../../../components/ui/RoleCombobox";
-import { StateCombobox } from "../../../components/ui/StateCombobox";
+import { DeviceStateCombobox } from "../../../components/ui/DeviceStateCombobox";
 
-const Users = () => {
-  const navigte = useNavigate();
-
+const User = () => {
   return (
-    <div className="bg-[#060a0c] w-screen px-8 text-white">
+    <div className="w-screen px-8 text-white">
       {/* 브래드크럼 */}
       <div className="pt-10">
         <Breadcrumb>
@@ -51,28 +47,26 @@ const Users = () => {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage className="text-white">
+              <BreadcrumbLink
+                className="text-white hover:text-gray-100"
+                href="/admin/users"
+              >
                 사용자 관리
-              </BreadcrumbPage>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage className="text-white">이서연</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
       </div>
       {/* 제목 */}
       <div className="pt-8 pb-4">
-        <div className="font-bold text-white text-3xl pb-4">사용자 관리</div>
+        <div className="font-bold text-white text-3xl pb-4">이서연</div>
       </div>
-      {/* 검색창 & 수정 버튼 */}
-      <div className="flex justify-between items-center pr-2">
-        {/* 검색창 */}
-        <div className="relative w-2/5 md:w-1/4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 w-5 h-5" />
-          <Input
-            placeholder="학번 또는 이름을 입력해주세요."
-            className="border-neutral-400 pl-10 text-sm"
-          />
-        </div>
-        {/* 수정 버튼 */}
+      <div className="flex space-x-4 justify-end">
+        {/* 대여 내용 수정 버튼 */}
         <div>
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -82,9 +76,9 @@ const Users = () => {
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>#1 이서연</AlertDialogTitle>
+                <AlertDialogTitle>2025-1 iPad Air 3 내용 수정</AlertDialogTitle>
                 <AlertDialogDescription>
-                  사용자 정보를 수정해보세요.
+                  기기 대여 내용을 수정해보세요.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               {/* 수정 모달 테이블 */}
@@ -93,40 +87,36 @@ const Users = () => {
                   <TableBody>
                     <TableRow className="border-neutral-200 hover:bg-white">
                       <TableCell className="w-1/6 bg-neutral-300">
-                        아이디
+                        대여 ID
                       </TableCell>
                       <TableCell className="text-left px-6">1</TableCell>
                     </TableRow>
                     <TableRow className="border-neutral-200 hover:bg-white">
                       <TableCell className="w-1/6 bg-neutral-300">
-                        이름
+                        분류
                       </TableCell>
                       <TableCell className="text-left px-4">
-                        <Input className="text-sm" value="이서연" />
+                        <DeviceCategoryCombobox />
                       </TableCell>
                     </TableRow>
                     <TableRow className="border-neutral-200 hover:bg-white">
                       <TableCell className="w-1/6 bg-neutral-300">
-                        학번
+                        기기명
                       </TableCell>
                       <TableCell className="text-left px-4">
-                        <Input className="text-sm" value="202202465" />
+                        <Input
+                          className="text-sm"
+                          readOnly
+                          value="iPad Air 3"
+                        />
                       </TableCell>
                     </TableRow>
                     <TableRow className="border-neutral-200 hover:bg-white">
                       <TableCell className="w-1/6 bg-neutral-300">
-                        권한
+                        코드번호
                       </TableCell>
                       <TableCell className="text-left px-4">
-                        <RoleCombobox />
-                      </TableCell>
-                    </TableRow>
-                    <TableRow className="border-neutral-200 hover:bg-white">
-                      <TableCell className="w-1/6 bg-neutral-300">
-                        상태
-                      </TableCell>
-                      <TableCell className="text-left px-4">
-                        <StateCombobox />
+                        <Input className="text-sm" value="A20342" />
                       </TableCell>
                     </TableRow>
                     <TableRow className="border-neutral-200 hover:bg-white">
@@ -134,15 +124,19 @@ const Users = () => {
                         이메일
                       </TableCell>
                       <TableCell className="text-left px-4">
-                        <Input className="text-sm" value="lsy0476@hufs.ac.kr" />
+                        <Input
+                          className="text-sm"
+                          value="2025-1"
+                          placeholder="yyyy-1"
+                        />
                       </TableCell>
                     </TableRow>
                     <TableRow className="border-neutral-200 hover:bg-white">
                       <TableCell className="w-1/6 bg-neutral-300">
-                        연락처
+                        대여 상태
                       </TableCell>
                       <TableCell className="text-left px-4">
-                        <Input className="text-sm" value="010-2728-0476" />
+                        <DeviceStateCombobox />
                       </TableCell>
                     </TableRow>
                   </TableBody>
@@ -159,65 +153,78 @@ const Users = () => {
             </AlertDialogContent>
           </AlertDialog>
         </div>
+        {/* 대여 기록 삭제 버튼 */}
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <div className="border cursor-pointer px-3 py-1 rounded-sm hover:bg-red-400 hover:text-black border-red-400 text-sm text-red-300">
+              삭제
+            </div>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="break-keep">
+                2025-1 아이패드 Air(A20342) 대여 기록을 삭제하시겠습니까?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                대여 기록은 삭제하면 다시 되돌릴 수 없습니다.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="cursor-pointer">
+                취소
+              </AlertDialogCancel>
+              <AlertDialogAction className="bg-red-600 hover:bg-red-500 font-bold cursor-pointer">
+                삭제
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
       {/* 사용자 테이블 */}
       <div className="mt-4">
-        <Table className="text-white text-center border border-neutral-700">
-          <TableHeader className="text-center border-b bg-[#11141b] hover:bg-[#11141b] border-neutral-700">
-            <TableHead></TableHead>
-            <TableHead className="text-white text-center">ID</TableHead>
-            <TableHead className="text-white text-center">이름</TableHead>
-            <TableHead className="text-white text-center">학번</TableHead>
-            <TableHead className="text-white text-center">권한</TableHead>
-            <TableHead className="text-white text-center">상태</TableHead>
-            <TableHead className="text-white text-center">이메일</TableHead>
-            <TableHead className="text-white text-center">연락처</TableHead>
+        <Table className="text-center">
+          <TableHeader className=" border-b bg-[#11141b] hover:bg-[#11141b] border-neutral-700">
+            <TableRow>
+              <TableHead></TableHead>
+              <TableHead className="text-white text-center">분류</TableHead>
+              <TableHead className="text-white text-center">기기명</TableHead>
+              <TableHead className="text-white text-center">코드번호</TableHead>
+              <TableHead className="text-white text-center">
+                대여 학기
+              </TableHead>
+              <TableHead className="text-white text-center">상태</TableHead>
+            </TableRow>
           </TableHeader>
-          <TableBody>
-            <TableRow
-              className="cursor-pointer"
-              onClick={() => navigte("/admin/users/1")}
-            >
-              <TableCell onClick={(e) => e.stopPropagation()}>
+          <TableBody className="hover:bg-[#060a0c]">
+            <TableRow>
+              <TableCell>
                 <Checkbox />
               </TableCell>
-              <TableCell>1</TableCell>
-              <TableCell>이서연</TableCell>
-              <TableCell>202202465</TableCell>
-              <TableCell>관리자</TableCell>
-              <TableCell>ACTIVE</TableCell>
-              <TableCell>lsy@hufs.ac.kr</TableCell>
-              <TableCell>010-1234-5678</TableCell>
+              <TableCell>기자재</TableCell>
+              <TableCell>iPad Air 3</TableCell>
+              <TableCell>A20342</TableCell>
+              <TableCell>2025-1</TableCell>
+              <TableCell>대여중</TableCell>
             </TableRow>
-            <TableRow
-              className="cursor-pointer"
-              onClick={() => navigte("/admin/users/1")}
-            >
-              <TableCell onClick={(e) => e.stopPropagation()}>
+            <TableRow>
+              <TableCell>
                 <Checkbox />
               </TableCell>
-              <TableCell>2</TableCell>
-              <TableCell>남하원</TableCell>
-              <TableCell>202202465</TableCell>
-              <TableCell>사용자</TableCell>
-              <TableCell>SUSPENDED</TableCell>
-              <TableCell>nhw@hufs.ac.kr</TableCell>
-              <TableCell>010-1234-5678</TableCell>
+              <TableCell>실습키트</TableCell>
+              <TableCell>Cortex-M3</TableCell>
+              <TableCell>CS123891</TableCell>
+              <TableCell>2024-2</TableCell>
+              <TableCell>미반납</TableCell>
             </TableRow>
-            <TableRow
-              className="cursor-pointer"
-              onClick={() => navigte("/admin/users/1")}
-            >
-              <TableCell onClick={(e) => e.stopPropagation()}>
+            <TableRow>
+              <TableCell>
                 <Checkbox />
               </TableCell>
-              <TableCell>3</TableCell>
-              <TableCell>정병주</TableCell>
-              <TableCell>202202465</TableCell>
-              <TableCell>관리자</TableCell>
-              <TableCell>BANNED</TableCell>
-              <TableCell>jbj@hufs.ac.kr</TableCell>
-              <TableCell>010-1234-5678</TableCell>
+              <TableCell>실습키트</TableCell>
+              <TableCell>아두이노</TableCell>
+              <TableCell>CS1272</TableCell>
+              <TableCell>2022-2</TableCell>
+              <TableCell>반납됨</TableCell>
             </TableRow>
           </TableBody>
         </Table>
@@ -226,4 +233,4 @@ const Users = () => {
   );
 };
 
-export default Users;
+export default User;
