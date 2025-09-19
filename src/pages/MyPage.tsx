@@ -60,6 +60,12 @@ const MyPage = () => {
             >
               대여 현황
             </div>
+            <div
+              onClick={() => navigate("/otp")}
+              className="border-b border-neutral-500 text-lg py-3 cursor-pointer"
+            >
+              QR 코드
+            </div>
           </div>
         </div>
         {/* 계정 관리 */}
