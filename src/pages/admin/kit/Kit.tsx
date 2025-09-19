@@ -35,8 +35,11 @@ import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Checkbox } from "../../../components/ui/checkbox";
 import { toast } from "sonner";
+import { usePhoneCopy } from "../../../hooks/usePhoneCopy";
 
 const Kit = () => {
+  const copyPhone = usePhoneCopy();
+
   return (
     <div className="bg-[#060a0c] w-screen px-8 text-white">
       {/* 브래드크럼 */}
@@ -199,8 +202,21 @@ const Kit = () => {
                 <TableCell>-</TableCell>
                 <TableCell>이서연</TableCell>
                 <TableCell>202202465</TableCell>
-                <TableCell>010-1234-5678</TableCell>
-                <TableCell>lsy@hufs.ac.kr</TableCell>
+                <TableCell
+                  className="cursor-pointer hover:underline"
+                  onClick={() => copyPhone("010-1234-5678")}
+                >
+                  010-1234-5678
+                </TableCell>
+                <TableCell>
+                  <a
+                    href="mailto:lsy@hufs.ac.kr"
+                    className="hover:underline cursor-pointer"
+                    title="메일 작성하기"
+                  >
+                    lsy@hufs.ac.kr
+                  </a>
+                </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>
@@ -213,8 +229,21 @@ const Kit = () => {
                 <TableCell>2025-06-20</TableCell>
                 <TableCell>정병주</TableCell>
                 <TableCell>202212345</TableCell>
-                <TableCell>010-1234-5678</TableCell>
-                <TableCell>jbj@hufs.ac.kr</TableCell>
+                <TableCell
+                  className="cursor-pointer hover:underline"
+                  onClick={() => copyPhone("010-1234-5678")}
+                >
+                  010-1234-5678
+                </TableCell>
+                <TableCell>
+                  <a
+                    href="mailto:lsy@hufs.ac.kr"
+                    className="hover:underline cursor-pointer"
+                    title="메일 작성하기"
+                  >
+                    jbj@hufs.ac.kr
+                  </a>
+                </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>
@@ -227,8 +256,21 @@ const Kit = () => {
                 <TableCell>-</TableCell>
                 <TableCell>남하원</TableCell>
                 <TableCell>202412345</TableCell>
-                <TableCell>010-1234-5678</TableCell>
-                <TableCell>nhw@hufs.ac.kr</TableCell>
+                <TableCell
+                  className="cursor-pointer hover:underline"
+                  onClick={() => copyPhone("010-1234-5678")}
+                >
+                  010-1234-5678
+                </TableCell>
+                <TableCell>
+                  <a
+                    href="mailto:lsy@hufs.ac.kr"
+                    className="hover:underline cursor-pointer"
+                    title="메일 작성하기"
+                  >
+                    nhw@hufs.ac.kr
+                  </a>
+                </TableCell>
               </TableRow>
             </TableBody>
           </Table>
