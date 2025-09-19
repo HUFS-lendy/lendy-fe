@@ -20,6 +20,7 @@ import ManageDevices from "./pages/admin/device/ManageDevices";
 import Users from "./pages/admin/user/Users";
 import User from "./pages/admin/user/User";
 import SignUp from "./pages/admin/user/Signup";
+import Otp from "./pages/Otp";
 
 function App() {
   const router = createBrowserRouter([
@@ -35,6 +36,7 @@ function App() {
         { element: <PwChange />, path: "/pw-change" },
         { element: <EmailChange />, path: "/email-change" },
         { element: <Notice />, path: "/notice" },
+        { element: <Otp />, path: "/otp" },
         {
           path: "admin",
           children: [
