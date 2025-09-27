@@ -32,6 +32,7 @@ import { Search } from "lucide-react";
 import { RoleCombobox } from "../../../components/ui/RoleCombobox";
 import { StateCombobox } from "../../../components/ui/StateCombobox";
 import { toast } from "sonner";
+import { Label } from "../../../components/ui/label";
 
 const Users = () => {
   const navigte = useNavigate();
@@ -199,6 +200,33 @@ const Users = () => {
             </AlertDialog>
           </div>
         </div>
+      </div>
+      {/* 권한 체크박스 */}
+      <div className="flex items-center space-x-4 py-4">
+        <Label>
+          <Checkbox
+            id="toggle-2"
+            defaultChecked
+            className="data-[state=checked]:border-neutral-600 data-[state=checked]:bg-neutral-600 data-[state=checked]:text-white dark:data-[state=checked]:border-neutral-700 dark:data-[state=checked]:bg-neutral-700"
+          />
+          <p className="text-sm">관리자</p>
+        </Label>
+        <Label>
+          <Checkbox
+            id="toggle-2"
+            defaultChecked
+            className="data-[state=checked]:border-neutral-600 data-[state=checked]:bg-neutral-600 data-[state=checked]:text-white dark:data-[state=checked]:border-neutral-700 dark:data-[state=checked]:bg-neutral-700"
+          />
+          <p className="text-sm">사용자</p>
+        </Label>
+        <Label>
+          <Checkbox
+            id="toggle-2"
+            defaultChecked
+            className="data-[state=checked]:border-neutral-600 data-[state=checked]:bg-neutral-600 data-[state=checked]:text-white dark:data-[state=checked]:border-neutral-700 dark:data-[state=checked]:bg-neutral-700"
+          />
+          <p className="text-sm">미반납자</p>
+        </Label>
       </div>
 
       {/* 사용자 테이블 */}
