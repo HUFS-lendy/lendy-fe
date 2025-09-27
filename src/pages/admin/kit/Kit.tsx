@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -36,9 +37,11 @@ import { Label } from "../../../components/ui/label";
 import { Checkbox } from "../../../components/ui/checkbox";
 import { toast } from "sonner";
 import { usePhoneCopy } from "../../../hooks/usePhoneCopy";
+import KitNumberTags from "../../../hooks/useCodeNumberTags";
 
 const Kit = () => {
   const copyPhone = usePhoneCopy();
+  const [kitNumbers, setKitNumbers] = useState<string[]>([]);
 
   return (
     <div className="bg-[#060a0c] w-screen px-8 text-white">
@@ -75,7 +78,7 @@ const Kit = () => {
           Cortex-M3 상세 현황
         </div>
         <div className="pb-6 text-sm text-neutral-400">
-          사용 수업 : 마이크로프로세서 및 실습 (임승호)
+          사용 수업 : 마이크로프로세서 및 실습
         </div>
         <div className="flex space-x-4 justify-end">
           {/* 키트 추가 버튼 */}
@@ -92,8 +95,7 @@ const Kit = () => {
               <div className="space-y-4">
                 {/* todo: 여러개 엔터로 입력되게 */}
                 <div>
-                  <Label className="pb-2">코드 번호</Label>
-                  <Input />
+                  <KitNumberTags value={kitNumbers} onChange={setKitNumbers} />
                 </div>
               </div>
               {/* todo: 추가에서 수정으로 */}

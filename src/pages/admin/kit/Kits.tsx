@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Breadcrumb,
@@ -30,9 +31,11 @@ import {
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { toast } from "sonner";
+import KitNumberTags from "../../../hooks/useCodeNumberTags";
 
 const Kits = () => {
   const navigate = useNavigate();
+  const [kitNumbers, setKitNumbers] = useState<string[]>([]);
   return (
     <div className="bg-[#060a0c] w-screen px-8 text-white">
       {/* 브래드크럼 */}
@@ -79,10 +82,10 @@ const Kits = () => {
                     <Label className="pb-2">강의명</Label>
                     <Input />
                   </div>
-                  <div>
+                  {/* <div>
                     <Label className="pb-2">교수명</Label>
                     <Input />
-                  </div>
+                  </div> */}
                 </div>
                 <div>
                   <Label className="pb-2">실습 키트명</Label>
@@ -93,10 +96,7 @@ const Kits = () => {
                   <Input type="number" />
                 </div>
                 {/* todo: 여러개 엔터로 입력되게 */}
-                <div>
-                  <Label className="pb-2">키트 번호</Label>
-                  <Input />
-                </div>
+                <KitNumberTags value={kitNumbers} onChange={setKitNumbers} />
               </div>
               <AlertDialogFooter className="pt-8">
                 <AlertDialogCancel>취소</AlertDialogCancel>
@@ -144,7 +144,7 @@ const Kits = () => {
               <TableHead className="text-white text-center">
                 사용 수업명
               </TableHead>
-              <TableHead className="text-white text-center">교수명</TableHead>
+              {/* <TableHead className="text-white text-center">교수명</TableHead> */}
               <TableHead className="text-white text-center">
                 잔여 대수
               </TableHead>
@@ -161,7 +161,7 @@ const Kits = () => {
                 </TableCell>
                 <TableCell>Cortex-M3</TableCell>
                 <TableCell>마이크로프로세서 및 실습</TableCell>
-                <TableCell>임승호</TableCell>
+                {/* <TableCell>임승호</TableCell> */}
                 <TableCell>5</TableCell>
                 <TableCell>12</TableCell>
                 <TableCell>3</TableCell>
@@ -173,7 +173,7 @@ const Kits = () => {
                 </TableCell>
                 <TableCell>아두이노</TableCell>
                 <TableCell>컴퓨터시스템입문</TableCell>
-                <TableCell>이재혁</TableCell>
+                {/* <TableCell>이재혁</TableCell> */}
                 <TableCell>3</TableCell>
                 <TableCell>17</TableCell>
                 <TableCell>40</TableCell>
