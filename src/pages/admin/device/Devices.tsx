@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Breadcrumb,
@@ -31,9 +32,11 @@ import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { DeviceCategoryCombobox } from "../../../components/ui/DeviceCategory";
 import { toast } from "sonner";
+import DeviceNumberTag from "../../../hooks/useCodeNumberTags";
 
 const Devices = () => {
   const navigate = useNavigate();
+  const [deviceNumber, setDeviceNumber] = useState<string[]>([]);
   return (
     <div className="px-8 w-screen">
       {/* 브래드크럼 */}
@@ -87,8 +90,10 @@ const Devices = () => {
                 </div>
                 {/* todo: 여러개 엔터로 입력되게 */}
                 <div>
-                  <Label className="pb-2">코드 번호</Label>
-                  <Input type="number" />
+                  <DeviceNumberTag
+                    value={deviceNumber}
+                    onChange={setDeviceNumber}
+                  />
                 </div>
               </div>
               <AlertDialogFooter className="pt-8">

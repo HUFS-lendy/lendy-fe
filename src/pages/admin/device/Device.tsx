@@ -130,7 +130,7 @@ const Device = () => {
                       </TableRow>
                       <TableRow className="border-neutral-200 hover:bg-white">
                         <TableCell className="w-1/6 bg-neutral-300">
-                          이메일
+                          대여 학기
                         </TableCell>
                         <TableCell className="text-left px-4">
                           <Input
