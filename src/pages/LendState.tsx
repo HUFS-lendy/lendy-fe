@@ -29,6 +29,7 @@ import {
 } from "../components/ui/alert-dialog";
 import { Textarea } from "../components/ui/textarea";
 import { toast } from "sonner";
+import { QrModal } from "../hooks/useQrCode";
 
 const LendState = () => {
   const navigate = useNavigate();
@@ -100,6 +101,7 @@ const LendState = () => {
                 대여 학기
               </TableHead>
               <TableHead className="text-white text-center">상태</TableHead>
+              <TableHead className="text-white text-center">QR</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody className="hover:bg-[#060a0c]">
@@ -112,7 +114,14 @@ const LendState = () => {
               <TableCell>A20342</TableCell>
               <TableCell>2025-1</TableCell>
               <TableCell>대여중</TableCell>
+              <TableCell>
+                <QrModal
+                  title="iPad Air 3 - QR 인증"
+                  value="https://example.com/check-in?otp=123456"
+                />
+              </TableCell>
             </TableRow>
+
             <TableRow>
               <TableCell>
                 <Checkbox />
@@ -122,7 +131,14 @@ const LendState = () => {
               <TableCell>CS123891</TableCell>
               <TableCell>2024-2</TableCell>
               <TableCell>미반납</TableCell>
+              <TableCell>
+                <QrModal
+                  title="Cortex-M3 - QR 인증"
+                  value="https://example.com/check-in?otp=abcde"
+                />
+              </TableCell>
             </TableRow>
+
             <TableRow>
               <TableCell>
                 <Checkbox />
@@ -132,6 +148,12 @@ const LendState = () => {
               <TableCell>CS1272</TableCell>
               <TableCell>2022-2</TableCell>
               <TableCell>반납됨</TableCell>
+              <TableCell>
+                <QrModal
+                  title="아두이노 - QR 인증"
+                  value="https://example.com/check-in?otp=999999"
+                />
+              </TableCell>
             </TableRow>
           </TableBody>
         </Table>
