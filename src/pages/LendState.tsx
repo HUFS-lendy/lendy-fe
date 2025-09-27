@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Breadcrumb,
@@ -27,12 +28,22 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu";
 import { Textarea } from "../components/ui/textarea";
 import { toast } from "sonner";
 import { QrModal } from "../hooks/useQrCode";
 
 const LendState = () => {
   const navigate = useNavigate();
+  const [issueType, setIssueType] = useState<string>("불량 유형 선택");
+
   return (
     <div className="bg-[#060a0c] w-screen h-full px-8">
       {/* 브래드크럼 */}
@@ -57,6 +68,7 @@ const LendState = () => {
       {/* 페이지명 */}
       <div className="pt-8 text-white">
         <div className="font-bold text-3xl pb-8">대여 현황</div>
+        {/* 불량 신청 모달/ */}
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <div className="flex justify-end mb-4">
@@ -70,7 +82,43 @@ const LendState = () => {
               <AlertDialogTitle className="pb-4">
                 기자재 - 아이패드 Air(A20342)에 대한 불량 사항을 적어주세요.
               </AlertDialogTitle>
-              <AlertDialogDescription className="break-keep pb-2">
+              <AlertDialogDescription className="break-keep pb-2 space-y-4">
+                {/* 불량 유형 선택 드롭다운 */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <div className="inline-block hover:bg-neutral-100 cursor-pointer py-2 px-3 rounded-md shadow-2xl text-black border">
+                      {issueType}
+                    </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56">
+                    <DropdownMenuLabel>불량 유형</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onSelect={() => setIssueType("전원 불가")}
+                    >
+                      전원 불가
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onSelect={() => setIssueType("충전 불가")}
+                    >
+                      충전 불가
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onSelect={() => setIssueType("화면 깨짐")}
+                    >
+                      화면 깨짐
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onSelect={() => setIssueType("작동 이상")}
+                    >
+                      작동 이상
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setIssueType("기타")}>
+                      기타
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                {/* 불량 사항 텍스트 */}
                 <Textarea className="text-black" />
               </AlertDialogDescription>
             </AlertDialogHeader>
