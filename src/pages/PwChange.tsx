@@ -23,7 +23,7 @@ const PwChange = () => {
                   기존 비밀번호
                 </Label>
                 <Input
-                  className="border border-neutral-400"
+                  className="border border-neutral-400 text-sm"
                   placeholder="기존 비밀번호를 입력해주세요."
                   required
                 />
@@ -35,7 +35,7 @@ const PwChange = () => {
                   </Label>
                 </div>
                 <Input
-                  className="border border-neutral-400"
+                  className="border border-neutral-400 text-sm"
                   id="password"
                   type="password"
                   required
@@ -49,7 +49,7 @@ const PwChange = () => {
                   </Label>
                 </div>
                 <Input
-                  className="border border-neutral-400"
+                  className="border border-neutral-400 text-sm"
                   id="password"
                   type="password"
                   required
@@ -62,7 +62,7 @@ const PwChange = () => {
         <CardFooter className="flex-col gap-2 mt-8">
           <div
             onClick={() => navigate("/")}
-            className="w-full border border-neutral-400 hover:bg-neutral-900 rounded-sm text-center py-1 cursor-pointer"
+            className="w-full border border-neutral-400 bg-neutral-900 hover:bg-neutral-800 rounded-sm text-center py-1 cursor-pointer"
           >
             비밀번호 변경
           </div>

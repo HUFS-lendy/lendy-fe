@@ -79,10 +79,10 @@ const LendState = () => {
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle className="pb-4">
+              <AlertDialogTitle className="pb-4 break-keep text-left">
                 기자재 - 아이패드 Air(A20342)에 대한 불량 사항을 적어주세요.
               </AlertDialogTitle>
-              <AlertDialogDescription className="break-keep pb-2 space-y-4">
+              <AlertDialogDescription className="break-keep pb-2 space-y-4 text-left">
                 {/* 불량 유형 선택 드롭다운 */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

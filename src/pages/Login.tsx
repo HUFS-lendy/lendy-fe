@@ -22,7 +22,7 @@ const Login = () => {
                   학번
                 </Label>
                 <Input
-                  className="border border-neutral-400"
+                  className="border border-neutral-400 text-sm"
                   placeholder="학번을 입력해주세요."
                   required
                 />
@@ -40,7 +40,7 @@ const Login = () => {
                   </a>
                 </div>
                 <Input
-                  className="border border-neutral-400"
+                  className="border border-neutral-400 text-sm"
                   id="password"
                   type="password"
                   required
@@ -56,7 +56,7 @@ const Login = () => {
               navigate("/");
               toast("로그인 되었습니다.");
             }}
-            className="w-full border border-neutral-400 hover:bg-neutral-900 rounded-sm text-center py-1 cursor-pointer"
+            className="w-full border border-neutral-400 bg-neutral-900 hover:bg-neutral-800 rounded-sm text-center py-1 cursor-pointer"
           >
             로그인
           </div>

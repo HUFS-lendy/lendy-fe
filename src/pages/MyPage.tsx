@@ -34,8 +34,8 @@ const MyPage = () => {
         </Breadcrumb>
       </div>
       {/* 기본 정보 */}
-      <div className="flex items-center space-x-12 p-12 text-white">
-        <img src={Logo} className="w-24 h-24" />
+      <div className="flex items-center space-x-8 md:space-x-12 py-12 md:p-12 text-white">
+        <img src={Logo} className="w-20 h-20 md:w-24 md:h-24" />
         <div className="space-y-0.5">
           <div className="font-bold text-lg">이서연</div>
           <div>202202465 | 컴퓨터공학부</div>
@@ -49,7 +49,7 @@ const MyPage = () => {
         </div>
       </div>
       {/* 메뉴 */}
-      <div className="text-white px-12 space-y-12">
+      <div className="text-white px-2 md:px-12 space-y-12">
         {/* 대여 관리 */}
         <div>
           <div className="text-lg font-bold mb-2">대여 관리</div>
