@@ -280,7 +280,8 @@ function SidebarTrigger({
       variant="ghost"
       size="icon"
       className={cn(
-        "size-7",
+        "size-10",
+
         // 기본 텍스트(아이콘) 컬러를 사이드바 전경색으로
         "text-[hsl(var(--sidebar-foreground))]",
         // hover 때 사이드바 색 사용
