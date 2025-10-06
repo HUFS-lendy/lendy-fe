@@ -88,7 +88,7 @@ const Lend = () => {
                     <AlertDialogTitle className="pb-4">
                       기자재 - 아이패드 Air을 대여하시겠습니까?
                     </AlertDialogTitle>
-                    <AlertDialogDescription className="break-keep">
+                    <AlertDialogDescription className="break-keep text-left">
                       반납 기한은 해당{" "}
                       <span className="font-bold">학기 종강일</span>까지이며,{" "}
                       <span className="text-red-500">

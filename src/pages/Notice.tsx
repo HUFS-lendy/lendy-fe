@@ -47,7 +47,7 @@ const Notice = () => {
           >
             <AccordionItem value="item-1">
               <AccordionTrigger className="text-lg">대여 방법</AccordionTrigger>
-              <AccordionContent className="flex flex-col gap-4 text-balance">
+              <AccordionContent className="flex flex-col gap-4 break-keep">
                 <p>
                   대여 신청은 학기 중에 이루어지며, 방학 중엔 신청이 불가합니다.
                 </p>
@@ -59,7 +59,7 @@ const Notice = () => {
             </AccordionItem>
             <AccordionItem value="item-2">
               <AccordionTrigger className="text-lg">반납 방법</AccordionTrigger>
-              <AccordionContent className="flex flex-col gap-4 text-balance">
+              <AccordionContent className="flex flex-col gap-4 break-keep">
                 <p>반납은 대여한 학기의 종강일까지 이루어져야 합니다.</p>
                 <p>
                   종강일 이후에 미반납 상태일 경우 일주일동안 이메일로
@@ -70,7 +70,7 @@ const Notice = () => {
             </AccordionItem>
             <AccordionItem value="item-3">
               <AccordionTrigger className="text-lg">불량 접수</AccordionTrigger>
-              <AccordionContent className="flex flex-col gap-4 text-balance">
+              <AccordionContent className="flex flex-col gap-4 break-keep">
                 <p>
                   마이페이지 - 대여 현황에서 대여한 기기의 불량을 접수할 수
                   있습니다.

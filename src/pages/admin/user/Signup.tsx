@@ -81,7 +81,7 @@ const SignUp = () => {
               navigate("/admin/users");
               toast("회원가입 되었습니다.");
             }}
-            className="w-full border bg-neutral-600 border-neutral-400 hover:bg-neutral-900 rounded-sm text-center py-1 cursor-pointer"
+            className="w-full border bg-neutral-900 border-neutral-400 hover:bg-neutral-800 rounded-sm text-center py-1 cursor-pointer"
           >
             회원가입
           </div>

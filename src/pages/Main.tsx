@@ -14,7 +14,7 @@ const Main = () => {
         easing="ease-out"
         initialOpacity={0}
       >
-        <div className="text-white px-10 py-32 font-bold space-y-4">
+        <div className="text-white px-8 sm:px-10 py-42 md:py-32 font-bold space-y-2 sm:space-y-4">
           <div className="text-2xl sm:text-5xl break-keep">
             한국외국어대학교
           </div>
