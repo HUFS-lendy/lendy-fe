@@ -1,8 +1,7 @@
-// components/ui/radio-group.tsx
 import * as React from "react";
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
+import { CircleIcon } from "lucide-react";
 import { cn } from "../../lib/utils";
-
 function RadioGroup({
   className,
   ...props
@@ -15,7 +14,6 @@ function RadioGroup({
     />
   );
 }
-
 function RadioGroupItem({
   className,
   ...props
@@ -24,29 +22,20 @@ function RadioGroupItem({
     <RadioGroupPrimitive.Item
       data-slot="radio-group-item"
       className={cn(
-        // 바깥 원(라디오 테두리)
-        "aspect-square size-4 shrink-0 rounded-full border outline-none transition-[box-shadow,border-color]",
-        // 기본 테두리/배경
-        "border-white/60 bg-transparent",
-        // 체크되면 테두리 더 선명하게
-        "data-[state=checked]:border-white",
-        // 포커스 링
-        "focus-visible:ring-[3px] focus-visible:ring-white/40",
-        // disabled
-        "disabled:cursor-not-allowed disabled:opacity-50",
+        "border-input text-primary focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 aspect-square size-4 shrink-0 rounded-full border shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
       {...props}
     >
+      {" "}
       <RadioGroupPrimitive.Indicator
         data-slot="radio-group-indicator"
         className="relative flex items-center justify-center"
       >
-        {/* 하얀색 내부 점 */}
-        <div className="size-2 rounded-full bg-white" />
-      </RadioGroupPrimitive.Indicator>
+        {" "}
+        <CircleIcon className="fill-primary absolute top-1/2 left-1/2 size-2 -translate-x-1/2 -translate-y-1/2" />{" "}
+      </RadioGroupPrimitive.Indicator>{" "}
     </RadioGroupPrimitive.Item>
   );
 }
-
 export { RadioGroup, RadioGroupItem };

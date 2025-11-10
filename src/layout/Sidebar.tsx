@@ -51,7 +51,7 @@ const items: NavItem[] = [
   {
     title: "반납 기한 설정",
     icon: ToolCase,
-    children: [{ title: "반납 기한 설정", url: "/admin/limit" }],
+    children: [{ title: "반납 기한 현황", url: "/admin/view-limit" }],
   },
 ];
 
