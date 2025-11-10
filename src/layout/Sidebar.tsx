@@ -48,6 +48,11 @@ const items: NavItem[] = [
       { title: "회원가입", url: "/admin/sign-up" },
     ],
   },
+  {
+    title: "반납 기한 설정",
+    icon: ToolCase,
+    children: [{ title: "반납 기한 현황", url: "/admin/view-limit" }],
+  },
 ];
 
 export function AppSidebar() {
