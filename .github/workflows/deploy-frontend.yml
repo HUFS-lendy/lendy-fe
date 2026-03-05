@@ -1,0 +1,26 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy frontend via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: lendy
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -e
+            cd ~/projects/lendy-fe
+            git pull origin main
+
+            cd ~/projects/lendy-deploy
+            docker compose up -d --build frontend
+            docker image prune -f
+            docker compose ps
