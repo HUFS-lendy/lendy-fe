@@ -1,7 +1,7 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { useAuthStore } from "../store/authStore";
 
-const baseUrl = "https://lendy-api.computer.hufs.ac.kr";
+const baseUrl = "https://lendy-api.hufs.ac.kr";
 
 export const apiClient = axios.create({
   baseURL: baseUrl,
