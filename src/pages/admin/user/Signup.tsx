@@ -3,6 +3,7 @@ import { Card, CardContent, CardFooter } from "../../../components/ui/card";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import Logo from "../../../assets/cse-logo.png";
+import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { useSignUp } from "../../../api/auth.api";
@@ -13,6 +14,7 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const { mutateAsync: doSignUp } = useSignUp();
 
   const navigate = useNavigate();
@@ -123,15 +125,25 @@ const SignUp = () => {
                     비밀번호
                   </Label>
                 </div>
-                <Input
-                  className="border border-neutral-400 text-sm"
-                  id="password"
-                  type="password"
-                  required
-                  placeholder="비밀번호를 입력해주세요."
-                  value={password}
-                  onChange={handlePassword}
-                />
+                <div className="relative">
+                  <Input
+                    className="border border-neutral-400 text-sm pr-10"
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    placeholder="비밀번호를 입력해주세요."
+                    value={password}
+                    onChange={handlePassword}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 cursor-pointer"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
 
               <div className="grid gap-2">
