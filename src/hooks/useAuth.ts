@@ -47,7 +47,7 @@ const useAuth = () => {
         const { accessToken, refreshToken } = response.data.data;
 
         if (!isTokenValid(accessToken) || !isTokenValid(refreshToken)) {
-          throw new Error("유효하지 않는 토큰");
+          throw new Error("유효하지 않은 토큰");
         }
 
         setAuth({
@@ -67,8 +67,27 @@ const useAuth = () => {
     [setAuth],
   );
 
-  const logout = useCallback(() => {
-    logoutStore();
+  const logout = useCallback(async (): Promise<{ message?: string }> => {
+    try {
+      const refreshToken = useAuthStore.getState().refreshToken;
+
+      if (refreshToken) {
+        await apiClient.post("/api/auth/logout", null, {
+          params: {
+            refreshToken,
+          },
+        });
+      }
+
+      logoutStore();
+      return { message: "로그아웃 되었습니다." };
+    } catch (e) {
+      logoutStore();
+
+      const error = e as AxiosLikeError;
+      const msg = error.response?.data?.message || "로그아웃 되었습니다.";
+      return { message: msg };
+    }
   }, [logoutStore]);
 
   return { ...auth, loggedIn, login, logout };

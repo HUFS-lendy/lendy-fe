@@ -5,6 +5,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import Logo from "../assets/cse-logo.png";
 import { toast } from "sonner";
+import { Eye, EyeOff } from "lucide-react";
 import useAuth from "../hooks/useAuth";
 
 const Login = () => {
@@ -14,6 +15,7 @@ const Login = () => {
   const [studentId, setStudentId] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const canSubmit = useMemo(() => {
     return studentId.trim().length > 0 && password.length > 0 && !isSubmitting;
@@ -79,19 +81,31 @@ const Login = () => {
                     비밀번호 재설정
                   </a>
                 </div>
-                <Input
-                  className="border border-neutral-400 text-sm"
-                  id="password"
-                  type="password"
-                  required
-                  placeholder="비밀번호를 입력해주세요."
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="current-password"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") void handleLogin();
-                  }}
-                />
+                <div className="relative">
+                  <Input
+                    className="border border-neutral-400 text-sm pr-10"
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    placeholder="비밀번호를 입력해주세요."
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") void handleLogin();
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white cursor-pointer"
+                    aria-label={
+                      showPassword ? "비밀번호 숨기기" : "비밀번호 보기"
+                    }
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
             </div>
 

@@ -10,6 +10,7 @@ export type PillNavItem = {
   label: string;
   href: string;
   ariaLabel?: string;
+  onClick?: (e: React.MouseEvent<HTMLElement>) => void | Promise<void>;
 };
 
 export interface PillNavProps {
@@ -92,14 +93,14 @@ const PillNav: React.FC<PillNavProps> = ({
         tl.to(
           circle,
           { scale: 1.2, xPercent: -50, duration: 2, ease, overwrite: "auto" },
-          0
+          0,
         );
 
         if (label) {
           tl.to(
             label,
             { y: -(h + 8), duration: 2, ease, overwrite: "auto" },
-            0
+            0,
           );
         }
 
@@ -108,7 +109,7 @@ const PillNav: React.FC<PillNavProps> = ({
           tl.to(
             white,
             { y: 0, opacity: 1, duration: 2, ease, overwrite: "auto" },
-            0
+            0,
           );
         }
 
@@ -230,7 +231,7 @@ const PillNav: React.FC<PillNavProps> = ({
             duration: 0.3,
             ease,
             transformOrigin: "top center",
-          }
+          },
         );
       } else {
         gsap.to(menu, {
@@ -407,6 +408,7 @@ const PillNav: React.FC<PillNavProps> = ({
                       aria-label={item.ariaLabel || item.label}
                       onMouseEnter={() => handleEnter(i)}
                       onMouseLeave={() => handleLeave(i)}
+                      onClick={item.onClick}
                     >
                       {PillContent}
                     </Link>
@@ -419,6 +421,7 @@ const PillNav: React.FC<PillNavProps> = ({
                       aria-label={item.ariaLabel || item.label}
                       onMouseEnter={() => handleEnter(i)}
                       onMouseLeave={() => handleLeave(i)}
+                      onClick={item.onClick}
                     >
                       {PillContent}
                     </a>
@@ -487,7 +490,10 @@ const PillNav: React.FC<PillNavProps> = ({
                     style={defaultStyle}
                     onMouseEnter={hoverIn}
                     onMouseLeave={hoverOut}
-                    onClick={() => updateMobileMenuState(false)}
+                    onClick={(e) => {
+                      item.onClick?.(e);
+                      updateMobileMenuState(false);
+                    }}
                   >
                     {item.label}
                   </Link>
@@ -498,7 +504,10 @@ const PillNav: React.FC<PillNavProps> = ({
                     style={defaultStyle}
                     onMouseEnter={hoverIn}
                     onMouseLeave={hoverOut}
-                    onClick={() => updateMobileMenuState(false)}
+                    onClick={(e) => {
+                      item.onClick?.(e);
+                      updateMobileMenuState(false);
+                    }}
                   >
                     {item.label}
                   </a>
