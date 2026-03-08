@@ -54,7 +54,7 @@ const useAuth = () => {
           isAuthenticated: true,
           accessToken,
           refreshToken,
-          tokenType: "bearer",
+          tokenType: "Bearer",
         });
 
         return { message: response.data.message };

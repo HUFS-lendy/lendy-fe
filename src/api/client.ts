@@ -29,12 +29,16 @@ apiClient.interceptors.request.use((config) => {
     url.includes("/api/auth/login") || url.includes("/api/auth/refresh");
 
   if (!isAuthEndpoint) {
-    const { accessToken, tokenType } = useAuthStore.getState();
+    const { accessToken } = useAuthStore.getState();
+
     if (accessToken) {
       config.headers = config.headers ?? {};
-      config.headers.Authorization = `${tokenType ?? "bearer"} ${accessToken}`;
+      config.headers.Authorization = `Bearer ${accessToken}`;
     }
   }
+
+  console.log("REQUEST URL:", config.url);
+  console.log("AUTH HEADER:", config.headers?.Authorization);
 
   return config;
 });
@@ -88,7 +92,7 @@ apiClient.interceptors.response.use(
           resolve: (newToken) => {
             // 새 토큰으로 헤더 갱신 후 재시도
             originalRequest.headers = originalRequest.headers ?? {};
-            originalRequest.headers.Authorization = `bearer ${newToken}`;
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
             resolve(apiClient(originalRequest));
           },
           reject,
@@ -109,14 +113,14 @@ apiClient.interceptors.response.use(
         isAuthenticated: true,
         accessToken,
         refreshToken,
-        tokenType: "bearer",
+        tokenType: "Bearer",
       });
 
       runQueue(null, accessToken);
 
       // 원래 요청도 새 토큰으로 재시도
       originalRequest.headers = originalRequest.headers ?? {};
-      originalRequest.headers.Authorization = `bearer ${accessToken}`;
+      originalRequest.headers.Authorization = `Bearer ${accessToken}`;
 
       return apiClient(originalRequest);
     } catch (refreshError: unknown) {

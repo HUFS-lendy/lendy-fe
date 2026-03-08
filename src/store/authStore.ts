@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
-export type TokenType = "bearer" | string;
+export type TokenType = "Bearer" | string;
 
 export interface AuthState {
   isAuthenticated: boolean;
@@ -23,7 +23,7 @@ export const useAuthStore = create<AuthStore>()(
       isAuthenticated: false,
       accessToken: null,
       refreshToken: null,
-      tokenType: "bearer",
+      tokenType: "Bearer",
 
       setAuth: (payload) =>
         set((prev) => ({
@@ -36,7 +36,7 @@ export const useAuthStore = create<AuthStore>()(
           isAuthenticated: false,
           accessToken: null,
           refreshToken: null,
-          tokenType: "bearer",
+          tokenType: "Bearer",
         }),
     }),
     {
