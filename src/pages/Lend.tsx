@@ -34,11 +34,19 @@ import {
   AlertDialogTrigger,
 } from "../components/ui/alert-dialog";
 import { toast } from "sonner";
+import { useModels, type ModelItem } from "../api/model.api";
 
 const Lend = () => {
   const navigate = useNavigate();
+  const { data, isLoading, isError } = useModels();
+
+  const models = data?.data ?? [];
+
+  const equipmentList = models.filter((item) => item.courseName === "");
+  const kitList = models.filter((item) => item.courseName !== "");
+
   return (
-    <div className="bg-[#060a0c] w-screen h-full px-8">
+    <div className="bg-[#060a0c] w-screen min-h-screen px-8">
       {/* 브래드크럼 */}
       <div className="pt-20">
         <Breadcrumb>
@@ -58,12 +66,13 @@ const Lend = () => {
           </BreadcrumbList>
         </Breadcrumb>
       </div>
+
       <div className="pt-8">
         <div className="font-bold text-white text-3xl pb-8">
           기자재 / 키트 대여 신청
         </div>
+
         <Tabs defaultValue="기자재">
-          {/* 탭 */}
           <TabsList className="bg-[#1e2427]">
             <TabsTrigger className="text-white bg-[#1e2427]" value="기자재">
               기자재
@@ -72,21 +81,26 @@ const Lend = () => {
               실습 키트
             </TabsTrigger>
           </TabsList>
-          {/* 기자재 콘텐츠 */}
+
+          {/* 기자재 */}
           <TabsContent value="기자재">
             <div className="mt-4">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <div className="flex justify-end mb-4">
-                    <div className="bg-[#060a0c] hover:bg-neutral-700 cursor-pointer text-sm text-white border border-neutral-400 rounded-md px-3 py-1">
+                    <button
+                      type="button"
+                      className="bg-[#060a0c] hover:bg-neutral-700 cursor-pointer text-sm text-white border border-neutral-400 rounded-md px-3 py-1"
+                    >
                       대여
-                    </div>
+                    </button>
                   </div>
                 </AlertDialogTrigger>
+
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle className="pb-4">
-                      기자재 - 아이패드 Air을 대여하시겠습니까?
+                      기자재를 대여하시겠습니까?
                     </AlertDialogTitle>
                     <AlertDialogDescription className="break-keep text-left">
                       반납 기한은 해당{" "}
@@ -99,12 +113,12 @@ const Lend = () => {
                       <br />
                       <br />
                       ※ 대리 제출 및 수령 불가합니다.
-                      <br /> ※ 노트북과 아이패드 중복 대여가 불가합니다.
-                      <br />
-                      ※ 타학과와 휴학생은 대여 불가합니다. <br />※ 방학 중 대여
-                      및 연장 불가 합니다.
+                      <br />※ 노트북과 아이패드 중복 대여가 불가합니다.
+                      <br />※ 타학과와 휴학생은 대여 불가합니다.
+                      <br />※ 방학 중 대여 및 연장 불가 합니다.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
+
                   <AlertDialogFooter>
                     <AlertDialogCancel className="cursor-pointer">
                       취소
@@ -121,49 +135,83 @@ const Lend = () => {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
+
               <Table className="text-white text-center border border-neutral-700">
                 <TableHeader className="text-center border-b bg-[#11141b] hover:bg-[#11141b] border-neutral-700">
-                  <TableHead></TableHead>
-                  <TableHead className="text-white text-center">분류</TableHead>
-                  <TableHead className="text-white text-center">
-                    기자재명
-                  </TableHead>
-                  <TableHead className="text-white text-center">
-                    잔여 대수
-                  </TableHead>
+                  <TableRow>
+                    <TableHead></TableHead>
+                    <TableHead className="text-white text-center">
+                      분류
+                    </TableHead>
+                    <TableHead className="text-white text-center">
+                      기자재명
+                    </TableHead>
+                    <TableHead className="text-white text-center">
+                      잔여 대수
+                    </TableHead>
+                  </TableRow>
                 </TableHeader>
+
                 <TableBody className="cursor-pointer">
-                  <TableRow>
-                    <TableCell>
-                      <Checkbox className="border-neutral-400" />
-                    </TableCell>
-                    <TableCell>태블릿</TableCell>
-                    <TableCell>아이패드 Air</TableCell>
-                    <TableCell>10</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>
-                      <Checkbox className="border-neutral-400" />
-                    </TableCell>
-                    <TableCell>노트북</TableCell>
-                    <TableCell>삼성 노트북</TableCell>
-                    <TableCell>10</TableCell>
-                  </TableRow>
+                  {isLoading && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center">
+                        로딩 중...
+                      </TableCell>
+                    </TableRow>
+                  )}
+
+                  {isError && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={4}
+                        className="text-center text-red-400"
+                      >
+                        기자재 목록을 불러오지 못했습니다.
+                      </TableCell>
+                    </TableRow>
+                  )}
+
+                  {!isLoading &&
+                    !isError &&
+                    equipmentList.map((item: ModelItem) => (
+                      <TableRow key={item.modelId}>
+                        <TableCell>
+                          <Checkbox className="border-neutral-400" />
+                        </TableCell>
+                        <TableCell>{item.categoryName}</TableCell>
+                        <TableCell>{item.name}</TableCell>
+                        <TableCell>{item.availableQty}</TableCell>
+                      </TableRow>
+                    ))}
+
+                  {!isLoading && !isError && equipmentList.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center">
+                        기자재가 없습니다.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>
           </TabsContent>
-          {/* 실습키트 콘텐츠 */}
+
+          {/* 실습 키트 */}
           <TabsContent value="실습 키트">
-            <TabsContent value="실습 키트">
-              <div className="mt-4">
-                <div className="flex justify-end mb-4">
-                  <div className="bg-[#060a0c] hover:bg-neutral-700 cursor-pointer text-sm text-white border border-neutral-400 rounded-md px-3 py-1">
-                    대여
-                  </div>
-                </div>
-                <Table className="text-white text-center border border-neutral-700">
-                  <TableHeader className="text-center border-b bg-[#11141b] hover:bg-[#11141b] border-neutral-700">
+            <div className="mt-4">
+              <div className="flex justify-end mb-4">
+                <button
+                  type="button"
+                  className="bg-[#060a0c] hover:bg-neutral-700 cursor-pointer text-sm text-white border border-neutral-400 rounded-md px-3 py-1"
+                >
+                  대여
+                </button>
+              </div>
+
+              <Table className="text-white text-center border border-neutral-700">
+                <TableHeader className="text-center border-b bg-[#11141b] hover:bg-[#11141b] border-neutral-700">
+                  <TableRow>
                     <TableHead></TableHead>
                     <TableHead className="text-white text-center">
                       키트명
@@ -174,28 +222,52 @@ const Lend = () => {
                     <TableHead className="text-white text-center">
                       잔여 대수
                     </TableHead>
-                  </TableHeader>
-                  <TableBody className="cursor-pointer">
+                  </TableRow>
+                </TableHeader>
+
+                <TableBody className="cursor-pointer">
+                  {isLoading && (
                     <TableRow>
-                      <TableCell>
-                        <Checkbox className="border-neutral-400" />
+                      <TableCell colSpan={4} className="text-center">
+                        로딩 중...
                       </TableCell>
-                      <TableCell>Cortex-M3</TableCell>
-                      <TableCell>마이크로프로세서 및 실습</TableCell>
-                      <TableCell>20</TableCell>
                     </TableRow>
+                  )}
+
+                  {isError && (
                     <TableRow>
-                      <TableCell>
-                        <Checkbox className="border-neutral-400" />
+                      <TableCell
+                        colSpan={4}
+                        className="text-center text-red-400"
+                      >
+                        실습 키트 목록을 불러오지 못했습니다.
                       </TableCell>
-                      <TableCell>아두이노</TableCell>
-                      <TableCell>컴퓨터시스템입문</TableCell>
-                      <TableCell>60</TableCell>
                     </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-            </TabsContent>
+                  )}
+
+                  {!isLoading &&
+                    !isError &&
+                    kitList.map((item: ModelItem) => (
+                      <TableRow key={item.modelId}>
+                        <TableCell>
+                          <Checkbox className="border-neutral-400" />
+                        </TableCell>
+                        <TableCell>{item.categoryName}</TableCell>
+                        <TableCell>{item.courseName}</TableCell>
+                        <TableCell>{item.availableQty}</TableCell>
+                      </TableRow>
+                    ))}
+
+                  {!isLoading && !isError && kitList.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center">
+                        실습 키트가 없습니다.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
