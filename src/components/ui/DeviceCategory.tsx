@@ -12,62 +12,69 @@ import {
   CommandList,
 } from "./command";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
+import { useCategories } from "../../api/adminCategory.api";
 
-const frameworks = [
-  {
-    value: "태블릿",
-    label: "태블릿",
-  },
-  {
-    value: "노트북",
-    label: "노트북",
-  },
-];
+type DeviceCategoryComboboxProps = {
+  value: string;
+  onChange: (value: string) => void;
+};
 
-export function DeviceCategoryCombobox() {
+export function DeviceCategoryCombobox({
+  value,
+  onChange,
+}: DeviceCategoryComboboxProps) {
   const [open, setOpen] = useState(false);
-  const [value, setValue] = useState("");
+  const { data: categories = [], isLoading, isError } = useCategories();
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-[200px] justify-between"
+          className="w-full justify-between"
         >
-          {value
-            ? frameworks.find((framework) => framework.value === value)?.label
-            : "카테고리 선택"}
+          {value || "카테고리 선택"}
           <ChevronsUpDown className="opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0">
+
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
         <Command>
           <CommandInput placeholder="카테고리 선택" className="h-9" />
           <CommandList>
-            <CommandEmpty>검색에 맞는 분류가 없습니다.</CommandEmpty>
-            <CommandGroup>
-              {frameworks.map((framework) => (
-                <CommandItem
-                  key={framework.value}
-                  value={framework.value}
-                  onSelect={(currentValue) => {
-                    setValue(currentValue === value ? "" : currentValue);
-                    setOpen(false);
-                  }}
-                >
-                  {framework.label}
-                  <Check
-                    className={cn(
-                      "ml-auto",
-                      value === framework.value ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                </CommandItem>
-              ))}
-            </CommandGroup>
+            {isLoading ? (
+              <CommandEmpty>카테고리 불러오는 중...</CommandEmpty>
+            ) : isError ? (
+              <CommandEmpty>카테고리를 불러오지 못했습니다.</CommandEmpty>
+            ) : categories.length === 0 ? (
+              <CommandEmpty>등록된 카테고리가 없습니다.</CommandEmpty>
+            ) : (
+              <CommandGroup>
+                {categories.map((category) => (
+                  <CommandItem
+                    key={category.category_id}
+                    value={category.name}
+                    onSelect={(currentValue) => {
+                      const nextValue =
+                        currentValue === value ? "" : currentValue;
+                      onChange(nextValue);
+                      setOpen(false);
+                    }}
+                  >
+                    {category.name}
+                    <Check
+                      className={cn(
+                        "ml-auto",
+                        value === category.name ? "opacity-100" : "opacity-0",
+                      )}
+                    />
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
           </CommandList>
         </Command>
       </PopoverContent>

@@ -4,7 +4,7 @@ import { apiClient } from "./client";
 export type ModelItem = {
   modelId: number;
   categoryId: number;
-  cateogryName: string;
+  categoryName: string;
   type: string;
   name: string;
   courseName: string;
