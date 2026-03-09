@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "./client";
 
 export type CategoryItem = {
@@ -7,7 +7,10 @@ export type CategoryItem = {
   description: string;
 };
 
+// 카테고리 생성
 export const useCreateCategory = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({
       name,
@@ -25,6 +28,9 @@ export const useCreateCategory = () => {
       );
       return create_category_res.data;
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    },
   });
 };
 
@@ -38,5 +44,22 @@ export const useCategories = () => {
   return useQuery({
     queryKey: ["categories"],
     queryFn: fetchCategories,
+  });
+};
+
+// 카테고리 삭제
+export const useDeleteCategory = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (categoryId: number) => {
+      const delete_category_res = await apiClient.delete(
+        `/api/admin/categories/${categoryId}`,
+      );
+      return delete_category_res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    },
   });
 };

@@ -49,7 +49,7 @@ const items: NavItem[] = [
   {
     title: "카테고리",
     icon: Archive,
-    children: [{ title: "카테고리", url: "/admin/kits" }],
+    children: [{ title: "카테고리", url: "/admin/category" }],
   },
   {
     title: "사용자 관리",

@@ -23,6 +23,7 @@ import SignUp from "./pages/admin/user/Signup";
 import Otp from "./pages/Otp";
 import SetLimit from "./pages/admin/limit/SetLimit";
 import ViewLimit from "./pages/admin/limit/ViewLimit";
+import Category from "./pages/admin/category/Category";
 
 function App() {
   const router = createBrowserRouter([
@@ -53,6 +54,7 @@ function App() {
             { path: "sign-up", element: <SignUp /> },
             { path: "set-limit", element: <SetLimit /> },
             { path: "view-limit", element: <ViewLimit /> },
+            { path: "category", element: <Category /> },
           ],
         },
       ],
