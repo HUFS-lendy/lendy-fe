@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -32,6 +33,7 @@ import { DeviceStateCombobox } from "../../../components/ui/DeviceStateCombobox"
 import { toast } from "sonner";
 
 const User = () => {
+  const [categoryName, setCategoryName] = useState("");
   return (
     <div className="w-screen px-8 text-white">
       {/* 브래드크럼 */}
@@ -99,7 +101,10 @@ const User = () => {
                         분류
                       </TableCell>
                       <TableCell className="text-left px-4">
-                        <DeviceCategoryCombobox />
+                        <DeviceCategoryCombobox
+                          value={categoryName}
+                          onChange={setCategoryName}
+                        />
                       </TableCell>
                     </TableRow>
                     <TableRow className="border-neutral-200 hover:bg-white">
