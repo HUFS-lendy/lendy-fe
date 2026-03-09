@@ -1,5 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import { TabletSmartphone, User, ToolCase, ChevronRight } from "lucide-react";
+import {
+  TabletSmartphone,
+  User,
+  ToolCase,
+  ChevronRight,
+  Archive,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -39,6 +45,11 @@ const items: NavItem[] = [
     title: "실습키트",
     icon: ToolCase,
     children: [{ title: "키트 현황", url: "/admin/kits" }],
+  },
+  {
+    title: "카테고리",
+    icon: Archive,
+    children: [{ title: "카테고리", url: "/admin/category" }],
   },
   {
     title: "사용자 관리",
@@ -114,7 +125,7 @@ export function AppSidebar() {
                       </a>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                )
+                ),
               )}
             </SidebarMenu>
           </SidebarGroupContent>
