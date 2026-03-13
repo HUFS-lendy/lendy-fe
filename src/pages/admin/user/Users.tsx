@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Breadcrumb,
@@ -33,9 +34,43 @@ import { RoleCombobox } from "../../../components/ui/RoleCombobox";
 import { StateCombobox } from "../../../components/ui/StateCombobox";
 import { toast } from "sonner";
 import { Label } from "../../../components/ui/label";
+import { useAdminUsers } from "../../../api/admin.api";
 
 const Users = () => {
   const navigte = useNavigate();
+  const [keyword, setKeyword] = useState("");
+  const [checkedRoles, setCheckedRoles] = useState({
+    ADMIN: true,
+    USER: true,
+  });
+  const [checkedStates, setCheckedStates] = useState({
+    ACTIVE: true,
+    BANNED: true,
+  });
+
+  const rolesParam = useMemo(() => {
+    const roles: string[] = [];
+    if (checkedRoles.ADMIN) roles.push("ADMIN");
+    if (checkedRoles.USER) roles.push("USER");
+    return roles.join(",");
+  }, [checkedRoles]);
+
+  const statesParam = useMemo(() => {
+    const states: string[] = [];
+    if (checkedStates.ACTIVE) states.push("ACTIVE");
+    if (checkedStates.BANNED) states.push("BANNED");
+    return states.join(",");
+  }, [checkedStates]);
+
+  const { data, isLoading, isError } = useAdminUsers({
+    roles: rolesParam,
+    states: statesParam,
+    keyword,
+    page: 0,
+    size: 10,
+    sort: "",
+  });
+  const users = data?.content ?? [];
 
   return (
     <div className="bg-[#060a0c] w-screen px-8 text-white">
@@ -72,6 +107,8 @@ const Users = () => {
           <Input
             placeholder="학번 또는 이름을 입력해주세요."
             className="border-neutral-400 pl-8 md:pl-10 text-sm"
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
           />
         </div>
         <div className="flex space-x-2">
@@ -203,29 +240,63 @@ const Users = () => {
       </div>
       {/* 권한 체크박스 */}
       <div className="flex items-center space-x-4 py-4">
-        <Label>
+        <Label className="flex items-center gap-2 cursor-pointer">
           <Checkbox
-            id="toggle-2"
-            defaultChecked
-            className="data-[state=checked]:border-neutral-600 data-[state=checked]:bg-neutral-600 data-[state=checked]:text-white dark:data-[state=checked]:border-neutral-700 dark:data-[state=checked]:bg-neutral-700"
+            checked={checkedRoles.ADMIN}
+            onCheckedChange={(checked) =>
+              setCheckedRoles((prev) => ({
+                ...prev,
+                ADMIN: checked === true,
+              }))
+            }
+            className="data-[state=checked]:border-neutral-600 data-[state=checked]:bg-neutral-600 data-[state=checked]:text-white"
           />
           <p className="text-sm">관리자</p>
         </Label>
-        <Label>
+
+        <Label className="flex items-center gap-2 cursor-pointer">
           <Checkbox
-            id="toggle-2"
-            defaultChecked
-            className="data-[state=checked]:border-neutral-600 data-[state=checked]:bg-neutral-600 data-[state=checked]:text-white dark:data-[state=checked]:border-neutral-700 dark:data-[state=checked]:bg-neutral-700"
+            checked={checkedRoles.USER}
+            onCheckedChange={(checked) =>
+              setCheckedRoles((prev) => ({
+                ...prev,
+                USER: checked === true,
+              }))
+            }
+            className="data-[state=checked]:border-neutral-600 data-[state=checked]:bg-neutral-600 data-[state=checked]:text-white"
           />
           <p className="text-sm">사용자</p>
         </Label>
-        <Label>
+      </div>
+
+      {/* 상태 체크박스 */}
+      <div className="flex items-center space-x-4 pb-4">
+        <Label className="flex items-center gap-2 cursor-pointer">
           <Checkbox
-            id="toggle-2"
-            defaultChecked
-            className="data-[state=checked]:border-neutral-600 data-[state=checked]:bg-neutral-600 data-[state=checked]:text-white dark:data-[state=checked]:border-neutral-700 dark:data-[state=checked]:bg-neutral-700"
+            checked={checkedStates.ACTIVE}
+            onCheckedChange={(checked) =>
+              setCheckedStates((prev) => ({
+                ...prev,
+                ACTIVE: checked === true,
+              }))
+            }
+            className="data-[state=checked]:border-neutral-600 data-[state=checked]:bg-neutral-600 data-[state=checked]:text-white"
           />
-          <p className="text-sm">미반납자</p>
+          <p className="text-sm">ACTIVE</p>
+        </Label>
+
+        <Label className="flex items-center gap-2 cursor-pointer">
+          <Checkbox
+            checked={checkedStates.BANNED}
+            onCheckedChange={(checked) =>
+              setCheckedStates((prev) => ({
+                ...prev,
+                BANNED: checked === true,
+              }))
+            }
+            className="data-[state=checked]:border-neutral-600 data-[state=checked]:bg-neutral-600 data-[state=checked]:text-white"
+          />
+          <p className="text-sm">BANNED</p>
         </Label>
       </div>
 
@@ -243,51 +314,49 @@ const Users = () => {
             <TableHead className="text-white text-center">연락처</TableHead>
           </TableHeader>
           <TableBody>
-            <TableRow
-              className="cursor-pointer"
-              onClick={() => navigte("/admin/users/1")}
-            >
-              <TableCell onClick={(e) => e.stopPropagation()}>
-                <Checkbox />
-              </TableCell>
-              <TableCell>1</TableCell>
-              <TableCell>이서연</TableCell>
-              <TableCell>202202465</TableCell>
-              <TableCell>관리자</TableCell>
-              <TableCell>ACTIVE</TableCell>
-              <TableCell>lsy@hufs.ac.kr</TableCell>
-              <TableCell>010-1234-5678</TableCell>
-            </TableRow>
-            <TableRow
-              className="cursor-pointer"
-              onClick={() => navigte("/admin/users/1")}
-            >
-              <TableCell onClick={(e) => e.stopPropagation()}>
-                <Checkbox />
-              </TableCell>
-              <TableCell>2</TableCell>
-              <TableCell>남하원</TableCell>
-              <TableCell>202202465</TableCell>
-              <TableCell>사용자</TableCell>
-              <TableCell>SUSPENDED</TableCell>
-              <TableCell>nhw@hufs.ac.kr</TableCell>
-              <TableCell>010-1234-5678</TableCell>
-            </TableRow>
-            <TableRow
-              className="cursor-pointer"
-              onClick={() => navigte("/admin/users/1")}
-            >
-              <TableCell onClick={(e) => e.stopPropagation()}>
-                <Checkbox />
-              </TableCell>
-              <TableCell>3</TableCell>
-              <TableCell>정병주</TableCell>
-              <TableCell>202202465</TableCell>
-              <TableCell>관리자</TableCell>
-              <TableCell>BANNED</TableCell>
-              <TableCell>jbj@hufs.ac.kr</TableCell>
-              <TableCell>010-1234-5678</TableCell>
-            </TableRow>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={8} className="py-6 text-center">
+                  불러오는 중...
+                </TableCell>
+              </TableRow>
+            ) : isError ? (
+              <TableRow>
+                <TableCell
+                  colSpan={8}
+                  className="py-6 text-center text-red-300"
+                >
+                  사용자 목록을 불러오지 못했습니다.
+                </TableCell>
+              </TableRow>
+            ) : users.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="py-6 text-center">
+                  조회된 사용자가 없습니다.
+                </TableCell>
+              </TableRow>
+            ) : (
+              users.map((user) => (
+                <TableRow
+                  key={user.userId}
+                  className="cursor-pointer"
+                  onClick={() => navigte(`/admin/users/${user.userId}`)}
+                >
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <Checkbox />
+                  </TableCell>
+                  <TableCell>{user.userId}</TableCell>
+                  <TableCell>{user.username}</TableCell>
+                  <TableCell>{user.studentId}</TableCell>
+                  <TableCell>
+                    {user.role === "ADMIN" ? "관리자" : "사용자"}
+                  </TableCell>
+                  <TableCell>{user.state}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.phone}</TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>

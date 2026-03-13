@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -31,9 +32,14 @@ import { DeviceCategoryCombobox } from "../../../components/ui/DeviceCategory";
 import { Checkbox } from "../../../components/ui/checkbox";
 import { DeviceStateCombobox } from "../../../components/ui/DeviceStateCombobox";
 import { toast } from "sonner";
+import { useFetchUser } from "../../../api/admin.api";
 
 const User = () => {
   const [categoryName, setCategoryName] = useState("");
+  const { userId } = useParams<{ userId: string }>();
+  const numericUserId = Number(userId);
+
+  const { data: user } = useFetchUser(numericUserId);
   return (
     <div className="w-screen px-8 text-white">
       {/* 브래드크럼 */}
@@ -60,7 +66,7 @@ const User = () => {
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbPage className="text-white">
-                이서연의 대여 기록
+                {user?.username}의 대여 기록
               </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
@@ -68,7 +74,9 @@ const User = () => {
       </div>
       {/* 제목 */}
       <div className="pt-8">
-        <div className="font-bold text-white text-3xl pb-4">이서연</div>
+        <div className="font-bold text-white text-3xl pb-4">
+          {user?.username}
+        </div>
       </div>
       <div className="flex space-x-4 justify-end">
         {/* 대여 내용 수정 버튼 */}
