@@ -73,13 +73,13 @@ const Login = () => {
                   <Label className="pb-1 text-md" htmlFor="password">
                     비밀번호
                   </Label>
-                  <a
-                    href="#"
-                    className="ml-auto inline-block text-xs underline-offset-4 hover:underline"
-                    onClick={(e) => e.preventDefault()}
+                  <button
+                    type="button"
+                    className="ml-auto inline-block text-xs underline-offset-4 hover:underline cursor-pointer"
+                    onClick={() => navigate("/pw-reset")}
                   >
                     비밀번호 재설정
-                  </a>
+                  </button>
                 </div>
                 <div className="relative">
                   <Input

@@ -27,3 +27,48 @@ export const useSignUp = () => {
     },
   });
 };
+
+export const usePasswordResetRequest = () => {
+  return useMutation({
+    mutationFn: async ({
+      studentId,
+      email,
+    }: {
+      studentId: string;
+      email: string;
+    }) => {
+      const res = await apiClient.post("/api/auth/password-reset/request", {
+        studentId,
+        email,
+      });
+      return res.data;
+    },
+  });
+};
+
+export const usePasswordResetConfirm = () => {
+  return useMutation({
+    mutationFn: async ({
+      studentId,
+      email,
+      code,
+      newPassword,
+      confirmPassword,
+    }: {
+      studentId: string;
+      email: string;
+      code: string;
+      newPassword: string;
+      confirmPassword: string;
+    }) => {
+      const res = await apiClient.post("/api/auth/password-reset/confirm", {
+        studentId,
+        email,
+        code,
+        newPassword,
+        confirmPassword,
+      });
+      return res.data;
+    },
+  });
+};
