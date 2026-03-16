@@ -15,9 +15,8 @@ type ApiResponse<T> = {
   data: T;
 };
 
-type TokenPair = {
+type AccessTokenResponse = {
   accessToken: string;
-  refreshToken: string;
 };
 
 type RetriableRequestConfig = InternalAxiosRequestConfig & { _retry?: boolean };
@@ -73,9 +72,11 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // refresh 자체가 401이면 종료
-    if (originalRequest?.url?.includes("/api/auth/refresh")) {
-      useAuthStore.getState().logout();
+    // login / refresh 자체가 실패한 경우에는 refresh 재시도하지 않음
+    if(
+      originalRequest?.url?.includes("/api/auth/login") ||
+      originalRequest?.url?.includes("/api/auth/refresh")
+    ){
       return Promise.reject(error);
     }
 
@@ -104,15 +105,14 @@ apiClient.interceptors.response.use(
 
     try {
       const refreshRes =
-        await apiClient.post<ApiResponse<TokenPair>>("/api/auth/refresh");
+        await apiClient.post<ApiResponse<AccessTokenResponse>>("/api/auth/refresh");
 
-      const { accessToken, refreshToken } = refreshRes.data.data;
+      const { accessToken } = refreshRes.data.data;
 
       // zustand store 갱신
       useAuthStore.getState().setAuth({
         isAuthenticated: true,
         accessToken,
-        refreshToken,
         tokenType: "Bearer",
       });
 

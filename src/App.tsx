@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import MyPage from "./pages/MyPage";
 import LendState from "./pages/LendState";
 import PwChange from "./pages/PwChange";
+import PwReset from "./pages/PwReset";
 import EmailChange from "./pages/EmailChange";
 import Notice from "./pages/Notice";
 import Devices from "./pages/admin/device/Devices";
@@ -34,6 +35,7 @@ function App() {
         { element: <Main />, path: "/" },
         { element: <Lend />, path: "/lend" },
         { element: <Login />, path: "/login" },
+        { element: <PwReset />, path: "/pw-reset" },
         { element: <MyPage />, path: "/mypage" },
         { element: <LendState />, path: "/lending-state" },
         { element: <PwChange />, path: "/pw-change" },

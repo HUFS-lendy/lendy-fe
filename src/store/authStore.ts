@@ -6,7 +6,6 @@ export type TokenType = "Bearer" | string;
 export interface AuthState {
   isAuthenticated: boolean;
   accessToken: string | null;
-  refreshToken: string | null;
   tokenType?: TokenType;
 }
 
@@ -22,7 +21,6 @@ export const useAuthStore = create<AuthStore>()(
     (set) => ({
       isAuthenticated: false,
       accessToken: null,
-      refreshToken: null,
       tokenType: "Bearer",
 
       setAuth: (payload) =>
@@ -35,7 +33,6 @@ export const useAuthStore = create<AuthStore>()(
         set({
           isAuthenticated: false,
           accessToken: null,
-          refreshToken: null,
           tokenType: "Bearer",
         }),
     }),

@@ -9,9 +9,27 @@ import {
   BreadcrumbSeparator,
 } from "../components/ui/breadcrumb";
 import { MdOutlineEdit } from "react-icons/md";
+import { useMe } from "../api/user.api";
 
 const MyPage = () => {
   const navigate = useNavigate();
+  const { data: me, isLoading, isError } = useMe();
+
+  if (isLoading) {
+    return (
+      <div className="bg-[#060a0c] w-screen h-screen px-8 text-white flex items-center justify-center">
+        로딩 중...
+      </div>
+    );
+  }
+
+  if (isError || !me) {
+    return (
+      <div className="bg-[#060a0c] w-screen h-screen px-8 text-white flex items-center justify-center">
+        사용자 정보를 불러오지 못했습니다.
+      </div>
+    );
+  }
   return (
     <div className="bg-[#060a0c] w-screen h-screen px-8">
       {/* 브래드크럼 */}
@@ -37,10 +55,10 @@ const MyPage = () => {
       <div className="flex items-center space-x-8 md:space-x-12 py-12 md:p-12 text-white">
         <img src={Logo} className="w-20 h-20 md:w-24 md:h-24" />
         <div className="space-y-0.5">
-          <div className="font-bold text-lg">이서연</div>
-          <div>202202465 | 컴퓨터공학부</div>
+          <div className="font-bold text-lg">{me.username}</div>
+          <div>{me.studentId} | 컴퓨터공학부</div>
           <div className="flex items-center space-x-4">
-            <div>lsy0476@hufs.ac.kr</div>
+            <div>{me.email}</div>
             <MdOutlineEdit
               onClick={() => navigate("/email-change")}
               className="cursor-pointer"
