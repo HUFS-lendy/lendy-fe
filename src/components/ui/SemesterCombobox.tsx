@@ -24,9 +24,13 @@ const frameworks = [
   },
 ];
 
-export function SemesterCombobox() {
+type SemesterComboboxProps = {
+  value: string;
+  onChange: (value: string) => void;
+};
+
+export function SemesterCombobox({ value, onChange }: SemesterComboboxProps) {
   const [open, setOpen] = useState(false);
-  const [value, setValue] = useState("");
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -43,6 +47,7 @@ export function SemesterCombobox() {
           <ChevronsUpDown className="opacity-50" />
         </Button>
       </PopoverTrigger>
+
       <PopoverContent className="w-[200px] p-0">
         <Command>
           <CommandInput placeholder="학기 선택" className="h-9" />
@@ -54,7 +59,9 @@ export function SemesterCombobox() {
                   key={framework.value}
                   value={framework.value}
                   onSelect={(currentValue) => {
-                    setValue(currentValue === value ? "" : currentValue);
+                    const nextValue =
+                      currentValue === value ? "" : currentValue;
+                    onChange(nextValue);
                     setOpen(false);
                   }}
                 >
@@ -62,7 +69,7 @@ export function SemesterCombobox() {
                   <Check
                     className={cn(
                       "ml-auto",
-                      value === framework.value ? "opacity-100" : "opacity-0"
+                      value === framework.value ? "opacity-100" : "opacity-0",
                     )}
                   />
                 </CommandItem>

@@ -28,9 +28,13 @@ const frameworks = [
   },
 ];
 
-export function StateCombobox() {
+type StateComboboxProps = {
+  value: string;
+  onChange: (value: string) => void;
+};
+
+export function StateCombobox({ value, onChange }: StateComboboxProps) {
   const [open, setOpen] = useState(false);
-  const [value, setValue] = useState("");
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -58,7 +62,9 @@ export function StateCombobox() {
                   key={framework.value}
                   value={framework.value}
                   onSelect={(currentValue) => {
-                    setValue(currentValue === value ? "" : currentValue);
+                    const nextValue =
+                      currentValue === value ? "" : currentValue;
+                    onChange(nextValue);
                     setOpen(false);
                   }}
                 >
@@ -66,7 +72,7 @@ export function StateCombobox() {
                   <Check
                     className={cn(
                       "ml-auto",
-                      value === framework.value ? "opacity-100" : "opacity-0"
+                      value === framework.value ? "opacity-100" : "opacity-0",
                     )}
                   />
                 </CommandItem>

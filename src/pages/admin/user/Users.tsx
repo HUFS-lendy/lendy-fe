@@ -1,3 +1,4 @@
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Breadcrumb,
@@ -33,9 +34,88 @@ import { RoleCombobox } from "../../../components/ui/RoleCombobox";
 import { StateCombobox } from "../../../components/ui/StateCombobox";
 import { toast } from "sonner";
 import { Label } from "../../../components/ui/label";
+import { useAdminUsers, useUserUpdate } from "../../../api/admin.api";
 
 const Users = () => {
   const navigte = useNavigate();
+  const [keyword, setKeyword] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editRole, setEditRole] = useState<"ADMIN" | "USER">("ADMIN");
+  const [editState, setEditState] = useState<"ACTIVE" | "BANNED">("ACTIVE");
+  const [editEmail, setEditEmail] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+
+  const { mutate: updateUser, isPending: isUpdating } = useUserUpdate();
+  const [checkedRoles, setCheckedRoles] = useState({
+    ADMIN: true,
+    USER: true,
+  });
+  const [checkedStates, setCheckedStates] = useState({
+    ACTIVE: true,
+    BANNED: true,
+  });
+
+  const rolesParam = useMemo(() => {
+    const roles: string[] = [];
+    if (checkedRoles.ADMIN) roles.push("ADMIN");
+    if (checkedRoles.USER) roles.push("USER");
+    return roles.join(",");
+  }, [checkedRoles]);
+
+  const statesParam = useMemo(() => {
+    const states: string[] = [];
+    if (checkedStates.ACTIVE) states.push("ACTIVE");
+    if (checkedStates.BANNED) states.push("BANNED");
+    return states.join(",");
+  }, [checkedStates]);
+
+  const { data, isLoading, isError } = useAdminUsers({
+    roles: rolesParam,
+    states: statesParam,
+    keyword,
+    page: 0,
+    size: 10,
+    sort: "",
+  });
+  const users = data?.content ?? [];
+  const selectedUser =
+    users.find((user) => user.userId === selectedUserId) ?? null;
+
+  useEffect(() => {
+    if (!selectedUser) return;
+
+    setEditRole(selectedUser.role);
+    setEditState(selectedUser.state);
+    setEditEmail(selectedUser.email);
+    setEditPhone(selectedUser.phone);
+  }, [selectedUser]);
+
+  const handleUpdateUser = () => {
+    if (!selectedUser) {
+      toast("수정할 사용자를 선택해주세요.");
+      return;
+    }
+
+    updateUser(
+      {
+        userId: selectedUser.userId,
+        role: editRole,
+        state: editState,
+        email: editEmail,
+        phone: editPhone,
+      },
+      {
+        onSuccess: () => {
+          toast("해당 사용자의 정보가 수정되었습니다.");
+          setIsEditDialogOpen(false);
+        },
+        onError: () => {
+          toast("사용자 정보 수정에 실패했습니다.");
+        },
+      },
+    );
+  };
 
   return (
     <div className="bg-[#060a0c] w-screen px-8 text-white">
@@ -72,20 +152,43 @@ const Users = () => {
           <Input
             placeholder="학번 또는 이름을 입력해주세요."
             className="border-neutral-400 pl-8 md:pl-10 text-sm"
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
           />
         </div>
         <div className="flex space-x-2">
+          {/* todo : 엑셀 일괄 등록 */}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <div className="border px-3 py-1 rounded-sm hover:bg-neutral-800 cursor-pointer border-neutral-400 text-neutral-200 text-sm">
+                등록
+              </div>
+            </AlertDialogTrigger>
+          </AlertDialog>
           {/* 수정 버튼 */}
           <div>
-            <AlertDialog>
+            <AlertDialog
+              open={isEditDialogOpen}
+              onOpenChange={setIsEditDialogOpen}
+            >
               <AlertDialogTrigger asChild>
-                <div className="hover:bg-neutral-800 cursor-pointer border border-neutral-400 text-neutral-200 text-sm px-3 py-1 rounded-sm">
+                <button
+                  type="button"
+                  disabled={!selectedUser}
+                  className={`border text-sm px-3 py-1 rounded-sm ${
+                    selectedUser
+                      ? "hover:bg-neutral-800 cursor-pointer border-neutral-400 text-neutral-200"
+                      : "cursor-not-allowed border-neutral-700 text-neutral-600"
+                  }`}
+                >
                   수정
-                </div>
+                </button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>#1 이서연</AlertDialogTitle>
+                  <AlertDialogTitle>
+                    {`#${selectedUser?.userId} ${selectedUser?.username}`}
+                  </AlertDialogTitle>
                   <AlertDialogDescription>
                     사용자 정보를 수정해보세요.
                   </AlertDialogDescription>
@@ -98,14 +201,20 @@ const Users = () => {
                         <TableCell className="w-1/6 bg-neutral-300">
                           아이디
                         </TableCell>
-                        <TableCell className="text-left px-6">1</TableCell>
+                        <TableCell className="text-left px-6">
+                          {selectedUser?.userId}
+                        </TableCell>
                       </TableRow>
                       <TableRow className="border-neutral-200 hover:bg-white">
                         <TableCell className="w-1/6 bg-neutral-300">
                           이름
                         </TableCell>
                         <TableCell className="text-left px-4">
-                          <Input className="text-sm" value="이서연" />
+                          <Input
+                            className="text-sm"
+                            value={selectedUser?.username}
+                            readOnly
+                          />
                         </TableCell>
                       </TableRow>
                       <TableRow className="border-neutral-200 hover:bg-white">
@@ -113,7 +222,11 @@ const Users = () => {
                           학번
                         </TableCell>
                         <TableCell className="text-left px-4">
-                          <Input className="text-sm" value="202202465" />
+                          <Input
+                            className="text-sm"
+                            value={selectedUser?.studentId}
+                            readOnly
+                          />
                         </TableCell>
                       </TableRow>
                       <TableRow className="border-neutral-200 hover:bg-white">
@@ -121,7 +234,12 @@ const Users = () => {
                           권한
                         </TableCell>
                         <TableCell className="text-left px-4">
-                          <RoleCombobox />
+                          <RoleCombobox
+                            value={editRole}
+                            onChange={(value) =>
+                              setEditRole(value as "ADMIN" | "USER")
+                            }
+                          />
                         </TableCell>
                       </TableRow>
                       <TableRow className="border-neutral-200 hover:bg-white">
@@ -129,7 +247,12 @@ const Users = () => {
                           상태
                         </TableCell>
                         <TableCell className="text-left px-4">
-                          <StateCombobox />
+                          <StateCombobox
+                            value={editState}
+                            onChange={(value) =>
+                              setEditState(value as "ACTIVE" | "BANNED")
+                            }
+                          />
                         </TableCell>
                       </TableRow>
                       <TableRow className="border-neutral-200 hover:bg-white">
@@ -139,7 +262,8 @@ const Users = () => {
                         <TableCell className="text-left px-4">
                           <Input
                             className="text-sm"
-                            value="lsy0476@hufs.ac.kr"
+                            value={editEmail}
+                            onChange={(e) => setEditEmail(e.target.value)}
                           />
                         </TableCell>
                       </TableRow>
@@ -148,7 +272,11 @@ const Users = () => {
                           연락처
                         </TableCell>
                         <TableCell className="text-left px-4">
-                          <Input className="text-sm" value="010-2728-0476" />
+                          <Input
+                            className="text-sm"
+                            value={editPhone}
+                            onChange={(e) => setEditPhone(e.target.value)}
+                          />
                         </TableCell>
                       </TableRow>
                     </TableBody>
@@ -159,12 +287,11 @@ const Users = () => {
                     취소
                   </AlertDialogCancel>
                   <AlertDialogAction
-                    onClick={() =>
-                      toast("해당 사용자의 정보가 수정되었습니다.")
-                    }
-                    className=" hover:bg-neutral-700 font-bold cursor-pointer"
+                    onClick={handleUpdateUser}
+                    disabled={!selectedUser || isUpdating}
+                    className="hover:bg-neutral-700 font-bold cursor-pointer"
                   >
-                    수정
+                    {isUpdating ? "수정 중..." : "수정"}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -203,29 +330,63 @@ const Users = () => {
       </div>
       {/* 권한 체크박스 */}
       <div className="flex items-center space-x-4 py-4">
-        <Label>
+        <Label className="flex items-center gap-2 cursor-pointer">
           <Checkbox
-            id="toggle-2"
-            defaultChecked
-            className="data-[state=checked]:border-neutral-600 data-[state=checked]:bg-neutral-600 data-[state=checked]:text-white dark:data-[state=checked]:border-neutral-700 dark:data-[state=checked]:bg-neutral-700"
+            checked={checkedRoles.ADMIN}
+            onCheckedChange={(checked) =>
+              setCheckedRoles((prev) => ({
+                ...prev,
+                ADMIN: checked === true,
+              }))
+            }
+            className="data-[state=checked]:border-neutral-600 data-[state=checked]:bg-neutral-600 data-[state=checked]:text-white"
           />
           <p className="text-sm">관리자</p>
         </Label>
-        <Label>
+
+        <Label className="flex items-center gap-2 cursor-pointer">
           <Checkbox
-            id="toggle-2"
-            defaultChecked
-            className="data-[state=checked]:border-neutral-600 data-[state=checked]:bg-neutral-600 data-[state=checked]:text-white dark:data-[state=checked]:border-neutral-700 dark:data-[state=checked]:bg-neutral-700"
+            checked={checkedRoles.USER}
+            onCheckedChange={(checked) =>
+              setCheckedRoles((prev) => ({
+                ...prev,
+                USER: checked === true,
+              }))
+            }
+            className="data-[state=checked]:border-neutral-600 data-[state=checked]:bg-neutral-600 data-[state=checked]:text-white"
           />
           <p className="text-sm">사용자</p>
         </Label>
-        <Label>
+      </div>
+
+      {/* 상태 체크박스 */}
+      <div className="flex items-center space-x-4 pb-4">
+        <Label className="flex items-center gap-2 cursor-pointer">
           <Checkbox
-            id="toggle-2"
-            defaultChecked
-            className="data-[state=checked]:border-neutral-600 data-[state=checked]:bg-neutral-600 data-[state=checked]:text-white dark:data-[state=checked]:border-neutral-700 dark:data-[state=checked]:bg-neutral-700"
+            checked={checkedStates.ACTIVE}
+            onCheckedChange={(checked) =>
+              setCheckedStates((prev) => ({
+                ...prev,
+                ACTIVE: checked === true,
+              }))
+            }
+            className="data-[state=checked]:border-neutral-600 data-[state=checked]:bg-neutral-600 data-[state=checked]:text-white"
           />
-          <p className="text-sm">미반납자</p>
+          <p className="text-sm">ACTIVE</p>
+        </Label>
+
+        <Label className="flex items-center gap-2 cursor-pointer">
+          <Checkbox
+            checked={checkedStates.BANNED}
+            onCheckedChange={(checked) =>
+              setCheckedStates((prev) => ({
+                ...prev,
+                BANNED: checked === true,
+              }))
+            }
+            className="data-[state=checked]:border-neutral-600 data-[state=checked]:bg-neutral-600 data-[state=checked]:text-white"
+          />
+          <p className="text-sm">BANNED</p>
         </Label>
       </div>
 
@@ -243,51 +404,54 @@ const Users = () => {
             <TableHead className="text-white text-center">연락처</TableHead>
           </TableHeader>
           <TableBody>
-            <TableRow
-              className="cursor-pointer"
-              onClick={() => navigte("/admin/users/1")}
-            >
-              <TableCell onClick={(e) => e.stopPropagation()}>
-                <Checkbox />
-              </TableCell>
-              <TableCell>1</TableCell>
-              <TableCell>이서연</TableCell>
-              <TableCell>202202465</TableCell>
-              <TableCell>관리자</TableCell>
-              <TableCell>ACTIVE</TableCell>
-              <TableCell>lsy@hufs.ac.kr</TableCell>
-              <TableCell>010-1234-5678</TableCell>
-            </TableRow>
-            <TableRow
-              className="cursor-pointer"
-              onClick={() => navigte("/admin/users/1")}
-            >
-              <TableCell onClick={(e) => e.stopPropagation()}>
-                <Checkbox />
-              </TableCell>
-              <TableCell>2</TableCell>
-              <TableCell>남하원</TableCell>
-              <TableCell>202202465</TableCell>
-              <TableCell>사용자</TableCell>
-              <TableCell>SUSPENDED</TableCell>
-              <TableCell>nhw@hufs.ac.kr</TableCell>
-              <TableCell>010-1234-5678</TableCell>
-            </TableRow>
-            <TableRow
-              className="cursor-pointer"
-              onClick={() => navigte("/admin/users/1")}
-            >
-              <TableCell onClick={(e) => e.stopPropagation()}>
-                <Checkbox />
-              </TableCell>
-              <TableCell>3</TableCell>
-              <TableCell>정병주</TableCell>
-              <TableCell>202202465</TableCell>
-              <TableCell>관리자</TableCell>
-              <TableCell>BANNED</TableCell>
-              <TableCell>jbj@hufs.ac.kr</TableCell>
-              <TableCell>010-1234-5678</TableCell>
-            </TableRow>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={8} className="py-6 text-center">
+                  불러오는 중...
+                </TableCell>
+              </TableRow>
+            ) : isError ? (
+              <TableRow>
+                <TableCell
+                  colSpan={8}
+                  className="py-6 text-center text-red-300"
+                >
+                  사용자 목록을 불러오지 못했습니다.
+                </TableCell>
+              </TableRow>
+            ) : users.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="py-6 text-center">
+                  조회된 사용자가 없습니다.
+                </TableCell>
+              </TableRow>
+            ) : (
+              users.map((user) => (
+                <TableRow
+                  key={user.userId}
+                  className="cursor-pointer"
+                  onClick={() => navigte(`/admin/users/${user.userId}`)}
+                >
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={selectedUserId === user.userId}
+                      onCheckedChange={(checked) => {
+                        setSelectedUserId(checked ? user.userId : null);
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell>{user.userId}</TableCell>
+                  <TableCell>{user.username}</TableCell>
+                  <TableCell>{user.studentId}</TableCell>
+                  <TableCell>
+                    {user.role === "ADMIN" ? "관리자" : "사용자"}
+                  </TableCell>
+                  <TableCell>{user.state}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.phone}</TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
