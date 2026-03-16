@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "./client";
+import type { UserMe, ApiResponse } from "../type/user.type";
 
 export const usePasswordChange = () => {
   return useMutation({
@@ -23,23 +24,6 @@ export const usePasswordChange = () => {
       return password_change_res.data;
     },
   });
-};
-
-export type UserMe = {
-  userId: number;
-  username: string;
-  studentId: string;
-  role: string;
-  state: string;
-  email: string;
-  phone: string;
-};
-
-type ApiResponse<T> = {
-  success: boolean;
-  code: string;
-  message: string;
-  data: T;
 };
 
 const fetchMe = async (): Promise<UserMe> => {

@@ -1,11 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "./client";
-
-export type CategoryItem = {
-  category_id: number;
-  name: string;
-  description: string;
-};
+import type { CategoryItem } from "../type/adminCategory.type";
 
 // 카테고리 생성
 export const useCreateCategory = () => {

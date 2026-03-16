@@ -57,6 +57,7 @@ const getReservationStatusText = (status: string) => {
   }
 };
 
+// todo : date-fns로 변경
 const formatDateTime = (value: string) => {
   const date = new Date(value);
 
