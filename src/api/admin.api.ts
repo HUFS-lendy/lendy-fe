@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "./client";
 
 export type UserRole = "ADMIN" | "USER";
@@ -36,6 +36,14 @@ export type GetAdminUsersParams = {
   page?: number;
   size?: number;
   sort?: string;
+};
+
+type UpdateUserRequest = {
+  userId: number;
+  role: "ADMIN" | "USER";
+  state: "ACTIVE" | "BANNED";
+  email: string;
+  phone: string;
 };
 
 // 전체 유저 조회
@@ -88,5 +96,33 @@ export const useFetchUser = (userId?: number) => {
     queryKey: ["user", userId],
     queryFn: () => fetchUser(userId as number),
     enabled: !!userId,
+  });
+};
+
+// 유저 정보 수정
+export const useUserUpdate = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      role,
+      state,
+      email,
+      phone,
+    }: UpdateUserRequest) => {
+      const res = await apiClient.put(`/api/admin/users/${userId}`, {
+        userId,
+        role,
+        state,
+        email,
+        phone,
+      });
+
+      return res.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin_users"] });
+    },
   });
 };
