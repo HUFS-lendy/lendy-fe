@@ -1,20 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "./client";
-
-export type ModelItem = {
-  modelId: number;
-  categoryId: number;
-  categoryName: string;
-  type: string;
-  name: string;
-  courseName: string;
-  totalQty: number;
-  availableQty: number;
-  reservedQty: number;
-  rentedQty: number;
-  createdAt: string;
-  updatedAt: string;
-};
+// import type { ModelItem } from "../type/adminModel.type";
 
 // 모델 등록
 export const useCreateModel = () => {

@@ -33,8 +33,8 @@ import {
   useCategories,
   useCreateCategory,
   useDeleteCategory,
-  type CategoryItem,
 } from "../../../api/adminCategory.api";
+import type { CategoryItem } from "../../../type/adminCategory.type";
 import { Label } from "../../../components/ui/label";
 
 const Category = () => {

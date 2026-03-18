@@ -1,28 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "./client";
-
-export type AcademicTerm = {
-  id: number;
-  year: number;
-  term: string;
-  code: string;
-  endDate: string;
-  active: boolean;
-};
-
-type ApiResponse<T> = {
-  success: boolean;
-  code: string;
-  message: string;
-  data: T;
-};
-
-type CreateAcademicTermRequest = {
-  year: number;
-  term: string;
-  endDate: string;
-  active: boolean;
-};
+import type {
+  AcademicTerm,
+  ApiResponse,
+  CreateAcademicTermRequest,
+} from "../type/academicTerm.type";
 
 // 전체 학기 조회 - 관리자
 const fetchAcademicTerms = async (): Promise<AcademicTerm[]> => {
