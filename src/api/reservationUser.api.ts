@@ -40,3 +40,20 @@ export const useDoReserve = () => {
     },
   });
 };
+
+// 예약 취소
+export const useDeleteReservation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (reservationId: number) => {
+      const delete_reservation_res = await apiClient.delete(
+        `/api/reservations/${reservationId}`,
+      );
+      return delete_reservation_res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-reservations"] });
+    },
+  });
+};

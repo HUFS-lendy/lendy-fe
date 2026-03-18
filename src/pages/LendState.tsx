@@ -39,7 +39,10 @@ import {
 import { Textarea } from "../components/ui/textarea";
 import { toast } from "sonner";
 import { QrModal } from "../hooks/useQrCode";
-import { useMyReservations } from "../api/reservationUser.api";
+import {
+  useDeleteReservation,
+  useMyReservations,
+} from "../api/reservationUser.api";
 import { useMe } from "../api/user.api";
 import { useModelsByIds } from "../api/modelUser.api";
 
@@ -77,6 +80,9 @@ const formatDateTime = (value: string) => {
 const LendState = () => {
   const navigate = useNavigate();
   const [issueType, setIssueType] = useState<string>("불량 유형 선택");
+  const [selectedReservationId, setSelectedReservationId] = useState<
+    number | null
+  >(null);
   const [page] = useState(0);
   const [size] = useState(20);
 
@@ -87,6 +93,9 @@ const LendState = () => {
     error,
   } = useMyReservations(page, size);
   const { data: myInfo } = useMe();
+
+  const { mutate: deleteReservation, isPending: isDeletingReservation } =
+    useDeleteReservation();
 
   const modelIds = useMemo(() => {
     const ids = myreservation?.content?.map((item) => item.modelId) ?? [];
@@ -104,6 +113,24 @@ const LendState = () => {
       return acc;
     }, {});
   }, [modelIds, modelQueries]);
+
+  // 예약 취소
+  const handleDeleteReservation = () => {
+    if (!selectedReservationId) {
+      toast.error("취소할 예약을 선택해주세요.");
+      return;
+    }
+
+    deleteReservation(selectedReservationId, {
+      onSuccess: () => {
+        toast.success("예약이 취소되었습니다.");
+        setSelectedReservationId(null);
+      },
+      onError: () => {
+        toast.error("예약 취소에 실패했습니다.");
+      },
+    });
+  };
 
   return (
     <div className="bg-[#060a0c] w-screen min-h-screen px-8">
@@ -140,6 +167,26 @@ const LendState = () => {
                 </div>
               </div>
             </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  선택한 얘약을 취소하시겠습니까?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  예약을 취소하면 다시 되돌릴 수 없습니다.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>돌아가기</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-red-600 hover:bg-red-500 font-bold"
+                  onClick={handleDeleteReservation}
+                  disabled={isDeletingReservation}
+                >
+                  {isDeletingReservation ? "취소 중..." : "취소"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
           </AlertDialog>
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -255,7 +302,7 @@ const LendState = () => {
             {!isLoading && !isError && myreservation?.content?.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={7}
+                  colSpan={6}
                   className="text-center text-gray-300 py-8"
                 >
                   대여/예약 내역이 없습니다.
@@ -268,7 +315,14 @@ const LendState = () => {
               myreservation?.content?.map((item) => (
                 <TableRow key={item.reservationId}>
                   <TableCell>
-                    <Checkbox />
+                    <Checkbox
+                      checked={selectedReservationId === item.reservationId}
+                      onCheckedChange={(checked) => {
+                        setSelectedReservationId(
+                          checked ? item.reservationId : null,
+                        );
+                      }}
+                    />
                   </TableCell>
                   <TableCell>{getReservationStatusText(item.status)}</TableCell>
                   <TableCell>{modelNameMap[item.modelId] ?? "-"}</TableCell>
