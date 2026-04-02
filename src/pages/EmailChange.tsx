@@ -24,7 +24,9 @@ const EmailChange = () => {
   const [code, setCode] = useState("");
 
   const [isCodeSent, setIsCodeSent] = useState(false);
-  const [remainingSeconds, setRemainingSeconds] = useState(EMAIL_CODE_EXPIRE_SECONDS);
+  const [remainingSeconds, setRemainingSeconds] = useState(
+    EMAIL_CODE_EXPIRE_SECONDS,
+  );
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
@@ -176,7 +178,6 @@ const EmailChange = () => {
             </div>
 
             <button type="submit" className="hidden" />
-
           </form>
         </CardContent>
         <CardFooter className="flex-col gap-2 mt-4">
@@ -196,7 +197,9 @@ const EmailChange = () => {
               <button
                 type="button"
                 onClick={handleVerifyCode}
-                disabled={emailVerifyMutation.isPending || remainingSeconds <= 0}
+                disabled={
+                  emailVerifyMutation.isPending || remainingSeconds <= 0
+                }
                 className="w-full border border-neutral-400 bg-neutral-900 hover:bg-neutral-800 rounded-sm text-center py-1 cursor-pointer disabled:opacity-50"
               >
                 {emailVerifyMutation.isPending

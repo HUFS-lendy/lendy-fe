@@ -1,3 +1,4 @@
+import { useParams } from "react-router-dom";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -14,14 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "../../../components/ui/table";
-import { Label } from "../../../components/ui/label";
 import { Input } from "../../../components/ui/input";
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "../../../components/ui/popover";
-import { Textarea } from "../../../components/ui/textarea";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,17 +27,32 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../../../components/ui/alert-dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../../../components/ui/popover";
 import { Checkbox } from "../../../components/ui/checkbox";
 import { DeviceStateCombobox } from "../../../components/ui/DeviceStateCombobox";
 import { toast } from "sonner";
-import { usePhoneCopy } from "../../../hooks/usePhoneCopy";
+import { format } from "date-fns";
+// import { usePhoneCopy } from "../../../hooks/usePhoneCopy";
+import { useReservations } from "../../../api/adminReservation.api";
+import { type Reservation } from "../../../type/adminReservation.type";
 
 const Device = () => {
-  const copyPhone = usePhoneCopy();
+  // const copyPhone = usePhoneCopy();
+  const { itemId } = useParams();
+  const { data: reservations = [] } = useReservations(Number(itemId));
+  console.log(reservations);
+  const filteredReservations = reservations.filter(
+    (item: Reservation) => String(item.modelId) === String(itemId),
+  );
+
   return (
     <div className="bg-[#060a0c] w-screen px-8 text-white">
       {/* 브래드크럼 */}
-      <div className="pt-10">
+      <div className="pt-14">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -72,7 +81,7 @@ const Device = () => {
       </div>
       <div className="pt-8">
         <div className="font-bold text-white text-3xl pb-8">
-          아이패드 Air 상세 현황
+          {filteredReservations[0]?.modelName ?? "기기 상세 현황"}
         </div>
         <div className="flex space-x-4 justify-end">
           {/* 기자재 추가 버튼 */}
@@ -205,125 +214,71 @@ const Device = () => {
               <TableHead className="text-white text-center">
                 대여 상태
               </TableHead>
-              <TableHead className="text-white text-center">
-                반납 상태
-              </TableHead>
               <TableHead className="text-white text-center">대여자</TableHead>
-              <TableHead className="text-white text-center">학번</TableHead>
-              <TableHead className="text-white text-center">연락처</TableHead>
-              <TableHead className="text-white text-center">메일</TableHead>
+              <TableHead className="text-white text-center">대여일</TableHead>
+              <TableHead className="text-white text-center">만료일</TableHead>
+              <TableHead className="text-white text-center">취소일</TableHead>
             </TableHeader>
             <TableBody>
-              <TableRow>
-                <TableCell>
-                  <Checkbox />
-                </TableCell>
-                <TableCell>A20342</TableCell>
-                <TableCell>-</TableCell>
-                <TableCell>대여중</TableCell>
-                <TableCell>이서연</TableCell>
-                <TableCell>202202465</TableCell>
-                <TableCell
-                  className="cursor-pointer hover:underline"
-                  onClick={() => copyPhone("010-1234-5678")}
-                >
-                  010-1234-5678
-                </TableCell>
-                <TableCell>
-                  <a
-                    href="mailto:lsy@hufs.ac.kr"
-                    className="hover:underline cursor-pointer"
-                    title="메일 작성하기"
-                  >
-                    lsy@hufs.ac.kr
-                  </a>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>
-                  <Checkbox />
-                </TableCell>
-                <TableCell>A20343</TableCell>
-                <TableCell>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <div className="hover:underline cursor-pointer">불량</div>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-80">
-                      <div className="grid gap-4">
-                        <div className="space-y-2">
-                          <h4 className="leading-none font-medium">
-                            불량 상세 설명
-                          </h4>
-                        </div>
-                        <div className="grid gap-2">
-                          <div className="grid grid-cols-3 items-center gap-4">
-                            <Label>불량 종류</Label>
-                            <Input
-                              id="type"
-                              defaultValue="고장"
-                              readOnly
-                              className="col-span-2 h-8"
-                            />
+              {reservations.map((item: Reservation) => (
+                <TableRow key={item.reservationId}>
+                  <TableCell>
+                    <Checkbox />
+                  </TableCell>
+                  <TableCell>{item.modelId}</TableCell>
+                  <TableCell>{item.status}</TableCell>
+                  <TableCell>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button className="hover:underline cursor-pointer">
+                          {item.username}
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80">
+                        <div className="space-y-3">
+                          <div className="space-y-1 font-bold text-lg">
+                            {item.username}
                           </div>
-                          <div className="grid grid-cols-3 gap-4">
-                            <Label>설명</Label>
-                            <Textarea
-                              id="maxWidth"
-                              defaultValue="홈 버튼이 눌리지 않습니다."
-                              readOnly
-                              className="col-span-2 h-8"
-                            />
+
+                          <div className="grid gap-2 text-sm">
+                            <div className="grid grid-cols-3 items-center gap-2">
+                              <span className="font-medium">학번</span>
+                              <span className="col-span-2">
+                                {item.studentId}
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-3 items-center gap-2">
+                              <span className="font-medium">연락처</span>
+                              <span className="col-span-2">{item.phone}</span>
+                            </div>
+                            <div className="grid grid-cols-3 items-center gap-2">
+                              <span className="font-medium">이메일</span>
+                              <span className="col-span-2">{item.email}</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </TableCell>
-                <TableCell>반납 완료</TableCell>
-                <TableCell>정병주</TableCell>
-                <TableCell>202212345</TableCell>
-                <TableCell
-                  className="cursor-pointer hover:underline"
-                  onClick={() => copyPhone("010-1234-5678")}
-                >
-                  010-1234-5678
-                </TableCell>
-                <TableCell>
-                  <a
-                    href="mailto:lsy@hufs.ac.kr"
-                    className="hover:underline cursor-pointer"
-                    title="메일 작성하기"
-                  >
-                    jbj@hufs.ac.kr
-                  </a>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>
-                  <Checkbox />
-                </TableCell>
-                <TableCell>A20344</TableCell>
-                <TableCell>-</TableCell>
-                <TableCell>미반납</TableCell>
-                <TableCell>남하원</TableCell>
-                <TableCell>202412345</TableCell>
-                <TableCell
-                  className="cursor-pointer hover:underline"
-                  onClick={() => copyPhone("010-1234-5678")}
-                >
-                  010-1234-5678
-                </TableCell>
-                <TableCell>
-                  <a
-                    href="mailto:lsy@hufs.ac.kr"
-                    className="hover:underline cursor-pointer"
-                    title="메일 작성하기"
-                  >
-                    nhw@hufs.ac.kr
-                  </a>
-                </TableCell>
-              </TableRow>
+                      </PopoverContent>
+                    </Popover>
+                  </TableCell>
+                  <TableCell>
+                    {format(
+                      new Date(item.reservedAt),
+                      "yyyy년 MM월 dd일 HH:mm",
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {format(new Date(item.expiresAt), "yyyy년 MM월 dd일 HH:mm")}
+                  </TableCell>
+                  <TableCell>
+                    {item.cancelledAt
+                      ? format(
+                          new Date(item.cancelledAt),
+                          "yyyy년 MM월 dd일 HH:mm",
+                        )
+                      : "-"}
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </div>

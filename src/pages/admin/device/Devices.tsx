@@ -37,8 +37,8 @@ import {
   useCreateModel,
   useDeleteModel,
   useModels,
-  type ModelItem,
 } from "../../../api/adminModel.api";
+import { type ModelItem } from "../../../type/adminModel.type";
 
 const Devices = () => {
   const navigate = useNavigate();
@@ -132,7 +132,7 @@ const Devices = () => {
 
   return (
     <div className="px-8 w-screen">
-      <div className="pt-10">
+      <div className="pt-14">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>

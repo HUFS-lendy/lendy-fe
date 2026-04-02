@@ -38,6 +38,8 @@ import {
 } from "../components/ui/dropdown-menu";
 import { Textarea } from "../components/ui/textarea";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { ko } from "date-fns/locale";
 import { QrModal } from "../hooks/useQrCode";
 import {
   useDeleteReservation,
@@ -60,21 +62,6 @@ const getReservationStatusText = (status: string) => {
     default:
       return status;
   }
-};
-
-// todo : date-fns로 변경
-const formatDateTime = (value: string) => {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) return "-";
-
-  return new Intl.DateTimeFormat("ko-KR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
 };
 
 const LendState = () => {
@@ -118,6 +105,20 @@ const LendState = () => {
   const handleDeleteReservation = () => {
     if (!selectedReservationId) {
       toast.error("취소할 예약을 선택해주세요.");
+      return;
+    }
+
+    const selectedReservation = myreservation?.content?.find(
+      (item) => item.reservationId === selectedReservationId,
+    );
+
+    if (!selectedReservation) {
+      toast.error("선택한 예약 정보를 찾을 수 없습니다.");
+      return;
+    }
+
+    if (selectedReservation.status === "CANCELLED") {
+      toast.error("이미 취소된 상태입니다.");
       return;
     }
 
@@ -326,8 +327,16 @@ const LendState = () => {
                   </TableCell>
                   <TableCell>{getReservationStatusText(item.status)}</TableCell>
                   <TableCell>{modelNameMap[item.modelId] ?? "-"}</TableCell>
-                  <TableCell>{formatDateTime(item.reservedAt)}</TableCell>
-                  <TableCell>{formatDateTime(item.expiresAt)}</TableCell>
+                  <TableCell>
+                    {format(new Date(item.reservedAt), "yyyy년 MM월 dd일", {
+                      locale: ko,
+                    })}
+                  </TableCell>
+                  <TableCell>
+                    {format(new Date(item.expiresAt), "yyyy년 MM월 dd일", {
+                      locale: ko,
+                    })}
+                  </TableCell>
                   <TableCell>
                     {item.qrUrl ? (
                       <QrModal
