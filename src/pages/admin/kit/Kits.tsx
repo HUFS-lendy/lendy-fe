@@ -37,8 +37,8 @@ import {
   useCreateModel,
   useDeleteModel,
   useModels,
-  type ModelItem,
 } from "../../../api/adminModel.api";
+import { type ModelItem } from "../../../type/adminModel.type";
 
 const Kits = () => {
   const navigate = useNavigate();
@@ -140,7 +140,7 @@ const Kits = () => {
 
   return (
     <div className="bg-[#060a0c] w-screen px-8 text-white">
-      <div className="pt-10">
+      <div className="pt-14">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>

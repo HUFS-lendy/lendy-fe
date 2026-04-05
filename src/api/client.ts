@@ -36,9 +36,6 @@ apiClient.interceptors.request.use((config) => {
     }
   }
 
-  console.log("REQUEST URL:", config.url);
-  console.log("AUTH HEADER:", config.headers?.Authorization);
-
   return config;
 });
 
@@ -73,10 +70,10 @@ apiClient.interceptors.response.use(
     }
 
     // login / refresh 자체가 실패한 경우에는 refresh 재시도하지 않음
-    if(
+    if (
       originalRequest?.url?.includes("/api/auth/login") ||
       originalRequest?.url?.includes("/api/auth/refresh")
-    ){
+    ) {
       return Promise.reject(error);
     }
 
@@ -105,7 +102,9 @@ apiClient.interceptors.response.use(
 
     try {
       const refreshRes =
-        await apiClient.post<ApiResponse<AccessTokenResponse>>("/api/auth/refresh");
+        await apiClient.post<ApiResponse<AccessTokenResponse>>(
+          "/api/auth/refresh",
+        );
 
       const { accessToken } = refreshRes.data.data;
 

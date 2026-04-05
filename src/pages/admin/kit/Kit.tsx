@@ -1,4 +1,5 @@
 import { useState } from "react";
+// import { useParams } from "react-router-dom";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -40,13 +41,14 @@ import { usePhoneCopy } from "../../../hooks/usePhoneCopy";
 import KitNumberTags from "../../../hooks/useCodeNumberTags";
 
 const Kit = () => {
+  // const { itemId } = useParams();
   const copyPhone = usePhoneCopy();
   const [kitNumbers, setKitNumbers] = useState<string[]>([]);
 
   return (
     <div className="bg-[#060a0c] w-screen px-8 text-white">
       {/* 브래드크럼 */}
-      <div className="pt-10">
+      <div className="pt-14">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>

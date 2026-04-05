@@ -27,7 +27,7 @@ const SetLimit = () => {
   return (
     <div className="px-8 w-screen">
       {/* 브래드크럼 */}
-      <div className="pt-10">
+      <div className="pt-14">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>

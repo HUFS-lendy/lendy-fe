@@ -58,3 +58,25 @@ export const useDeleteCategory = () => {
     },
   });
 };
+
+// 카테고리 정보 수정
+export const useUpdateCategory = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ category_id, name, description }: CategoryItem) => {
+      const updateCategory_res = await apiClient.patch(
+        `/api/admin/categories/${category_id}`,
+        {
+          name,
+          description,
+        },
+      );
+
+      return updateCategory_res.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    },
+  });
+};
