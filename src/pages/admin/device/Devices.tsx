@@ -55,7 +55,7 @@ const Devices = () => {
   const { mutateAsync: deleteModel, isPending: isDeleting } = useDeleteModel();
 
   const deviceModels = useMemo(() => {
-    return (devices as ModelItem[]).filter(
+    return (devices as ModelItem[])?.filter(
       (model) => model.type === "EQUIPMENT",
     );
   }, [devices]);

@@ -142,22 +142,24 @@ const Kit = () => {
         <div className="mt-4">
           <Table className="text-white text-center border border-neutral-700">
             <TableHeader className="text-center border-b bg-[#11141b] hover:bg-[#11141b] border-neutral-700">
-              <TableHead></TableHead>
-              <TableHead className="text-white text-center">
-                코드 번호
-              </TableHead>
-              <TableHead className="text-white text-center">
-                대여 상태
-              </TableHead>
-              <TableHead className="text-white text-center">
-                반납 상태
-              </TableHead>
-              <TableHead className="text-white text-center">대여일</TableHead>
-              <TableHead className="text-white text-center">반납일</TableHead>
-              <TableHead className="text-white text-center">대여자</TableHead>
-              <TableHead className="text-white text-center">학번</TableHead>
-              <TableHead className="text-white text-center">연락처</TableHead>
-              <TableHead className="text-white text-center">메일</TableHead>
+              <TableRow>
+                <TableHead></TableHead>
+                <TableHead className="text-white text-center">
+                  코드 번호
+                </TableHead>
+                <TableHead className="text-white text-center">
+                  대여 상태
+                </TableHead>
+                <TableHead className="text-white text-center">
+                  반납 상태
+                </TableHead>
+                <TableHead className="text-white text-center">대여일</TableHead>
+                <TableHead className="text-white text-center">반납일</TableHead>
+                <TableHead className="text-white text-center">대여자</TableHead>
+                <TableHead className="text-white text-center">학번</TableHead>
+                <TableHead className="text-white text-center">연락처</TableHead>
+                <TableHead className="text-white text-center">메일</TableHead>
+              </TableRow>
             </TableHeader>
             <TableBody>
               <TableRow>
