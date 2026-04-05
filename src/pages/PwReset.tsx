@@ -8,6 +8,7 @@ import {
   usePasswordResetRequest,
   usePasswordResetConfirm,
 } from "../api/auth.api";
+import axios from "axios";
 
 const CODE_EXPIRE_SECONDS = 10 * 60;
 
@@ -71,9 +72,11 @@ const PwReset = () => {
       setCode("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (error: any) {
-      const msg =
-        error?.response?.data?.message || "인증 코드 요청에 실패했습니다.";
+    } catch (error: unknown) {
+      const msg = axios.isAxiosError(error)
+        ? error.response?.data?.message
+        : "인증 코드 요청에 실패했습니다.";
+
       setErrorMessage(msg);
     }
   };
@@ -108,9 +111,11 @@ const PwReset = () => {
 
       alert(res.message || "비밀번호가 재설정되었습니다.");
       navigate("/login");
-    } catch (error: any) {
-      const msg =
-        error?.response?.data?.message || "비밀번호 재설정에 실패했습니다.";
+    } catch (error: unknown) {
+      const msg = axios.isAxiosError(error)
+        ? error.response?.data?.message
+        : "비밀번호 재설정에 실패했습니다.";
+
       setErrorMessage(msg);
     }
   };

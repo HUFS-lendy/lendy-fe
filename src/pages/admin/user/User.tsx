@@ -43,7 +43,7 @@ const User = () => {
   return (
     <div className="w-screen px-8 text-white">
       {/* 브래드크럼 */}
-      <div className="pt-10">
+      <div className="pt-14">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>

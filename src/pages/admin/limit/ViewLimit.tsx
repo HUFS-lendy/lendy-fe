@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -46,7 +45,6 @@ import {
 } from "../../../api/academicTerm.api";
 
 const ViewLimit = () => {
-  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [year, setYear] = useState("");
@@ -128,7 +126,7 @@ const ViewLimit = () => {
   return (
     <div className="px-8 w-screen">
       {/* 브래드크럼 */}
-      <div className="pt-10">
+      <div className="pt-14">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -325,10 +323,7 @@ const ViewLimit = () => {
                 </TableRow>
               ) : (
                 academicTerms.map((term) => (
-                  <TableRow
-                    key={term.id}
-                    onClick={() => navigate(`/admin/devices/${term.id}`)}
-                  >
+                  <TableRow key={term.id}>
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <Checkbox
                         checked={selectedTermId === term.id}

@@ -27,15 +27,16 @@ import {
   AlertDialogTrigger,
 } from "../../../components/ui/alert-dialog";
 import { Checkbox } from "../../../components/ui/checkbox";
-import { DeviceStateCombobox } from "../../../components/ui/DeviceStateCombobox";
+// import { DeviceStateCombobox } from "../../../components/ui/DeviceStateCombobox";
+import { Label } from "../../../components/ui/label";
 import { toast } from "sonner";
 import {
   useCategories,
   useCreateCategory,
   useDeleteCategory,
+  useUpdateCategory,
 } from "../../../api/adminCategory.api";
 import type { CategoryItem } from "../../../type/adminCategory.type";
-import { Label } from "../../../components/ui/label";
 
 const Category = () => {
   const { data: categories = [], isLoading, isError } = useCategories();
@@ -43,12 +44,24 @@ const Category = () => {
     useCreateCategory();
   const { mutateAsync: deleteCategory, isPending: isDeleting } =
     useDeleteCategory();
+  const { mutateAsync: updateCategory, isPending: isUpdating } =
+    useUpdateCategory();
 
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editCategoryId, setEditCategoryId] = useState<number | null>(null);
+  const [editCategoryName, setEditCategoryName] = useState("");
+  const [editCategoryDescription, setEditCategoryDescription] = useState("");
   const [categoryName, setCategoryName] = useState("");
   const [categoryDescription, setCategoryDescription] = useState("");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const selectedCategories = categories.filter((category: CategoryItem) =>
+    selectedCategoryIds.includes(category.category_id),
+  );
+
+  const selectedCategory = selectedCategories[0] ?? null;
 
   const resetCreateForm = () => {
     setCategoryName("");
@@ -89,6 +102,63 @@ const Category = () => {
     );
   };
 
+  const handleOpenEditDialog = () => {
+    if (selectedCategoryIds.length === 0) {
+      toast.error("수정할 카테고리를 선택해주세요.");
+      return;
+    }
+
+    if (selectedCategoryIds.length > 1) {
+      toast.error("수정은 한 번에 하나의 카테고리만 가능합니다.");
+      return;
+    }
+
+    if (!selectedCategory) {
+      toast.error("선택한 카테고리 정보를 찾을 수 없습니다.");
+      return;
+    }
+
+    setEditCategoryId(selectedCategory.category_id);
+    setEditCategoryName(selectedCategory.name);
+    setEditCategoryDescription(selectedCategory.description);
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdateCategory = async () => {
+    if (editCategoryId === null) {
+      toast.error("수정할 카테고리 정보가 없습니다.");
+      return;
+    }
+
+    if (!editCategoryName.trim()) {
+      toast.error("카테고리명을 입력해주세요.");
+      return;
+    }
+
+    if (!editCategoryDescription.trim()) {
+      toast.error("설명을 입력해주세요.");
+      return;
+    }
+
+    try {
+      await updateCategory({
+        category_id: editCategoryId,
+        name: editCategoryName.trim(),
+        description: editCategoryDescription.trim(),
+      });
+
+      toast.success("카테고리가 수정되었습니다.");
+      setEditDialogOpen(false);
+      setEditCategoryId(null);
+      setEditCategoryName("");
+      setEditCategoryDescription("");
+      setSelectedCategoryIds([]);
+    } catch (error) {
+      console.error(error);
+      toast.error("카테고리 수정에 실패했습니다.");
+    }
+  };
+
   const handleDeleteCategories = async () => {
     if (selectedCategoryIds.length === 0) {
       toast.error("삭제할 카테고리를 선택해주세요.");
@@ -112,7 +182,7 @@ const Category = () => {
   return (
     <div className="bg-[#060a0c] w-screen px-8 text-white">
       {/* 브래드크럼 */}
-      <div className="pt-10">
+      <div className="pt-14">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -195,94 +265,72 @@ const Category = () => {
               </AlertDialogContent>
             </AlertDialog>
           </div>
-          {/* 카테고리 수정 버튼 */}
+          {/* todo : 카테고리 수정 버튼 */}
           <div>
-            <AlertDialog>
+            <AlertDialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
               <AlertDialogTrigger asChild>
-                <div className="hover:bg-neutral-800 cursor-pointer border border-neutral-400 text-neutral-200 text-sm px-3 py-1 rounded-sm">
+                <div
+                  className="hover:bg-neutral-800 cursor-pointer border border-neutral-400 text-neutral-200 text-sm px-3 py-1 rounded-sm"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleOpenEditDialog();
+                  }}
+                >
                   수정
                 </div>
               </AlertDialogTrigger>
+
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    2025-1 iPad Air 3 내용 수정
-                  </AlertDialogTitle>
+                  <AlertDialogTitle>카테고리 수정</AlertDialogTitle>
                   <AlertDialogDescription>
-                    기기 대여 내용을 수정해보세요.
+                    선택한 카테고리 정보를 수정해보세요.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
 
-                <div>
-                  <Table className="text-center border border-neutral-200">
-                    <TableBody>
-                      <TableRow className="border-neutral-200 hover:bg-white">
-                        <TableCell className="w-1/6 bg-neutral-300">
-                          대여 ID
-                        </TableCell>
-                        <TableCell className="text-left px-6">1</TableCell>
-                      </TableRow>
-                      <TableRow className="border-neutral-200 hover:bg-white">
-                        <TableCell className="w-1/6 bg-neutral-300">
-                          분류
-                        </TableCell>
-                        <TableCell className="text-left px-6">태블릿</TableCell>
-                      </TableRow>
-                      <TableRow className="border-neutral-200 hover:bg-white">
-                        <TableCell className="w-1/6 bg-neutral-300">
-                          기기명
-                        </TableCell>
-                        <TableCell className="text-left px-4">
-                          <Input
-                            className="text-sm"
-                            readOnly
-                            value="iPad Air 3"
-                          />
-                        </TableCell>
-                      </TableRow>
-                      <TableRow className="border-neutral-200 hover:bg-white">
-                        <TableCell className="w-1/6 bg-neutral-300">
-                          코드번호
-                        </TableCell>
-                        <TableCell className="text-left px-4">
-                          <Input className="text-sm" value="A20342" />
-                        </TableCell>
-                      </TableRow>
-                      <TableRow className="border-neutral-200 hover:bg-white">
-                        <TableCell className="w-1/6 bg-neutral-300">
-                          대여 학기
-                        </TableCell>
-                        <TableCell className="text-left px-4">
-                          <Input
-                            className="text-sm"
-                            value="2025-1"
-                            placeholder="yyyy-1"
-                          />
-                        </TableCell>
-                      </TableRow>
-                      <TableRow className="border-neutral-200 hover:bg-white">
-                        <TableCell className="w-1/6 bg-neutral-300">
-                          대여 상태
-                        </TableCell>
-                        <TableCell className="text-left px-4">
-                          <DeviceStateCombobox />
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
+                <div className="space-y-4 pt-6">
+                  <div>
+                    <Label className="pb-2">카테고리 ID</Label>
+                    <Input value={editCategoryId ?? ""} readOnly />
+                  </div>
+
+                  <div>
+                    <Label className="pb-2">카테고리명</Label>
+                    <Input
+                      value={editCategoryName}
+                      onChange={(e) => setEditCategoryName(e.target.value)}
+                      placeholder="카테고리명을 입력하세요"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="pb-2">설명</Label>
+                    <Input
+                      value={editCategoryDescription}
+                      onChange={(e) =>
+                        setEditCategoryDescription(e.target.value)
+                      }
+                      placeholder="카테고리 설명을 입력하세요"
+                    />
+                  </div>
                 </div>
 
                 <AlertDialogFooter className="mt-4">
-                  <AlertDialogCancel className="cursor-pointer">
+                  <AlertDialogCancel
+                    className="cursor-pointer"
+                    disabled={isUpdating}
+                  >
                     취소
                   </AlertDialogCancel>
                   <AlertDialogAction
-                    onClick={() =>
-                      toast("해당 기기의 대여 상태가 수정되었습니다.")
-                    }
-                    className=" hover:bg-neutral-700 font-bold cursor-pointer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleUpdateCategory();
+                    }}
+                    disabled={isUpdating}
+                    className="hover:bg-neutral-700 font-bold cursor-pointer"
                   >
-                    수정
+                    {isUpdating ? "수정 중..." : "수정"}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -387,7 +435,9 @@ const Category = () => {
                     </TableCell>
                     <TableCell>{category.category_id}</TableCell>
                     <TableCell>{category.name}</TableCell>
-                    <TableCell>{category.description}</TableCell>
+                    <TableCell className="text-left">
+                      {category.description}
+                    </TableCell>
                   </TableRow>
                 ))
               )}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+// import { useParams } from "react-router-dom";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -40,13 +41,14 @@ import { usePhoneCopy } from "../../../hooks/usePhoneCopy";
 import KitNumberTags from "../../../hooks/useCodeNumberTags";
 
 const Kit = () => {
+  // const { itemId } = useParams();
   const copyPhone = usePhoneCopy();
   const [kitNumbers, setKitNumbers] = useState<string[]>([]);
 
   return (
     <div className="bg-[#060a0c] w-screen px-8 text-white">
       {/* 브래드크럼 */}
-      <div className="pt-10">
+      <div className="pt-14">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -140,22 +142,24 @@ const Kit = () => {
         <div className="mt-4">
           <Table className="text-white text-center border border-neutral-700">
             <TableHeader className="text-center border-b bg-[#11141b] hover:bg-[#11141b] border-neutral-700">
-              <TableHead></TableHead>
-              <TableHead className="text-white text-center">
-                코드 번호
-              </TableHead>
-              <TableHead className="text-white text-center">
-                대여 상태
-              </TableHead>
-              <TableHead className="text-white text-center">
-                반납 상태
-              </TableHead>
-              <TableHead className="text-white text-center">대여일</TableHead>
-              <TableHead className="text-white text-center">반납일</TableHead>
-              <TableHead className="text-white text-center">대여자</TableHead>
-              <TableHead className="text-white text-center">학번</TableHead>
-              <TableHead className="text-white text-center">연락처</TableHead>
-              <TableHead className="text-white text-center">메일</TableHead>
+              <TableRow>
+                <TableHead></TableHead>
+                <TableHead className="text-white text-center">
+                  코드 번호
+                </TableHead>
+                <TableHead className="text-white text-center">
+                  대여 상태
+                </TableHead>
+                <TableHead className="text-white text-center">
+                  반납 상태
+                </TableHead>
+                <TableHead className="text-white text-center">대여일</TableHead>
+                <TableHead className="text-white text-center">반납일</TableHead>
+                <TableHead className="text-white text-center">대여자</TableHead>
+                <TableHead className="text-white text-center">학번</TableHead>
+                <TableHead className="text-white text-center">연락처</TableHead>
+                <TableHead className="text-white text-center">메일</TableHead>
+              </TableRow>
             </TableHeader>
             <TableBody>
               <TableRow>

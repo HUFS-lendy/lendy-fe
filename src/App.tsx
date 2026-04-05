@@ -47,10 +47,10 @@ function App() {
           children: [
             { index: true, element: <Navigate to="devices" replace /> },
             { path: "devices", element: <Devices /> },
-            { path: "devices/:deviceId", element: <Device /> },
+            { path: "devices/:itemId", element: <Device /> },
             { path: "devices/manage", element: <ManageDevices /> },
             { path: "kits", element: <Kits /> },
-            { path: "kits/:kitId", element: <Kit /> },
+            { path: "kits/:itemId", element: <Kit /> },
             { path: "users", element: <Users /> },
             { path: "users/:userId", element: <User /> },
             { path: "sign-up", element: <SignUp /> },

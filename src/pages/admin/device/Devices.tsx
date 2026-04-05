@@ -37,8 +37,8 @@ import {
   useCreateModel,
   useDeleteModel,
   useModels,
-  type ModelItem,
 } from "../../../api/adminModel.api";
+import { type ModelItem } from "../../../type/adminModel.type";
 
 const Devices = () => {
   const navigate = useNavigate();
@@ -55,7 +55,7 @@ const Devices = () => {
   const { mutateAsync: deleteModel, isPending: isDeleting } = useDeleteModel();
 
   const deviceModels = useMemo(() => {
-    return (devices as ModelItem[]).filter(
+    return (devices as ModelItem[])?.filter(
       (model) => model.type === "EQUIPMENT",
     );
   }, [devices]);
@@ -132,7 +132,7 @@ const Devices = () => {
 
   return (
     <div className="px-8 w-screen">
-      <div className="pt-10">
+      <div className="pt-14">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>

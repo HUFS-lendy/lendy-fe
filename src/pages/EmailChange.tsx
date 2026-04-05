@@ -5,6 +5,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import Logo from "../assets/cse-logo.png";
 import { useEmailChangeRequest, useEmailVerify } from "../api/user.api";
+import axios from "axios";
 
 const EMAIL_CODE_EXPIRE_SECONDS = 10 * 60;
 
@@ -24,7 +25,9 @@ const EmailChange = () => {
   const [code, setCode] = useState("");
 
   const [isCodeSent, setIsCodeSent] = useState(false);
-  const [remainingSeconds, setRemainingSeconds] = useState(EMAIL_CODE_EXPIRE_SECONDS);
+  const [remainingSeconds, setRemainingSeconds] = useState(
+    EMAIL_CODE_EXPIRE_SECONDS,
+  );
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
@@ -63,9 +66,10 @@ const EmailChange = () => {
       setIsCodeSent(true);
       setRemainingSeconds(EMAIL_CODE_EXPIRE_SECONDS);
       setCode("");
-    } catch (error: any) {
-      const msg =
-        error?.response?.data?.message || "인증 코드 요청에 실패했습니다.";
+    } catch (error: unknown) {
+      const msg = axios.isAxiosError(error)
+        ? error.response?.data?.message
+        : "인증 코드 요청에 실패했습니다.";
       setErrorMessage(msg);
     }
   };
@@ -89,9 +93,10 @@ const EmailChange = () => {
 
       alert(res.message || "이메일이 변경되었습니다.");
       navigate("/mypage");
-    } catch (error: any) {
-      const msg =
-        error?.response?.data?.message || "이메일 변경에 실패했습니다.";
+    } catch (error: unknown) {
+      const msg = axios.isAxiosError(error)
+        ? error.response?.data?.message
+        : "이메일 변경에 실패했습니다.";
       setErrorMessage(msg);
     }
   };
@@ -176,7 +181,6 @@ const EmailChange = () => {
             </div>
 
             <button type="submit" className="hidden" />
-
           </form>
         </CardContent>
         <CardFooter className="flex-col gap-2 mt-4">
@@ -196,7 +200,9 @@ const EmailChange = () => {
               <button
                 type="button"
                 onClick={handleVerifyCode}
-                disabled={emailVerifyMutation.isPending || remainingSeconds <= 0}
+                disabled={
+                  emailVerifyMutation.isPending || remainingSeconds <= 0
+                }
                 className="w-full border border-neutral-400 bg-neutral-900 hover:bg-neutral-800 rounded-sm text-center py-1 cursor-pointer disabled:opacity-50"
               >
                 {emailVerifyMutation.isPending

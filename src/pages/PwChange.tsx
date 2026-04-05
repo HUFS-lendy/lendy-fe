@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { AxiosError } from "axios";
 import { Card, CardContent, CardFooter } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -39,9 +40,10 @@ const PwChange = () => {
 
       alert(res.message || "비밀번호가 변경되었습니다.");
       navigate("/mypage");
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message: string }>;
       const msg =
-        error?.response?.data?.message || "비밀번호 변경에 실패했습니다.";
+        axiosError?.response?.data?.message || "비밀번호 변경에 실패했습니다.";
       setErrorMessage(msg);
     }
   };
@@ -120,9 +122,7 @@ const PwChange = () => {
             disabled={passwordChangeMutation.isPending}
             className="w-full border border-neutral-400 bg-neutral-900 hover:bg-neutral-800 rounded-sm text-center py-1 cursor-pointer disabled:opacity-50"
           >
-            {passwordChangeMutation.isPending
-              ? "변경 중..."
-              : "비밀번호 변경"}
+            {passwordChangeMutation.isPending ? "변경 중..." : "비밀번호 변경"}
           </button>
         </CardFooter>
       </Card>
