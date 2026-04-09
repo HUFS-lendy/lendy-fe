@@ -42,6 +42,7 @@ import {
   useAcademicTerms,
   useCreateAcademicTerm,
   useDeleteAcademicTerm,
+  useUpdateAcademicTerm,
 } from "../../../api/academicTerm.api";
 
 const ViewLimit = () => {
@@ -57,6 +58,8 @@ const ViewLimit = () => {
   const { data: academicTerms = [], isLoading, isError } = useAcademicTerms();
   const { mutate: deleteAcademicTerm, isPending: isDeleting } =
     useDeleteAcademicTerm();
+  const { mutate: updateAcademicTerm, isPending: isUpdating } =
+    useUpdateAcademicTerm();
 
   const formatDateToKSTString = (value: Date) => {
     const year = value.getFullYear();
@@ -121,6 +124,54 @@ const ViewLimit = () => {
         toast("종강일 삭제에 실패했습니다.");
       },
     });
+  };
+
+  const handleOpenUpdateDialog = () => {
+    if (!selectedAcademicTerm) {
+      toast("수정할 학기를 선택해주세요.");
+      return;
+    }
+
+    setYear(String(selectedAcademicTerm.year));
+    setSelectedTerm(selectedAcademicTerm.term);
+    setDate(
+      selectedAcademicTerm.endDate
+        ? new Date(selectedAcademicTerm.endDate)
+        : undefined,
+    );
+    setActive(selectedAcademicTerm.active ? "true" : "false");
+  };
+
+  const handleUpdateAcademicTerm = () => {
+    if (!selectedAcademicTerm) {
+      toast("수정할 학기를 선택해주세요.");
+      return;
+    }
+
+    if (!date) {
+      toast("날짜를 선택해주세요.");
+      return;
+    }
+
+    updateAcademicTerm(
+      {
+        termId: selectedAcademicTerm.id,
+        endDate: formatDateToKSTString(date),
+      },
+      {
+        onSuccess: () => {
+          toast("종강일이 수정되었습니다.");
+          setYear("");
+          setSelectedTerm("");
+          setDate(undefined);
+          setActive("false");
+          setSelectedTermId(null);
+        },
+        onError: () => {
+          toast("종강일 수정에 실패했습니다.");
+        },
+      },
+    );
   };
 
   return (
@@ -234,6 +285,99 @@ const ViewLimit = () => {
                   disabled={isCreating}
                 >
                   {isCreating ? "추가 중..." : "추가"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          {/* 종강일 수정 버튼 */}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <div
+                onClick={handleOpenUpdateDialog}
+                className={`border px-3 py-1 rounded-sm text-sm ${
+                  selectedTermId
+                    ? "cursor-pointer hover:bg-neutral-400 hover:text-black border-neutral-400"
+                    : "cursor-not-allowed border-neutral-700 text-neutral-600"
+                }`}
+              >
+                수정
+              </div>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>종강일 수정</AlertDialogTitle>
+                <AlertDialogDescription>
+                  선택한 종강일 정보를 수정합니다.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <div className="space-y-4">
+                <div>
+                  <Label className="pb-2">년도</Label>
+                  <Input
+                    className="w-1/3"
+                    value={year}
+                    onChange={(e) => setYear(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <Label className="pb-2">학기</Label>
+                  <SemesterCombobox
+                    value={selectedTerm}
+                    onChange={setSelectedTerm}
+                  />
+                </div>
+
+                <div>
+                  <Label className="pb-2">날짜</Label>
+                  <Popover open={open} onOpenChange={setOpen}>
+                    <PopoverTrigger asChild>
+                      <div className="inline-block w-fit border text-sm rounded-sm px-3 py-1 cursor-pointer">
+                        {date ? date.toLocaleDateString() : "날짜 선택"}
+                      </div>
+                    </PopoverTrigger>
+
+                    <PopoverContent
+                      className="w-auto rounded-2xl overflow-hidden p-0 bg-white text-black border border-black/10"
+                      align="start"
+                    >
+                      <Calendar
+                        mode="single"
+                        selected={date}
+                        captionLayout="dropdown"
+                        onSelect={(d) => {
+                          setDate(d);
+                          setOpen(false);
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div>
+                  <Label className="pb-2">현재 학기 여부</Label>
+                  <RadioGroup value={active} onValueChange={setActive}>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="true" id="active-yes" />
+                      <Label htmlFor="active-yes">예</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="false" id="active-no" />
+                      <Label htmlFor="active-no">아니오</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              </div>
+
+              <AlertDialogFooter className="pt-8">
+                <AlertDialogCancel>취소</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleUpdateAcademicTerm}
+                  disabled={!selectedAcademicTerm || isUpdating}
+                >
+                  {isUpdating ? "수정 중..." : "수정"}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

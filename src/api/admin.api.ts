@@ -7,6 +7,7 @@ import type {
   ApiResponse,
   UpdateUserRequest,
 } from "../type/admin.type";
+// todo : 유저 삭제
 
 // 전체 유저 조회
 const fetchAdminUsers = async (

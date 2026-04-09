@@ -27,7 +27,6 @@ import {
   AlertDialogTrigger,
 } from "../../../components/ui/alert-dialog";
 import { Checkbox } from "../../../components/ui/checkbox";
-// import { DeviceStateCombobox } from "../../../components/ui/DeviceStateCombobox";
 import { Label } from "../../../components/ui/label";
 import { toast } from "sonner";
 import {

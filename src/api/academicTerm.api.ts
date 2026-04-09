@@ -65,3 +65,30 @@ export const useDeleteAcademicTerm = () => {
     },
   });
 };
+
+// 학기 정보 수정
+export const useUpdateAcademicTerm = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      termId,
+      endDate,
+    }: {
+      termId: number;
+      endDate: string;
+    }) => {
+      const updateAcademicTerm_res = await apiClient.patch(
+        `/api/admin/academic-terms/${termId}`,
+        {
+          endDate,
+        },
+      );
+
+      return updateAcademicTerm_res.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["academic_terms"] });
+    },
+  });
+};
