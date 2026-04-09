@@ -33,6 +33,7 @@ import { Checkbox } from "../../../components/ui/checkbox";
 import { DeviceStateCombobox } from "../../../components/ui/DeviceStateCombobox";
 import { toast } from "sonner";
 import { useFetchUser } from "../../../api/admin.api";
+import { useUserRentals } from "../../../api/adminUser.api";
 
 const User = () => {
   const [categoryName, setCategoryName] = useState("");
@@ -40,6 +41,8 @@ const User = () => {
   const numericUserId = Number(userId);
 
   const { data: user } = useFetchUser(numericUserId);
+  const { data: rentals = [] } = useUserRentals(numericUserId);
+
   return (
     <div className="w-screen px-8 text-white">
       {/* 브래드크럼 */}
@@ -222,36 +225,33 @@ const User = () => {
             </TableRow>
           </TableHeader>
           <TableBody className="hover:bg-[#060a0c]">
-            <TableRow>
-              <TableCell>
-                <Checkbox />
-              </TableCell>
-              <TableCell>기자재</TableCell>
-              <TableCell>iPad Air 3</TableCell>
-              <TableCell>A20342</TableCell>
-              <TableCell>2025-1</TableCell>
-              <TableCell>대여중</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>
-                <Checkbox />
-              </TableCell>
-              <TableCell>실습키트</TableCell>
-              <TableCell>Cortex-M3</TableCell>
-              <TableCell>CS123891</TableCell>
-              <TableCell>2024-2</TableCell>
-              <TableCell>미반납</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>
-                <Checkbox />
-              </TableCell>
-              <TableCell>실습키트</TableCell>
-              <TableCell>아두이노</TableCell>
-              <TableCell>CS1272</TableCell>
-              <TableCell>2022-2</TableCell>
-              <TableCell>반납됨</TableCell>
-            </TableRow>
+            {rentals.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-6">
+                  대여 기록이 없습니다.
+                </TableCell>
+              </TableRow>
+            ) : (
+              rentals.map((rental) => (
+                <TableRow key={rental.rentalId}>
+                  <TableCell>
+                    <Checkbox />
+                  </TableCell>
+                  <TableCell>{rental.category}</TableCell>
+                  <TableCell>{rental.modelName}</TableCell>
+                  <TableCell>{rental.itemSerial}</TableCell>
+                  <TableCell>{rental.semester}</TableCell>
+                  <TableCell>
+                    {/* todo : enum 확인 */}
+                    {rental.status === "RENTING"
+                      ? "대여중"
+                      : rental.status === "OVERDUE"
+                        ? "미반납"
+                        : "반납됨"}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
