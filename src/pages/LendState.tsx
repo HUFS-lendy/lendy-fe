@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -28,15 +27,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../components/ui/alert-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu";
-import { Textarea } from "../components/ui/textarea";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
@@ -65,8 +55,6 @@ const getReservationStatusText = (status: string) => {
 };
 
 const LendState = () => {
-  const navigate = useNavigate();
-  const [issueType, setIssueType] = useState<string>("불량 유형 선택");
   const [selectedReservationId, setSelectedReservationId] = useState<
     number | null
   >(null);
@@ -185,73 +173,6 @@ const LendState = () => {
                   disabled={isDeletingReservation}
                 >
                   {isDeletingReservation ? "취소 중..." : "취소"}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <div className="flex justify-end mb-4">
-                <div className="bg-[#060a0c] hover:bg-neutral-700 cursor-pointer text-sm text-white border border-neutral-400 rounded-md px-3 py-1">
-                  불량 신청
-                </div>
-              </div>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle className="pb-4 break-keep text-left">
-                  선택한 기자재에 대한 불량 사항을 적어주세요.
-                </AlertDialogTitle>
-                <AlertDialogDescription className="break-keep pb-2 space-y-4 text-left">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <div className="inline-block hover:bg-neutral-100 cursor-pointer py-2 px-3 rounded-md shadow-2xl text-black border">
-                        {issueType}
-                      </div>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56">
-                      <DropdownMenuLabel>불량 유형</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onSelect={() => setIssueType("전원 불가")}
-                      >
-                        전원 불가
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onSelect={() => setIssueType("충전 불가")}
-                      >
-                        충전 불가
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onSelect={() => setIssueType("화면 깨짐")}
-                      >
-                        화면 깨짐
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onSelect={() => setIssueType("작동 이상")}
-                      >
-                        작동 이상
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => setIssueType("기타")}>
-                        기타
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <Textarea className="text-black" />
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel className="cursor-pointer">
-                  취소
-                </AlertDialogCancel>
-                <AlertDialogAction
-                  className="cursor-pointer"
-                  onClick={() => {
-                    navigate("/lending-state");
-                    toast("불량 신청이 완료되었습니다.");
-                  }}
-                >
-                  신청
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
