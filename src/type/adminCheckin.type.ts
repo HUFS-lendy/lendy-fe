@@ -1,5 +1,6 @@
 export interface CheckinItem {
   reservationId: number;
+  itemId: number;
   userId: number;
   studentId: string;
   username: string;

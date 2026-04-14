@@ -29,17 +29,69 @@ import {
 import { Search } from "lucide-react";
 import { Input } from "../../../components/ui/input";
 import { useCheckinList } from "../../../api/adminCheckIn.api";
+import { useCreateRental } from "../../../api/adminRental.api";
 import { format } from "date-fns";
 import { Checkbox } from "../../../components/ui/checkbox";
+import { type CheckinItem } from "../../../type/adminCheckin.type";
 
 const CheckIn = () => {
   const [keyword, setKeyword] = useState("");
   const [page] = useState(0);
+  const [selectedReservationId, setSelectedReservationId] = useState<
+    number | null
+  >(null);
+  const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
+
   const size = 20;
 
   const { data, isLoading, isError } = useCheckinList(keyword, page, size);
+  const { mutate: createRental, isPending } = useCreateRental();
 
   const checkinList = data?.content ?? [];
+
+  const selectedReservation =
+    checkinList.find(
+      (reservation) => reservation.reservationId === selectedReservationId,
+    ) ?? null;
+
+  const handleSelectReservation = (reservation: CheckinItem) => {
+    const isSameSelected =
+      selectedReservationId === reservation.reservationId &&
+      selectedItemId === reservation.itemId;
+
+    if (isSameSelected) {
+      setSelectedReservationId(null);
+      setSelectedItemId(null);
+      return;
+    }
+
+    setSelectedReservationId(reservation.reservationId);
+    setSelectedItemId(reservation.itemId);
+  };
+
+  const handleCreateRental = () => {
+    if (!selectedReservationId || !selectedItemId) {
+      toast.error("대여 전환할 예약을 선택해주세요.");
+      return;
+    }
+
+    createRental(
+      {
+        reservationId: selectedReservationId,
+        itemId: selectedItemId,
+      },
+      {
+        onSuccess: () => {
+          toast.success("대여 전환이 완료되었습니다.");
+          setSelectedReservationId(null);
+          setSelectedItemId(null);
+        },
+        onError: () => {
+          toast.error("대여 전환 중 오류가 발생했습니다.");
+        },
+      },
+    );
+  };
 
   return (
     <div className="bg-[#060a0c] w-screen px-8 text-white min-h-screen">
@@ -78,28 +130,39 @@ const CheckIn = () => {
             onChange={(e) => setKeyword(e.target.value)}
           />
         </div>
+
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <div className="border cursor-pointer px-3 py-1 rounded-sm hover:bg-red-400 hover:text-black border-red-400 text-sm text-red-300">
+            <button
+              type="button"
+              className="border cursor-pointer px-3 py-1 rounded-sm hover:bg-neutral-400 hover:text-black border-neutral-400 text-sm"
+              //   disabled={!selectedReservationId || !selectedItemId}
+              disabled={!selectedReservationId}
+            >
               대여 전환
-            </div>
+            </button>
           </AlertDialogTrigger>
+
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>
-                아이패드 Air(A20342) 를 삭제하시겠습니까?
+                {selectedReservation
+                  ? `${selectedReservation.modelName} (${selectedReservation.itemSerial}) 을 대여 전환하시겠습니까?`
+                  : "선택한 예약을 대여 전환하시겠습니까?"}
               </AlertDialogTitle>
               <AlertDialogDescription>
-                기자재를 삭제하면 다시 되돌릴 수 없습니다.
+                예약 상태의 기자재를 실제 대여 상태로 전환합니다.
               </AlertDialogDescription>
             </AlertDialogHeader>
+
             <AlertDialogFooter>
               <AlertDialogCancel>취소</AlertDialogCancel>
               <AlertDialogAction
-                onClick={() => toast("해당 기기가 삭제되었습니다.")}
+                onClick={handleCreateRental}
+                disabled={isPending}
                 className="bg-red-600 hover:bg-red-500 font-bold"
               >
-                삭제
+                {isPending ? "전환 중..." : "전환"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -150,33 +213,43 @@ const CheckIn = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              checkinList.map((reservation) => (
-                <TableRow key={reservation.reservationId}>
-                  <TableCell>
-                    {" "}
-                    <Checkbox />
-                  </TableCell>
-                  <TableCell>{reservation.username}</TableCell>
-                  <TableCell>{reservation.studentId}</TableCell>
-                  <TableCell>{reservation.category}</TableCell>
-                  <TableCell>{reservation.modelName}</TableCell>
-                  <TableCell>{reservation.itemSerial}</TableCell>
-                  <TableCell>{reservation.status}</TableCell>
-                  <TableCell>{reservation.semester}</TableCell>
-                  <TableCell>
-                    {format(
-                      reservation.reservedAt,
-                      "yyyy년 MM월 dd일 HH시 mm분",
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {format(
-                      reservation.expiresAt,
-                      "yyyy년 MM월 dd일 HH시 mm분",
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))
+              checkinList.map((reservation) => {
+                const checked =
+                  selectedReservationId === reservation.reservationId &&
+                  selectedItemId === reservation.itemId;
+
+                return (
+                  <TableRow key={reservation.reservationId}>
+                    <TableCell>
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={() =>
+                          handleSelectReservation(reservation)
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>{reservation.username}</TableCell>
+                    <TableCell>{reservation.studentId}</TableCell>
+                    <TableCell>{reservation.category}</TableCell>
+                    <TableCell>{reservation.modelName}</TableCell>
+                    <TableCell>{reservation.itemSerial}</TableCell>
+                    <TableCell>{reservation.status}</TableCell>
+                    <TableCell>{reservation.semester}</TableCell>
+                    <TableCell>
+                      {format(
+                        new Date(reservation.reservedAt),
+                        "yyyy년 MM월 dd일 HH시 mm분",
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {format(
+                        new Date(reservation.expiresAt),
+                        "yyyy년 MM월 dd일 HH시 mm분",
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
