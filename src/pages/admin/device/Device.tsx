@@ -37,13 +37,13 @@ import { DeviceStateCombobox } from "../../../components/ui/DeviceStateCombobox"
 import { toast } from "sonner";
 import { format } from "date-fns";
 // import { usePhoneCopy } from "../../../hooks/usePhoneCopy";
-import { useReservations } from "../../../api/adminReservation.api";
+import { useReservation } from "../../../api/adminReservation.api";
 import { type Reservation } from "../../../type/adminReservation.type";
 
 const Device = () => {
   // const copyPhone = usePhoneCopy();
   const { itemId } = useParams();
-  const { data: reservations = [] } = useReservations(Number(itemId));
+  const { data: reservations = [] } = useReservation(Number(itemId));
   console.log(reservations);
   const filteredReservations = reservations.filter(
     (item: Reservation) => String(item.modelId) === String(itemId),
