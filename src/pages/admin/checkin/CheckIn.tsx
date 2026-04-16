@@ -160,7 +160,7 @@ const CheckIn = () => {
               <AlertDialogAction
                 onClick={handleCreateRental}
                 disabled={isPending}
-                className="bg-red-600 hover:bg-red-500 font-bold"
+                className="bg-black font-bold"
               >
                 {isPending ? "전환 중..." : "전환"}
               </AlertDialogAction>
