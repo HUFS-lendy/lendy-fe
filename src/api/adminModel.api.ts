@@ -1,6 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "./client";
-// import type { ModelItem } from "../type/adminModel.type";
 
 // 모델 등록
 export const useCreateModel = () => {

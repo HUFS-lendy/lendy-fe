@@ -1,22 +1,6 @@
-export interface Reservation {
+export interface CheckinItem {
   reservationId: number;
-  userId: number;
-  username: string;
-  studentId: string;
-  email: string;
-  phone: string;
-  modelId: number;
-  modelName: string;
-  semester: string;
-  status: string;
-  reservedAt: Date;
-  expiresAt: Date;
-  convertedAt: Date;
-  cancelledAt: Date;
-}
-
-export interface ReservationItem {
-  reservationId: number;
+  itemId: number;
   userId: number;
   studentId: string;
   username: string;
@@ -29,8 +13,8 @@ export interface ReservationItem {
   status: string;
 }
 
-export interface ReservationListResponse {
-  content: ReservationItem[];
+export interface CheckinListResponse {
+  content: CheckinItem[];
   pageable: {
     pageNumber: number;
     pageSize: number;

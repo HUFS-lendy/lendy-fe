@@ -5,6 +5,8 @@ import {
   ToolCase,
   ChevronRight,
   Archive,
+  ClipboardCheck,
+  CalendarClock,
 } from "lucide-react";
 import {
   Sidebar,
@@ -36,6 +38,14 @@ type NavItem = {
 // Menu items (예시)
 const items: NavItem[] = [
   {
+    title: "체크인",
+    icon: ClipboardCheck,
+    children: [
+      { title: "체크인", url: "/admin/check-in" },
+      { title: "수기 대여 등록", url: "/admin/manual-rental" },
+    ],
+  },
+  {
     title: "기자재",
     icon: TabletSmartphone,
     defaultOpen: true,
@@ -61,7 +71,7 @@ const items: NavItem[] = [
   },
   {
     title: "반납 기한 설정",
-    icon: ToolCase,
+    icon: CalendarClock,
     children: [{ title: "반납 기한 현황", url: "/admin/view-limit" }],
   },
 ];
