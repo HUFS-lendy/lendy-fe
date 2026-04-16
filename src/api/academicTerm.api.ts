@@ -79,7 +79,7 @@ export const useUpdateAcademicTerm = () => {
       endDate: string;
     }) => {
       const updateAcademicTerm_res = await apiClient.patch(
-        `/api/admin/academic-terms/${termId}`,
+        `/api/admin/academic-terms/${termId}/end-date`,
         {
           endDate,
         },

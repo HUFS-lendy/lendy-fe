@@ -17,6 +17,7 @@ export const useCreateRental = () => {
     },
 
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["check-in"] });
       queryClient.invalidateQueries({ queryKey: ["reservations"] });
     },
   });
