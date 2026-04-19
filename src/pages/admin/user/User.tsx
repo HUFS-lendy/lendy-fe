@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
   Breadcrumb,
@@ -34,18 +34,47 @@ import { DeviceStateCombobox } from "../../../components/ui/DeviceStateCombobox"
 import { toast } from "sonner";
 import { useFetchUser } from "../../../api/admin.api";
 import { useUserRentals } from "../../../api/adminUser.api";
+import { useReturnReservation } from "../../../api/adminRental.api";
 
 const User = () => {
   const [categoryName, setCategoryName] = useState("");
+  const [selectedRentalId, setSelectedRentalId] = useState<number | null>(null);
   const { userId } = useParams<{ userId: string }>();
   const numericUserId = Number(userId);
 
   const { data: user } = useFetchUser(numericUserId);
   const { data: rentals = [] } = useUserRentals(numericUserId);
+  const { mutate: returnReservation, isPending: isReturning } =
+    useReturnReservation();
+
+  const selectedRental = useMemo(
+    () =>
+      rentals.find((rental) => rental.rentalId === selectedRentalId) ?? null,
+    [rentals, selectedRentalId],
+  );
+
+  const handleReturnRental = () => {
+    if (!selectedRental) {
+      toast("반납할 대여 기록을 선택해주세요.");
+      return;
+    }
+
+    returnReservation(
+      { rentalId: selectedRental.rentalId },
+      {
+        onSuccess: () => {
+          toast("기자재가 반납 처리되었습니다.");
+          setSelectedRentalId(null);
+        },
+        onError: () => {
+          toast("반납 처리에 실패했습니다.");
+        },
+      },
+    );
+  };
 
   return (
     <div className="w-screen px-8 text-white">
-      {/* 브래드크럼 */}
       <div className="pt-14">
         <Breadcrumb>
           <BreadcrumbList>
@@ -75,14 +104,14 @@ const User = () => {
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-      {/* 제목 */}
+
       <div className="pt-8">
         <div className="font-bold text-white text-3xl pb-4">
           {user?.username}
         </div>
       </div>
+
       <div className="flex space-x-4 justify-end">
-        {/* 대여 내용 수정 버튼 */}
         <div>
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -92,12 +121,15 @@ const User = () => {
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>2025-1 iPad Air 3 내용 수정</AlertDialogTitle>
+                <AlertDialogTitle>
+                  {selectedRental
+                    ? `${selectedRental.semester} ${selectedRental.modelName} 내용 수정`
+                    : "대여 내용 수정"}
+                </AlertDialogTitle>
                 <AlertDialogDescription>
                   기기 대여 내용을 수정해보세요.
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              {/* 수정 모달 테이블 */}
               <div>
                 <Table className="text-center border border-neutral-200">
                   <TableBody>
@@ -105,7 +137,9 @@ const User = () => {
                       <TableCell className="w-1/6 bg-neutral-300">
                         대여 ID
                       </TableCell>
-                      <TableCell className="text-left px-6">1</TableCell>
+                      <TableCell className="text-left px-6">
+                        {selectedRental?.rentalId ?? ""}
+                      </TableCell>
                     </TableRow>
                     <TableRow className="border-neutral-200 hover:bg-white">
                       <TableCell className="w-1/6 bg-neutral-300">
@@ -126,7 +160,7 @@ const User = () => {
                         <Input
                           className="text-sm"
                           readOnly
-                          value="iPad Air 3"
+                          value={selectedRental?.modelName ?? ""}
                         />
                       </TableCell>
                     </TableRow>
@@ -135,18 +169,23 @@ const User = () => {
                         코드번호
                       </TableCell>
                       <TableCell className="text-left px-4">
-                        <Input className="text-sm" value="A20342" />
+                        <Input
+                          className="text-sm"
+                          value={selectedRental?.itemSerial ?? ""}
+                          readOnly
+                        />
                       </TableCell>
                     </TableRow>
                     <TableRow className="border-neutral-200 hover:bg-white">
                       <TableCell className="w-1/6 bg-neutral-300">
-                        이메일
+                        대여 학기
                       </TableCell>
                       <TableCell className="text-left px-4">
                         <Input
                           className="text-sm"
-                          value="2025-1"
+                          value={selectedRental?.semester ?? ""}
                           placeholder="yyyy-1"
+                          readOnly
                         />
                       </TableCell>
                     </TableRow>
@@ -169,7 +208,7 @@ const User = () => {
                   onClick={() =>
                     toast("사용자의 해당 대여 내용이 수정되었습니다.")
                   }
-                  className=" hover:bg-neutral-700 font-bold cursor-pointer"
+                  className="hover:bg-neutral-700 font-bold cursor-pointer"
                 >
                   수정
                 </AlertDialogAction>
@@ -177,7 +216,45 @@ const User = () => {
             </AlertDialogContent>
           </AlertDialog>
         </div>
-        {/* 대여 기록 삭제 버튼 */}
+
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button
+              type="button"
+              disabled={!selectedRental}
+              className={`text-sm px-3 py-1 rounded-sm border ${selectedRental ? "hover:bg-neutral-800 cursor-pointer border-neutral-400 text-neutral-200" : "cursor-not-allowed border-neutral-700 text-neutral-600"}`}
+            >
+              반납
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="break-keep">
+                {selectedRental
+                  ? `${selectedRental.semester}) ${selectedRental.modelName}(${selectedRental.itemSerial}) 기자재를 반납 처리하시겠습니까?`
+                  : "반납할 대여 기록을 선택해주세요."}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {selectedRental
+                  ? "반납 처리 후 해당 대여 기록의 상태가 변경됩니다."
+                  : "테이블에서 반납할 대여 기록을 선택해주세요."}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="cursor-pointer">
+                취소
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleReturnRental}
+                disabled={!selectedRental || isReturning}
+                className="bg-neutral-900 hover:bg-neutral-700 font-bold cursor-pointer"
+              >
+                {isReturning ? "반납 처리 중..." : "반납"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <div className="border cursor-pointer px-3 py-1 rounded-sm hover:bg-red-400 hover:text-black border-red-400 text-sm text-red-300">
@@ -209,10 +286,10 @@ const User = () => {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-      {/* 사용자 테이블 */}
+
       <div className="mt-4">
         <Table className="text-center">
-          <TableHeader className=" border-b bg-[#11141b] hover:bg-[#11141b] border-neutral-700">
+          <TableHeader className="border-b bg-[#11141b] hover:bg-[#11141b] border-neutral-700">
             <TableRow>
               <TableHead></TableHead>
               <TableHead className="text-white text-center">분류</TableHead>
@@ -235,14 +312,18 @@ const User = () => {
               rentals.map((rental) => (
                 <TableRow key={rental.rentalId}>
                   <TableCell>
-                    <Checkbox />
+                    <Checkbox
+                      checked={selectedRentalId === rental.rentalId}
+                      onCheckedChange={(checked) =>
+                        setSelectedRentalId(checked ? rental.rentalId : null)
+                      }
+                    />
                   </TableCell>
                   <TableCell>{rental.category}</TableCell>
                   <TableCell>{rental.modelName}</TableCell>
                   <TableCell>{rental.itemSerial}</TableCell>
                   <TableCell>{rental.semester}</TableCell>
                   <TableCell>
-                    {/* todo : enum 확인 */}
                     {rental.status === "RENTING"
                       ? "대여중"
                       : rental.status === "OVERDUE"

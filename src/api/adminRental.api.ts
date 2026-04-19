@@ -22,3 +22,21 @@ export const useCreateRental = () => {
     },
   });
 };
+
+// 기자재 반납 처리
+export const useReturnReservation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ rentalId }: { rentalId: number }) => {
+      const returnReservation_res = await apiClient.patch(
+        `/api/admin/rentals/${rentalId}`,
+      );
+
+      return returnReservation_res.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user_rentals"] });
+    },
+  });
+};
