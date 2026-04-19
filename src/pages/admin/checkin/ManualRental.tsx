@@ -188,7 +188,14 @@ const ManualRental = () => {
                           기기 번호
                         </TableCell>
                         <TableCell className="text-left px-4">
-                          <Input placeholder="기기 번호를 입력해주세요." />
+                          <ItemCombobox
+                            value={selectedModelName}
+                            onChange={setSelectedModelName}
+                            items={models.map((model: { name: string }) => ({
+                              value: model.name,
+                              label: model.name,
+                            }))}
+                          />
                         </TableCell>
                       </TableRow>
                     </TableBody>

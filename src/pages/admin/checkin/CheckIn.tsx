@@ -30,7 +30,7 @@ import { Search } from "lucide-react";
 import { Input } from "../../../components/ui/input";
 import { useCheckinList } from "../../../api/adminCheckIn.api";
 import { useCreateRental } from "../../../api/adminRental.api";
-import { format } from "date-fns";
+import { format, compareDesc } from "date-fns";
 import { Checkbox } from "../../../components/ui/checkbox";
 import { type CheckinItem } from "../../../type/adminCheckin.type";
 
@@ -160,7 +160,7 @@ const CheckIn = () => {
               <AlertDialogAction
                 onClick={handleCreateRental}
                 disabled={isPending}
-                className="bg-black font-bold"
+                className="bg-red-600 hover:bg-red-500 font-bold"
               >
                 {isPending ? "전환 중..." : "전환"}
               </AlertDialogAction>
@@ -213,43 +213,42 @@ const CheckIn = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              checkinList.map((reservation) => {
-                const checked =
-                  selectedReservationId === reservation.reservationId &&
-                  selectedItemId === reservation.itemId;
-
-                return (
-                  <TableRow key={reservation.reservationId}>
-                    <TableCell>
-                      <Checkbox
-                        checked={checked}
-                        onCheckedChange={() =>
-                          handleSelectReservation(reservation)
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>{reservation.username}</TableCell>
-                    <TableCell>{reservation.studentId}</TableCell>
-                    <TableCell>{reservation.category}</TableCell>
-                    <TableCell>{reservation.modelName}</TableCell>
-                    <TableCell>{reservation.itemSerial}</TableCell>
-                    <TableCell>{reservation.status}</TableCell>
-                    <TableCell>{reservation.semester}</TableCell>
-                    <TableCell>
-                      {format(
-                        new Date(reservation.reservedAt),
-                        "yyyy년 MM월 dd일 HH시 mm분",
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {format(
-                        new Date(reservation.expiresAt),
-                        "yyyy년 MM월 dd일 HH시 mm분",
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })
+              [...checkinList]
+                .sort((a, b) =>
+                  compareDesc(new Date(a.reservedAt), new Date(b.reservedAt)),
+                )
+                .map((reservation) => {
+                  return (
+                    <TableRow key={reservation.reservationId}>
+                      <TableCell>
+                        <Checkbox
+                          onCheckedChange={() =>
+                            handleSelectReservation(reservation)
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>{reservation.username}</TableCell>
+                      <TableCell>{reservation.studentId}</TableCell>
+                      <TableCell>{reservation.category}</TableCell>
+                      <TableCell>{reservation.modelName}</TableCell>
+                      <TableCell>{reservation.itemSerial}</TableCell>
+                      <TableCell>{reservation.status}</TableCell>
+                      <TableCell>{reservation.semester}</TableCell>
+                      <TableCell>
+                        {format(
+                          new Date(reservation.reservedAt),
+                          "yyyy년 MM월 dd일 HH시 mm분",
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {format(
+                          new Date(reservation.expiresAt),
+                          "yyyy년 MM월 dd일 HH시 mm분",
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
             )}
           </TableBody>
         </Table>
