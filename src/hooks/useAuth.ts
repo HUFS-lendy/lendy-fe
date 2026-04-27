@@ -3,7 +3,10 @@ import { apiClient } from "../api/client";
 import { useAuthStore } from "../store/authStore";
 import { useShallow } from "zustand/react/shallow";
 
-type LoginParams = { id: string; password: string };
+type LoginParams = {
+  id: string;
+  password: string;
+};
 
 type ApiResponse<T> = {
   success: boolean;
@@ -12,10 +15,16 @@ type ApiResponse<T> = {
   data: T;
 };
 
-type AccessTokenResponse = { accessToken: string };
+type AccessTokenResponse = {
+  accessToken: string;
+};
 
 type AxiosLikeError = {
-  response?: { data?: { message?: string } };
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
 };
 
 const isTokenValid = (token: unknown): token is string =>
@@ -24,7 +33,6 @@ const isTokenValid = (token: unknown): token is string =>
 const useAuth = () => {
   const auth = useAuthStore(
     useShallow((s) => ({
-      isAuthenticated: s.isAuthenticated,
       accessToken: s.accessToken,
       tokenType: s.tokenType,
     })),
@@ -33,24 +41,26 @@ const useAuth = () => {
   const setAuth = useAuthStore((s) => s.setAuth);
   const logoutStore = useAuthStore((s) => s.logout);
 
-  const loggedIn = auth.isAuthenticated;
+  const loggedIn = !!auth.accessToken;
 
   const login = useCallback(
     async ({ id, password }: LoginParams): Promise<{ message?: string }> => {
       try {
         const response = await apiClient.post<ApiResponse<AccessTokenResponse>>(
           "/api/auth/login",
-          { studentId: id, password },
+          {
+            studentId: id,
+            password,
+          },
         );
 
-        const { accessToken } = response.data.data;
+        const accessToken = response.data.data?.accessToken;
 
         if (!isTokenValid(accessToken)) {
           throw new Error("유효하지 않은 토큰");
         }
 
         setAuth({
-          isAuthenticated: true,
           accessToken,
           tokenType: "Bearer",
         });
@@ -65,22 +75,55 @@ const useAuth = () => {
     [setAuth],
   );
 
+  const refreshAuth = useCallback(async (): Promise<boolean> => {
+    try {
+      const response =
+        await apiClient.post<ApiResponse<AccessTokenResponse>>(
+          "/api/auth/refresh",
+        );
+
+      const accessToken = response.data.data?.accessToken;
+
+      if (!isTokenValid(accessToken)) {
+        throw new Error("유효하지 않은 토큰");
+      }
+
+      setAuth({
+        accessToken,
+        tokenType: "Bearer",
+      });
+
+      return true;
+    } catch {
+      logoutStore();
+      return false;
+    }
+  }, [setAuth, logoutStore]);
+
   const logout = useCallback(async (): Promise<{ message?: string }> => {
     try {
       await apiClient.post("/api/auth/logout");
 
       logoutStore();
+
       return { message: "로그아웃 되었습니다." };
     } catch (e) {
       logoutStore();
 
       const error = e as AxiosLikeError;
       const msg = error.response?.data?.message || "로그아웃 되었습니다.";
+
       return { message: msg };
     }
   }, [logoutStore]);
 
-  return { ...auth, loggedIn, login, logout };
+  return {
+    ...auth,
+    loggedIn,
+    login,
+    refreshAuth,
+    logout,
+  };
 };
 
 export default useAuth;

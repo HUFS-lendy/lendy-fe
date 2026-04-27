@@ -33,7 +33,7 @@ const Login = () => {
       });
 
       toast(message ?? "로그인 되었습니다.");
-      navigate("/");
+      navigate("/", { replace: true });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "로그인에 실패했습니다.";
       toast(msg);
