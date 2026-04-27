@@ -1,7 +1,7 @@
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 
 const Footer = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   return (
     <div className="space-y-4 md:space-y-0 bg-[#060a0c] text-white px-4">
@@ -25,12 +25,12 @@ const Footer = () => {
             <div>ces@hufs.ac.kr</div>
           </div>
         </div>
-        <div
+        {/* <div
           onClick={() => navigate("/admin")}
           className="text-sm md:text-xs hover:underline cursor-pointer"
         >
           관리자
-        </div>
+        </div> */}
       </div>
     </div>
   );

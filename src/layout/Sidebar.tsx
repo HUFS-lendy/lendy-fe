@@ -70,9 +70,9 @@ const items: NavItem[] = [
     ],
   },
   {
-    title: "반납 기한 설정",
+    title: "종강일 설정",
     icon: CalendarClock,
-    children: [{ title: "반납 기한 현황", url: "/admin/view-limit" }],
+    children: [{ title: "종강일 설정", url: "/admin/view-limit" }],
   },
 ];
 

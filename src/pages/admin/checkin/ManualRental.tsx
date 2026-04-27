@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -37,7 +37,6 @@ import { useAdminUsers } from "../../../api/admin.api";
 import { useModels } from "../../../api/adminModel.api";
 
 const ManualRental = () => {
-  const navigte = useNavigate();
   const [keyword, setKeyword] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -184,6 +183,21 @@ const ManualRental = () => {
                           />
                         </TableCell>
                       </TableRow>
+                      <TableRow className="border-neutral-200 hover:bg-white">
+                        <TableCell className="w-1/6 bg-neutral-300">
+                          기기 번호
+                        </TableCell>
+                        <TableCell className="text-left px-4">
+                          <ItemCombobox
+                            value={selectedModelName}
+                            onChange={setSelectedModelName}
+                            items={models.map((model: { name: string }) => ({
+                              value: model.name,
+                              label: model.name,
+                            }))}
+                          />
+                        </TableCell>
+                      </TableRow>
                     </TableBody>
                   </Table>
                 </div>
@@ -299,11 +313,7 @@ const ManualRental = () => {
               </TableRow>
             ) : (
               users.map((user) => (
-                <TableRow
-                  key={user.userId}
-                  className="cursor-pointer"
-                  onClick={() => navigte(`/admin/users/${user.userId}`)}
-                >
+                <TableRow key={user.userId}>
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                       checked={selectedUserId === user.userId}

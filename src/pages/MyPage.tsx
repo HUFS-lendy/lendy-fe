@@ -14,6 +14,7 @@ import { useMe } from "../api/user.api";
 const MyPage = () => {
   const navigate = useNavigate();
   const { data: me, isLoading, isError } = useMe();
+  console.log(me);
 
   if (isLoading) {
     return (
@@ -68,6 +69,18 @@ const MyPage = () => {
       </div>
       {/* 메뉴 */}
       <div className="text-white px-2 md:px-12 space-y-12">
+        {/* 관리자 페이지 */}
+        <div>
+          <div className="text-lg font-bold mb-2">관리자</div>
+          <div className="mx-2">
+            <div
+              onClick={() => navigate("/admin")}
+              className="border-b border-neutral-500 text-lg py-3 cursor-pointer"
+            >
+              관리자 페이지
+            </div>
+          </div>
+        </div>
         {/* 대여 관리 */}
         <div>
           <div className="text-lg font-bold mb-2">대여 관리</div>
@@ -77,12 +90,6 @@ const MyPage = () => {
               className="border-b border-neutral-500 text-lg py-3 cursor-pointer"
             >
               대여 현황
-            </div>
-            <div
-              onClick={() => navigate("/otp")}
-              className="border-b border-neutral-500 text-lg py-3 cursor-pointer"
-            >
-              QR 코드
             </div>
           </div>
         </div>

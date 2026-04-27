@@ -30,7 +30,6 @@ import {
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
-import { QrModal } from "../hooks/useQrCode";
 import {
   useDeleteReservation,
   useMyReservations,
@@ -193,7 +192,6 @@ const LendState = () => {
               <TableHead className="text-white text-center">
                 만료 시각
               </TableHead>
-              <TableHead className="text-white text-center">QR</TableHead>
             </TableRow>
           </TableHeader>
 
@@ -257,16 +255,6 @@ const LendState = () => {
                     {format(new Date(item.expiresAt), "yyyy년 MM월 dd일", {
                       locale: ko,
                     })}
-                  </TableCell>
-                  <TableCell>
-                    {item.qrUrl ? (
-                      <QrModal
-                        title={`예약 ${item.reservationId} - QR 인증`}
-                        value={item.qrUrl}
-                      />
-                    ) : (
-                      "-"
-                    )}
                   </TableCell>
                 </TableRow>
               ))}
