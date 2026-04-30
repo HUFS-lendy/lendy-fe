@@ -27,6 +27,7 @@ import {
   AlertDialogTrigger,
   AlertDialogAction,
 } from "../../../components/ui/alert-dialog";
+import { toast } from "sonner";
 import { Input } from "../../../components/ui/input";
 import { Checkbox } from "../../../components/ui/checkbox";
 import { Search } from "lucide-react";
@@ -35,6 +36,7 @@ import { Label } from "../../../components/ui/label";
 import { useAdminUsers } from "../../../api/admin.api";
 import { useModels } from "../../../api/adminModel.api";
 import { useItemAvailable } from "../../../api/adminItem.api";
+import { useManualRental } from "../../../api/adminRental.api";
 
 const ManualRental = () => {
   const [keyword, setKeyword] = useState("");
@@ -56,6 +58,9 @@ const ManualRental = () => {
 
   const { data: modelsData } = useModels();
   const models = modelsData ?? [];
+
+  const { mutate: manualRental, isPending: isManualRentalPending } =
+    useManualRental();
 
   const { data: availableItems = [], isLoading: isAvailableItemsLoading } =
     useItemAvailable(selectedModelId);
@@ -94,21 +99,38 @@ const ManualRental = () => {
 
   const handleSubmitManualRental = () => {
     if (!selectedUser) {
+      toast("대여 등록할 사용자를 선택해주세요.");
       return;
     }
 
     if (!selectedModelId) {
+      toast("기기를 선택해주세요.");
       return;
     }
 
     if (!selectedItemId) {
+      toast("기기 번호를 선택해주세요.");
       return;
     }
 
-    console.log({
-      userId: selectedUser.userId,
-      itemId: Number(selectedItemId),
-    });
+    manualRental(
+      {
+        studentId: selectedUser.studentId,
+        itemId: Number(selectedItemId),
+      },
+      {
+        onSuccess: () => {
+          toast("수기 대여가 등록되었습니다.");
+          setIsEditDialogOpen(false);
+          setSelectedUserId(null);
+          setSelectedModelId(null);
+          setSelectedItemId("");
+        },
+        onError: () => {
+          toast("수기 대여 등록에 실패했습니다.");
+        },
+      },
+    );
   };
 
   return (
@@ -263,11 +285,14 @@ const ManualRental = () => {
                 <AlertDialogAction
                   className="bg-black font-bold"
                   disabled={
-                    !selectedUser || !selectedModelId || !selectedItemId
+                    !selectedUser ||
+                    !selectedModelId ||
+                    !selectedItemId ||
+                    isManualRentalPending
                   }
                   onClick={handleSubmitManualRental}
                 >
-                  등록
+                  {isManualRentalPending ? "등록 중..." : "등록"}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
