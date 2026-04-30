@@ -148,6 +148,16 @@ const ViewLimit = () => {
       return;
     }
 
+    if (!year.trim()) {
+      toast("년도를 입력해주세요.");
+      return;
+    }
+
+    if (!selectedTerm) {
+      toast("학기를 선택해주세요.");
+      return;
+    }
+
     if (!date) {
       toast("날짜를 선택해주세요.");
       return;
@@ -156,7 +166,10 @@ const ViewLimit = () => {
     updateAcademicTerm(
       {
         termId: selectedAcademicTerm.id,
+        year: Number(year),
+        term: selectedTerm,
         endDate: formatDateToKSTString(date),
+        active: active === "true",
       },
       {
         onSuccess: () => {

@@ -31,16 +31,18 @@ import { Input } from "../../../components/ui/input";
 import { Checkbox } from "../../../components/ui/checkbox";
 import { Search } from "lucide-react";
 import { ItemCombobox } from "../../../components/ui/ItemCombobox";
-
 import { Label } from "../../../components/ui/label";
 import { useAdminUsers } from "../../../api/admin.api";
 import { useModels } from "../../../api/adminModel.api";
+import { useItemAvailable } from "../../../api/adminItem.api";
 
 const ManualRental = () => {
   const [keyword, setKeyword] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedModelName, setSelectedModelName] = useState("");
+
+  const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState("");
 
   const [checkedRoles, setCheckedRoles] = useState({
     ADMIN: true,
@@ -54,6 +56,9 @@ const ManualRental = () => {
 
   const { data: modelsData } = useModels();
   const models = modelsData ?? [];
+
+  const { data: availableItems = [], isLoading: isAvailableItemsLoading } =
+    useItemAvailable(selectedModelId);
 
   const rolesParam = useMemo(() => {
     const roles: string[] = [];
@@ -77,9 +82,34 @@ const ManualRental = () => {
     size: 10,
     sort: "",
   });
+
   const users = data?.content ?? [];
   const selectedUser =
     users.find((user) => user.userId === selectedUserId) ?? null;
+
+  const handleOpenManualRentalDialog = () => {
+    setSelectedModelId(null);
+    setSelectedItemId("");
+  };
+
+  const handleSubmitManualRental = () => {
+    if (!selectedUser) {
+      return;
+    }
+
+    if (!selectedModelId) {
+      return;
+    }
+
+    if (!selectedItemId) {
+      return;
+    }
+
+    console.log({
+      userId: selectedUser.userId,
+      itemId: Number(selectedItemId),
+    });
+  };
 
   return (
     <div className="bg-[#060a0c] w-screen px-8 text-white">
@@ -104,13 +134,14 @@ const ManualRental = () => {
           </BreadcrumbList>
         </Breadcrumb>
       </div>
+
       {/* 제목 */}
       <div className="pt-8 pb-4">
         <div className="font-bold text-white text-3xl pb-4">수기 대여 등록</div>
       </div>
-      {/* 검색창 & 수정 버튼 */}
+
+      {/* 검색창 & 대여 등록 버튼 */}
       <div className="flex justify-between items-center pr-2">
-        {/* 검색창 */}
         <div className="relative w-3/5 md:w-1/4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 w-3 h-3 md:w-5 md:h-5" />
           <Input
@@ -120,110 +151,137 @@ const ManualRental = () => {
             onChange={(e) => setKeyword(e.target.value)}
           />
         </div>
+
         <div className="flex space-x-2">
-          {/* 수정 버튼 */}
-          <div>
-            <AlertDialog
-              open={isEditDialogOpen}
-              onOpenChange={setIsEditDialogOpen}
-            >
-              <AlertDialogTrigger asChild>
-                <button
-                  type="button"
-                  disabled={!selectedUser}
-                  className={`border text-sm px-3 py-1 rounded-sm ${
-                    selectedUser
-                      ? "hover:bg-neutral-800 cursor-pointer border-neutral-400 text-neutral-200"
-                      : "cursor-not-allowed border-neutral-700 text-neutral-600"
-                  }`}
+          <AlertDialog
+            open={isEditDialogOpen}
+            onOpenChange={setIsEditDialogOpen}
+          >
+            <AlertDialogTrigger asChild>
+              <button
+                type="button"
+                disabled={!selectedUser}
+                onClick={handleOpenManualRentalDialog}
+                className={`border text-sm px-3 py-1 rounded-sm ${selectedUser ? "hover:bg-neutral-800 cursor-pointer border-neutral-400 text-neutral-200" : "cursor-not-allowed border-neutral-700 text-neutral-600"}`}
+              >
+                대여 등록
+              </button>
+            </AlertDialogTrigger>
+
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  {selectedUser
+                    ? `#${selectedUser.userId} ${selectedUser.username}`
+                    : "대여 등록"}
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  사용자에게 기기 대여가 수동으로 부여됩니다.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <div>
+                <Table className="text-center border border-neutral-200">
+                  <TableBody>
+                    <TableRow className="border-neutral-200 hover:bg-white">
+                      <TableCell className="w-1/6 bg-neutral-300">
+                        학번
+                      </TableCell>
+                      <TableCell className="text-left px-6">
+                        {selectedUser?.studentId}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow className="border-neutral-200 hover:bg-white">
+                      <TableCell className="w-1/6 bg-neutral-300">
+                        이름
+                      </TableCell>
+                      <TableCell className="text-left px-6">
+                        {selectedUser?.username}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow className="border-neutral-200 hover:bg-white">
+                      <TableCell className="w-1/6 bg-neutral-300">
+                        기기
+                      </TableCell>
+                      <TableCell className="text-left px-4">
+                        <ItemCombobox
+                          value={selectedModelId ? String(selectedModelId) : ""}
+                          onChange={(value) => {
+                            setSelectedModelId(value ? Number(value) : null);
+                            setSelectedItemId("");
+                          }}
+                          items={models.map(
+                            (model: { modelId: number; name: string }) => ({
+                              value: String(model.modelId),
+                              label: model.name,
+                            }),
+                          )}
+                          placeholder="기기 선택"
+                          searchPlaceholder="기기 검색"
+                          emptyText="검색에 맞는 기기가 없습니다."
+                        />
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow className="border-neutral-200 hover:bg-white">
+                      <TableCell className="w-1/6 bg-neutral-300">
+                        기기 번호
+                      </TableCell>
+                      <TableCell className="text-left px-4">
+                        <ItemCombobox
+                          value={selectedItemId}
+                          onChange={setSelectedItemId}
+                          disabled={!selectedModelId || isAvailableItemsLoading}
+                          items={availableItems.map(
+                            (item: { itemId: number; serial: string }) => ({
+                              value: String(item.itemId),
+                              label: item.serial,
+                            }),
+                          )}
+                          placeholder={
+                            !selectedModelId
+                              ? "기기를 먼저 선택해주세요"
+                              : isAvailableItemsLoading
+                                ? "불러오는 중..."
+                                : "기기 번호 선택"
+                          }
+                          searchPlaceholder="기기 번호 검색"
+                          emptyText="대여 가능한 기기 번호가 없습니다."
+                        />
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+
+              <AlertDialogFooter className="mt-4">
+                <AlertDialogCancel className="cursor-pointer">
+                  취소
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-black font-bold"
+                  disabled={
+                    !selectedUser || !selectedModelId || !selectedItemId
+                  }
+                  onClick={handleSubmitManualRental}
                 >
-                  대여 등록
-                </button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    {`#${selectedUser?.userId} ${selectedUser?.username}`}
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    사용자에게 기기 대여가 수동으로 부여됩니다.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <div>
-                  <Table className="text-center border border-neutral-200">
-                    <TableBody>
-                      <TableRow className="border-neutral-200 hover:bg-white">
-                        <TableCell className="w-1/6 bg-neutral-300">
-                          학번
-                        </TableCell>
-                        <TableCell className="text-left px-6">
-                          {selectedUser?.studentId}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow className="border-neutral-200 hover:bg-white">
-                        <TableCell className="w-1/6 bg-neutral-300">
-                          이름
-                        </TableCell>
-                        <TableCell className="text-left px-6">
-                          {selectedUser?.username}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow className="border-neutral-200 hover:bg-white">
-                        <TableCell className="w-1/6 bg-neutral-300">
-                          기기
-                        </TableCell>
-                        <TableCell className="text-left px-4">
-                          <ItemCombobox
-                            value={selectedModelName}
-                            onChange={setSelectedModelName}
-                            items={models.map((model: { name: string }) => ({
-                              value: model.name,
-                              label: model.name,
-                            }))}
-                          />
-                        </TableCell>
-                      </TableRow>
-                      <TableRow className="border-neutral-200 hover:bg-white">
-                        <TableCell className="w-1/6 bg-neutral-300">
-                          기기 번호
-                        </TableCell>
-                        <TableCell className="text-left px-4">
-                          <ItemCombobox
-                            value={selectedModelName}
-                            onChange={setSelectedModelName}
-                            items={models.map((model: { name: string }) => ({
-                              value: model.name,
-                              label: model.name,
-                            }))}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
-                <AlertDialogFooter className="mt-4">
-                  <AlertDialogCancel className="cursor-pointer">
-                    취소
-                  </AlertDialogCancel>
-                  <AlertDialogAction className="bg-black font-bold">
-                    등록
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
+                  등록
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
+
       {/* 권한 체크박스 */}
       <div className="flex items-center space-x-4 py-4">
         <Label className="flex items-center gap-2 cursor-pointer">
           <Checkbox
             checked={checkedRoles.ADMIN}
             onCheckedChange={(checked) =>
-              setCheckedRoles((prev) => ({
-                ...prev,
-                ADMIN: checked === true,
-              }))
+              setCheckedRoles((prev) => ({ ...prev, ADMIN: checked === true }))
             }
             className="data-[state=checked]:border-neutral-600 data-[state=checked]:bg-neutral-600 data-[state=checked]:text-white"
           />
@@ -234,10 +292,7 @@ const ManualRental = () => {
           <Checkbox
             checked={checkedRoles.USER}
             onCheckedChange={(checked) =>
-              setCheckedRoles((prev) => ({
-                ...prev,
-                USER: checked === true,
-              }))
+              setCheckedRoles((prev) => ({ ...prev, USER: checked === true }))
             }
             className="data-[state=checked]:border-neutral-600 data-[state=checked]:bg-neutral-600 data-[state=checked]:text-white"
           />
@@ -280,15 +335,18 @@ const ManualRental = () => {
       <div className="mt-4">
         <Table className="text-white text-center border border-neutral-700">
           <TableHeader className="text-center border-b bg-[#11141b] hover:bg-[#11141b] border-neutral-700">
-            <TableHead></TableHead>
-            <TableHead className="text-white text-center">ID</TableHead>
-            <TableHead className="text-white text-center">이름</TableHead>
-            <TableHead className="text-white text-center">학번</TableHead>
-            <TableHead className="text-white text-center">권한</TableHead>
-            <TableHead className="text-white text-center">상태</TableHead>
-            <TableHead className="text-white text-center">이메일</TableHead>
-            <TableHead className="text-white text-center">연락처</TableHead>
+            <TableRow>
+              <TableHead></TableHead>
+              <TableHead className="text-white text-center">ID</TableHead>
+              <TableHead className="text-white text-center">이름</TableHead>
+              <TableHead className="text-white text-center">학번</TableHead>
+              <TableHead className="text-white text-center">권한</TableHead>
+              <TableHead className="text-white text-center">상태</TableHead>
+              <TableHead className="text-white text-center">이메일</TableHead>
+              <TableHead className="text-white text-center">연락처</TableHead>
+            </TableRow>
           </TableHeader>
+
           <TableBody>
             {isLoading ? (
               <TableRow>
@@ -317,9 +375,9 @@ const ManualRental = () => {
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                       checked={selectedUserId === user.userId}
-                      onCheckedChange={(checked) => {
-                        setSelectedUserId(checked ? user.userId : null);
-                      }}
+                      onCheckedChange={(checked) =>
+                        setSelectedUserId(checked ? user.userId : null)
+                      }
                     />
                   </TableCell>
                   <TableCell>{user.userId}</TableCell>
