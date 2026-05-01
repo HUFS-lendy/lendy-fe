@@ -6,3 +6,9 @@ export type UserRental = {
   semester: string;
   status: "RENTING" | "OVERDUE" | "RETURNED";
 };
+
+export interface RegisterExcelRequest {
+  termId: number;
+  isConfirm: boolean;
+  file: File;
+}

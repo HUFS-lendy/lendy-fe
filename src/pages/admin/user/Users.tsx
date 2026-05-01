@@ -27,6 +27,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../../../components/ui/alert-dialog";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "../../../components/ui/pagination";
 import { Input } from "../../../components/ui/input";
 import { Checkbox } from "../../../components/ui/checkbox";
 import { Search } from "lucide-react";
@@ -35,6 +43,7 @@ import { StateCombobox } from "../../../components/ui/StateCombobox";
 import { toast } from "sonner";
 import { Label } from "../../../components/ui/label";
 import { useAdminUsers, useUserUpdate } from "../../../api/admin.api";
+import { useRegisterExcel } from "../../../api/adminUser.api";
 
 const Users = () => {
   const navigte = useNavigate();
@@ -45,6 +54,15 @@ const Users = () => {
   const [editState, setEditState] = useState<"ACTIVE" | "BANNED">("ACTIVE");
   const [editEmail, setEditEmail] = useState("");
   const [editPhone, setEditPhone] = useState("");
+  const [excelDialogOpen, setExcelDialogOpen] = useState(false);
+  const [excelTermId, setExcelTermId] = useState("");
+  const [excelFile, setExcelFile] = useState<File | null>(null);
+  const [excelPreviewData, setExcelPreviewData] = useState<unknown>(null);
+  const [page, setPage] = useState(0);
+  const size = 20;
+
+  const { mutateAsync: registerExcel, isPending: isRegisteringExcel } =
+    useRegisterExcel();
 
   const { mutate: updateUser, isPending: isUpdating } = useUserUpdate();
   const [checkedRoles, setCheckedRoles] = useState({
@@ -74,13 +92,39 @@ const Users = () => {
     roles: rolesParam,
     states: statesParam,
     keyword,
-    page: 0,
-    size: 10,
+    page,
+    size,
     sort: "",
   });
+
   const users = data?.content ?? [];
+  const totalPages = data?.totalPages ?? 0;
+  const currentPage = page;
   const selectedUser =
     users.find((user) => user.userId === selectedUserId) ?? null;
+
+  useEffect(() => {
+    setPage(0);
+  }, [rolesParam, statesParam, keyword]);
+
+  const pageNumbers = useMemo(() => {
+    if (totalPages <= 0) return [];
+
+    const startPage = Math.max(0, currentPage - 2);
+    const endPage = Math.min(totalPages - 1, currentPage + 2);
+
+    return Array.from(
+      { length: endPage - startPage + 1 },
+      (_, index) => startPage + index,
+    );
+  }, [currentPage, totalPages]);
+
+  const handlePageChange = (nextPage: number) => {
+    if (nextPage < 0 || nextPage >= totalPages || nextPage === currentPage)
+      return;
+    setPage(nextPage);
+    setSelectedUserId(null);
+  };
 
   useEffect(() => {
     if (!selectedUser) return;
@@ -115,6 +159,63 @@ const Users = () => {
         },
       },
     );
+  };
+
+  const resetExcelForm = () => {
+    setExcelTermId("");
+    setExcelFile(null);
+    setExcelPreviewData(null);
+  };
+
+  const handleExcelPreview = async () => {
+    if (!excelTermId.trim()) {
+      toast.error("학기 ID를 입력해주세요.");
+      return;
+    }
+
+    if (!excelFile) {
+      toast.error("엑셀 파일을 선택해주세요.");
+      return;
+    }
+
+    try {
+      const res = await registerExcel({
+        termId: Number(excelTermId),
+        isConfirm: false,
+        file: excelFile,
+      });
+      setExcelPreviewData(res);
+      toast.success("엑셀 미리보기를 불러왔습니다.");
+    } catch (error) {
+      console.error(error);
+      toast.error("엑셀 미리보기에 실패했습니다.");
+    }
+  };
+
+  const handleExcelConfirm = async () => {
+    if (!excelTermId.trim()) {
+      toast.error("학기 ID를 입력해주세요.");
+      return;
+    }
+
+    if (!excelFile) {
+      toast.error("엑셀 파일을 선택해주세요.");
+      return;
+    }
+
+    try {
+      await registerExcel({
+        termId: Number(excelTermId),
+        isConfirm: true,
+        file: excelFile,
+      });
+      toast.success("학생 정보가 일괄 등록되었습니다.");
+      resetExcelForm();
+      setExcelDialogOpen(false);
+    } catch (error) {
+      console.error(error);
+      toast.error("학생 정보 일괄 등록에 실패했습니다.");
+    }
   };
 
   return (
@@ -158,12 +259,82 @@ const Users = () => {
         </div>
         <div className="flex space-x-2">
           {/* todo : 엑셀 일괄 등록 */}
-          <AlertDialog>
+          <AlertDialog open={excelDialogOpen} onOpenChange={setExcelDialogOpen}>
             <AlertDialogTrigger asChild>
-              <div className="border px-3 py-1 rounded-sm hover:bg-neutral-800 cursor-pointer border-neutral-400 text-neutral-200 text-sm">
-                등록
-              </div>
+              <button
+                type="button"
+                className="border px-3 py-1 rounded-sm hover:bg-neutral-800 cursor-pointer border-neutral-400 text-neutral-200 text-sm"
+              >
+                일괄 등록
+              </button>
             </AlertDialogTrigger>
+
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>학생 정보 엑셀 일괄 등록</AlertDialogTitle>
+                <AlertDialogDescription>
+                  엑셀 파일을 업로드한 뒤 미리보기로 내용을 확인하고 최종 등록할
+                  수 있습니다.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <div className="space-y-4 pt-4">
+                <div>
+                  <Label className="pb-2">학기 ID</Label>
+                  <Input
+                    type="number"
+                    value={excelTermId}
+                    onChange={(e) => setExcelTermId(e.target.value)}
+                    placeholder="예: 4"
+                  />
+                </div>
+
+                <div>
+                  <Label className="pb-2">엑셀 파일</Label>
+                  <Input
+                    type="file"
+                    accept=".xlsx,.xls"
+                    onChange={(e) => setExcelFile(e.target.files?.[0] ?? null)}
+                  />
+                </div>
+
+                {excelPreviewData ? (
+                  <div className="max-h-60 overflow-auto rounded-sm border border-neutral-700 bg-neutral-950 p-3 text-xs text-neutral-200">
+                    <pre>{JSON.stringify(excelPreviewData, null, 2)}</pre>
+                  </div>
+                ) : null}
+              </div>
+
+              <AlertDialogFooter className="mt-4">
+                <AlertDialogCancel
+                  className="cursor-pointer"
+                  disabled={isRegisteringExcel}
+                  onClick={resetExcelForm}
+                >
+                  취소
+                </AlertDialogCancel>
+
+                <button
+                  type="button"
+                  disabled={isRegisteringExcel}
+                  onClick={handleExcelPreview}
+                  className="border px-4 py-2 rounded-sm hover:bg-neutral-700 bg-neutral-900 border-neutral-400 text-neutral-200 text-sm disabled:cursor-not-allowed disabled:border-neutral-700 disabled:text-neutral-600"
+                >
+                  {isRegisteringExcel ? "처리 중..." : "미리보기"}
+                </button>
+
+                <AlertDialogAction
+                  onClick={(e) => {
+                    e.preventDefault();
+                    void handleExcelConfirm();
+                  }}
+                  disabled={isRegisteringExcel || !excelPreviewData}
+                  className="bg-neutral-900 hover:bg-neutral-700 font-bold cursor-pointer disabled:cursor-not-allowed"
+                >
+                  최종 등록
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
           </AlertDialog>
           {/* 수정 버튼 */}
           <div>
@@ -454,6 +625,51 @@ const Users = () => {
             )}
           </TableBody>
         </Table>
+        {totalPages > 1 ? (
+          <div className="my-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePageChange(currentPage - 1);
+                    }}
+                    className={`border bg-black text-white hover:bg-neutral-800 hover:text-white ${currentPage === 0 ? "pointer-events-none opacity-50 border-neutral-700" : "cursor-pointer border-none"}`}
+                  />
+                </PaginationItem>
+
+                {pageNumbers.map((pageNumber) => (
+                  <PaginationItem key={pageNumber}>
+                    <PaginationLink
+                      href="#"
+                      isActive={pageNumber === currentPage}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePageChange(pageNumber);
+                      }}
+                      className={`cursor-pointer border text-white hover:bg-neutral-800 hover:text-white ${pageNumber === currentPage ? "bg-black border-white text-white" : "bg-transparent border-neutral-700 text-white"}`}
+                    >
+                      {pageNumber + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePageChange(currentPage + 1);
+                    }}
+                    className={`border bg-black text-white hover:bg-neutral-800 hover:text-white ${currentPage >= totalPages - 1 ? "pointer-events-none opacity-50 border-neutral-700" : "cursor-pointer border-none"}`}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        ) : null}
       </div>
     </div>
   );

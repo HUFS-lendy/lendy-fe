@@ -231,17 +231,13 @@ const Devices = () => {
             onOpenChange={setDeleteDialogOpen}
           >
             <AlertDialogTrigger asChild>
-              <div
-                className="border cursor-pointer px-3 py-1 rounded-sm hover:bg-red-400 hover:text-black border-red-400 text-sm text-red-300"
-                onClick={(e) => {
-                  if (selectedModelIds.length === 0) {
-                    e.preventDefault();
-                    toast.error("삭제할 기자재를 선택해주세요.");
-                  }
-                }}
+              <button
+                type="button"
+                disabled={selectedModelIds.length === 0}
+                className={`text-sm px-3 py-1 rounded-sm border ${selectedModelIds.length > 0 ? "cursor-pointer hover:bg-red-400 hover:text-black border-red-400 text-red-300" : "cursor-not-allowed border-neutral-700 text-neutral-600"}`}
               >
                 삭제
-              </div>
+              </button>
             </AlertDialogTrigger>
 
             <AlertDialogContent>
@@ -253,6 +249,7 @@ const Devices = () => {
                   기자재를 삭제하면 다시 되돌릴 수 없습니다.
                 </AlertDialogDescription>
               </AlertDialogHeader>
+
               <AlertDialogFooter>
                 <AlertDialogCancel disabled={isDeleting}>
                   취소
