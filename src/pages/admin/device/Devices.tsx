@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -52,7 +52,7 @@ import { type RegisterItemsExcelData } from "../../../type/adminItem.type";
 const ITEMS_PER_PAGE = 10;
 
 const Devices = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const [deviceNumber, setDeviceNumber] = useState<string[]>([]);
   const [categoryName, setCategoryName] = useState("");
@@ -565,15 +565,15 @@ const Devices = () => {
                   </TableCell>
                 </TableRow>
               ) : (
-                paginatedDeviceModels.map((device: ModelItem) => {
+                paginatedDeviceModels?.map((device: ModelItem) => {
                   const checked = selectedModelIds.includes(device.modelId);
 
                   return (
                     <TableRow
                       key={device.modelId}
-                      onClick={() =>
-                        navigate(`/admin/devices/${device.modelId}`)
-                      }
+                      // onClick={() =>
+                      //   navigate(`/admin/devices/${device.modelId}`)
+                      // }
                     >
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <Checkbox

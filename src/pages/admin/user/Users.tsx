@@ -59,7 +59,7 @@ const Users = () => {
   const [excelFile, setExcelFile] = useState<File | null>(null);
   const [excelPreviewData, setExcelPreviewData] = useState<unknown>(null);
   const [page, setPage] = useState(0);
-  const size = 20;
+  const size = 10;
 
   const { mutateAsync: registerExcel, isPending: isRegisteringExcel } =
     useRegisterExcel();

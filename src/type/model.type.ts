@@ -2,9 +2,9 @@ export interface ModelItem {
   modelId: number;
   categoryId: number;
   categoryName: string;
-  type: string;
+  type: "EQUIPMENT" | "KIT";
   name: string;
-  courseName: string;
+  courseName: string | null;
   availableQty: number;
 }
 

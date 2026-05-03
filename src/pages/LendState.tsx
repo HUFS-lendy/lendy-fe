@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -27,6 +27,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../components/ui/alert-dialog";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "../components/ui/pagination";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
@@ -36,6 +44,7 @@ import {
 } from "../api/reservationUser.api";
 import { useMe } from "../api/user.api";
 import { useModelsByIds } from "../api/modelUser.api";
+const RESERVATIONS_PER_PAGE = 10;
 
 // todo : 밖으로 빼기
 const getReservationStatusText = (status: string) => {
@@ -57,15 +66,14 @@ const LendState = () => {
   const [selectedReservationId, setSelectedReservationId] = useState<
     number | null
   >(null);
-  const [page] = useState(0);
-  const [size] = useState(20);
+  const [currentPage, setCurrentPage] = useState(0);
 
   const {
     data: myreservation,
     isLoading,
     isError,
     error,
-  } = useMyReservations(page, size);
+  } = useMyReservations(currentPage, RESERVATIONS_PER_PAGE);
   const { data: myInfo } = useMe();
 
   const { mutate: deleteReservation, isPending: isDeletingReservation } =
@@ -87,6 +95,25 @@ const LendState = () => {
       return acc;
     }, {});
   }, [modelIds, modelQueries]);
+
+  // 페이지네이션 계산
+  const totalPages = myreservation?.totalPages ?? 0;
+
+  const pageNumbers = useMemo(() => {
+    return Array.from({ length: totalPages }, (_, index) => index);
+  }, [totalPages]);
+
+  useEffect(() => {
+    if (currentPage >= totalPages && totalPages > 0) {
+      setCurrentPage(totalPages - 1);
+    }
+  }, [currentPage, totalPages]);
+
+  const handlePageChange = (page: number) => {
+    if (page < 0 || page >= totalPages) return;
+    setCurrentPage(page);
+    setSelectedReservationId(null);
+  };
 
   // 예약 취소
   const handleDeleteReservation = () => {
@@ -260,6 +287,51 @@ const LendState = () => {
               ))}
           </TableBody>
         </Table>
+        {totalPages > 1 ? (
+          <div className="my-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePageChange(currentPage - 1);
+                    }}
+                    className={`border bg-black text-white hover:bg-neutral-800 hover:text-white ${currentPage === 0 ? "pointer-events-none opacity-50 border-neutral-700" : "cursor-pointer border-none"}`}
+                  />
+                </PaginationItem>
+
+                {pageNumbers.map((pageNumber) => (
+                  <PaginationItem key={pageNumber}>
+                    <PaginationLink
+                      href="#"
+                      isActive={pageNumber === currentPage}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePageChange(pageNumber);
+                      }}
+                      className={`cursor-pointer border text-white hover:bg-neutral-800 hover:text-white ${pageNumber === currentPage ? "bg-black border-white text-white" : "bg-transparent border-neutral-700 text-white"}`}
+                    >
+                      {pageNumber + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePageChange(currentPage + 1);
+                    }}
+                    className={`border bg-black text-white hover:bg-neutral-800 hover:text-white ${currentPage >= totalPages - 1 ? "pointer-events-none opacity-50 border-neutral-700" : "cursor-pointer border-none"}`}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        ) : null}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -17,6 +17,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../../../components/ui/alert-dialog";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "../../../components/ui/pagination";
 import { toast } from "sonner";
 import {
   Table,
@@ -33,21 +41,68 @@ import { useCreateRental } from "../../../api/adminRental.api";
 import { format, compareDesc } from "date-fns";
 import { Checkbox } from "../../../components/ui/checkbox";
 import { type CheckinItem } from "../../../type/adminCheckin.type";
+const CHECKIN_PAGE_SIZE = 20;
+const MAX_PAGE_BUTTONS = 5;
 
 const CheckIn = () => {
   const [keyword, setKeyword] = useState("");
-  const [page] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0);
   const [selectedReservationId, setSelectedReservationId] = useState<
     number | null
   >(null);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
 
-  const size = 20;
-
-  const { data, isLoading, isError } = useCheckinList(keyword, page, size);
+  const { data, isLoading, isError } = useCheckinList(
+    keyword,
+    currentPage,
+    CHECKIN_PAGE_SIZE,
+  );
   const { mutate: createRental, isPending } = useCreateRental();
 
   const checkinList = data?.content ?? [];
+
+  const totalPages = data?.totalPages ?? 0;
+
+  const pageNumbers = useMemo(() => {
+    if (totalPages <= 0) return [];
+
+    if (totalPages <= MAX_PAGE_BUTTONS) {
+      return Array.from({ length: totalPages }, (_, index) => index);
+    }
+
+    const half = Math.floor(MAX_PAGE_BUTTONS / 2);
+    let startPage = currentPage - half;
+    let endPage = currentPage + half;
+
+    if (startPage < 0) {
+      startPage = 0;
+      endPage = MAX_PAGE_BUTTONS - 1;
+    }
+
+    if (endPage >= totalPages) {
+      endPage = totalPages - 1;
+      startPage = totalPages - MAX_PAGE_BUTTONS;
+    }
+
+    return Array.from(
+      { length: endPage - startPage + 1 },
+      (_, index) => startPage + index,
+    );
+  }, [currentPage, totalPages]);
+
+  useEffect(() => {
+    if (currentPage >= totalPages && totalPages > 0) {
+      setCurrentPage(totalPages - 1);
+    }
+  }, [currentPage, totalPages]);
+
+  const handlePageChange = (page: number) => {
+    if (page < 0 || page >= totalPages) return;
+
+    setCurrentPage(page);
+    setSelectedReservationId(null);
+    setSelectedItemId(null);
+  };
 
   const selectedReservation =
     checkinList.find(
@@ -127,7 +182,12 @@ const CheckIn = () => {
             placeholder="학번 또는 이름을 입력해주세요."
             className="border-neutral-400 pl-8 md:pl-10 text-sm"
             value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
+            onChange={(e) => {
+              setKeyword(e.target.value);
+              setCurrentPage(0);
+              setSelectedReservationId(null);
+              setSelectedItemId(null);
+            }}
           />
         </div>
 
@@ -222,6 +282,11 @@ const CheckIn = () => {
                     <TableRow key={reservation.reservationId}>
                       <TableCell>
                         <Checkbox
+                          checked={
+                            selectedReservationId ===
+                              reservation.reservationId &&
+                            selectedItemId === reservation.itemId
+                          }
                           onCheckedChange={() =>
                             handleSelectReservation(reservation)
                           }
@@ -252,6 +317,51 @@ const CheckIn = () => {
             )}
           </TableBody>
         </Table>
+        {totalPages > 1 ? (
+          <div className="my-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePageChange(currentPage - 1);
+                    }}
+                    className={`border bg-black text-white hover:bg-neutral-800 hover:text-white ${currentPage === 0 ? "pointer-events-none opacity-50 border-neutral-700" : "cursor-pointer border-none"}`}
+                  />
+                </PaginationItem>
+
+                {pageNumbers.map((pageNumber) => (
+                  <PaginationItem key={pageNumber}>
+                    <PaginationLink
+                      href="#"
+                      isActive={pageNumber === currentPage}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePageChange(pageNumber);
+                      }}
+                      className={`cursor-pointer border text-white hover:bg-neutral-800 hover:text-white ${pageNumber === currentPage ? "bg-black border-white text-white" : "bg-transparent border-neutral-700 text-white"}`}
+                    >
+                      {pageNumber + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePageChange(currentPage + 1);
+                    }}
+                    className={`border bg-black text-white hover:bg-neutral-800 hover:text-white ${currentPage >= totalPages - 1 ? "pointer-events-none opacity-50 border-neutral-700" : "cursor-pointer border-none"}`}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        ) : null}
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -27,6 +27,14 @@ import {
   AlertDialogTrigger,
   AlertDialogAction,
 } from "../../../components/ui/alert-dialog";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "../../../components/ui/pagination";
 import { toast } from "sonner";
 import { Input } from "../../../components/ui/input";
 import { Checkbox } from "../../../components/ui/checkbox";
@@ -37,14 +45,17 @@ import { useAdminUsers } from "../../../api/admin.api";
 import { useModels } from "../../../api/adminModel.api";
 import { useItemAvailable } from "../../../api/adminItem.api";
 import { useManualRental } from "../../../api/adminRental.api";
+const USERS_PAGE_SIZE = 20;
+const MAX_PAGE_BUTTONS = 5;
 
 const ManualRental = () => {
+  const navigate = useNavigate();
   const [keyword, setKeyword] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-
   const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
   const [selectedItemId, setSelectedItemId] = useState("");
+  const [currentPage, setCurrentPage] = useState(0);
 
   const [checkedRoles, setCheckedRoles] = useState({
     ADMIN: true,
@@ -83,12 +94,53 @@ const ManualRental = () => {
     roles: rolesParam,
     states: statesParam,
     keyword,
-    page: 0,
-    size: 10,
+    page: currentPage,
+    size: USERS_PAGE_SIZE,
     sort: "",
   });
-
   const users = data?.content ?? [];
+
+  const totalPages = data?.totalPages ?? 0;
+
+  const pageNumbers = useMemo(() => {
+    if (totalPages <= 0) return [];
+
+    if (totalPages <= MAX_PAGE_BUTTONS) {
+      return Array.from({ length: totalPages }, (_, index) => index);
+    }
+
+    const half = Math.floor(MAX_PAGE_BUTTONS / 2);
+    let startPage = currentPage - half;
+    let endPage = currentPage + half;
+
+    if (startPage < 0) {
+      startPage = 0;
+      endPage = MAX_PAGE_BUTTONS - 1;
+    }
+
+    if (endPage >= totalPages) {
+      endPage = totalPages - 1;
+      startPage = totalPages - MAX_PAGE_BUTTONS;
+    }
+
+    return Array.from(
+      { length: endPage - startPage + 1 },
+      (_, index) => startPage + index,
+    );
+  }, [currentPage, totalPages]);
+
+  useEffect(() => {
+    if (currentPage >= totalPages && totalPages > 0) {
+      setCurrentPage(totalPages - 1);
+    }
+  }, [currentPage, totalPages]);
+
+  const handlePageChange = (page: number) => {
+    if (page < 0 || page >= totalPages) return;
+    setCurrentPage(page);
+    setSelectedUserId(null);
+  };
+
   const selectedUser =
     users.find((user) => user.userId === selectedUserId) ?? null;
 
@@ -125,6 +177,7 @@ const ManualRental = () => {
           setSelectedUserId(null);
           setSelectedModelId(null);
           setSelectedItemId("");
+          navigate(`/admin/users/${selectedUserId}`);
         },
         onError: () => {
           toast("수기 대여 등록에 실패했습니다.");
@@ -170,7 +223,11 @@ const ManualRental = () => {
             placeholder="학번 또는 이름을 입력해주세요."
             className="border-neutral-400 pl-8 md:pl-10 text-sm"
             value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
+            onChange={(e) => {
+              setKeyword(e.target.value);
+              setCurrentPage(0);
+              setSelectedUserId(null);
+            }}
           />
         </div>
 
@@ -305,9 +362,11 @@ const ManualRental = () => {
         <Label className="flex items-center gap-2 cursor-pointer">
           <Checkbox
             checked={checkedRoles.ADMIN}
-            onCheckedChange={(checked) =>
-              setCheckedRoles((prev) => ({ ...prev, ADMIN: checked === true }))
-            }
+            onCheckedChange={(checked) => {
+              setCheckedRoles((prev) => ({ ...prev, ADMIN: checked === true }));
+              setCurrentPage(0);
+              setSelectedUserId(null);
+            }}
             className="data-[state=checked]:border-neutral-600 data-[state=checked]:bg-neutral-600 data-[state=checked]:text-white"
           />
           <p className="text-sm">관리자</p>
@@ -316,9 +375,11 @@ const ManualRental = () => {
         <Label className="flex items-center gap-2 cursor-pointer">
           <Checkbox
             checked={checkedRoles.USER}
-            onCheckedChange={(checked) =>
-              setCheckedRoles((prev) => ({ ...prev, USER: checked === true }))
-            }
+            onCheckedChange={(checked) => {
+              setCheckedRoles((prev) => ({ ...prev, USER: checked === true }));
+              setCurrentPage(0);
+              setSelectedUserId(null);
+            }}
             className="data-[state=checked]:border-neutral-600 data-[state=checked]:bg-neutral-600 data-[state=checked]:text-white"
           />
           <p className="text-sm">사용자</p>
@@ -330,12 +391,14 @@ const ManualRental = () => {
         <Label className="flex items-center gap-2 cursor-pointer">
           <Checkbox
             checked={checkedStates.ACTIVE}
-            onCheckedChange={(checked) =>
+            onCheckedChange={(checked) => {
               setCheckedStates((prev) => ({
                 ...prev,
                 ACTIVE: checked === true,
-              }))
-            }
+              }));
+              setCurrentPage(0);
+              setSelectedUserId(null);
+            }}
             className="data-[state=checked]:border-neutral-600 data-[state=checked]:bg-neutral-600 data-[state=checked]:text-white"
           />
           <p className="text-sm">ACTIVE</p>
@@ -344,12 +407,14 @@ const ManualRental = () => {
         <Label className="flex items-center gap-2 cursor-pointer">
           <Checkbox
             checked={checkedStates.BANNED}
-            onCheckedChange={(checked) =>
+            onCheckedChange={(checked) => {
               setCheckedStates((prev) => ({
                 ...prev,
                 BANNED: checked === true,
-              }))
-            }
+              }));
+              setCurrentPage(0);
+              setSelectedUserId(null);
+            }}
             className="data-[state=checked]:border-neutral-600 data-[state=checked]:bg-neutral-600 data-[state=checked]:text-white"
           />
           <p className="text-sm">BANNED</p>
@@ -419,6 +484,51 @@ const ManualRental = () => {
             )}
           </TableBody>
         </Table>
+        {totalPages > 1 ? (
+          <div className="my-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePageChange(currentPage - 1);
+                    }}
+                    className={`border bg-black text-white hover:bg-neutral-800 hover:text-white ${currentPage === 0 ? "pointer-events-none opacity-50 border-neutral-700" : "cursor-pointer border-none"}`}
+                  />
+                </PaginationItem>
+
+                {pageNumbers.map((pageNumber) => (
+                  <PaginationItem key={pageNumber}>
+                    <PaginationLink
+                      href="#"
+                      isActive={pageNumber === currentPage}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePageChange(pageNumber);
+                      }}
+                      className={`cursor-pointer border text-white hover:bg-neutral-800 hover:text-white ${pageNumber === currentPage ? "bg-black border-white text-white" : "bg-transparent border-neutral-700 text-white"}`}
+                    >
+                      {pageNumber + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePageChange(currentPage + 1);
+                    }}
+                    className={`border bg-black text-white hover:bg-neutral-800 hover:text-white ${currentPage >= totalPages - 1 ? "pointer-events-none opacity-50 border-neutral-700" : "cursor-pointer border-none"}`}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        ) : null}
       </div>
     </div>
   );
