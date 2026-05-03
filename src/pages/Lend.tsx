@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Breadcrumb,
@@ -35,30 +35,92 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../components/ui/alert-dialog";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "../components/ui/pagination";
 import { toast } from "sonner";
 import { useModels } from "../api/model.api";
 import type { ModelItem } from "../type/model.type";
 import { useDoReserve } from "../api/reservationUser.api";
+const ITEMS_PER_PAGE = 10;
 
 const Lend = () => {
   const navigate = useNavigate();
   const [pledgeDialogOpen, setPledgeDialogOpen] = useState(false);
   const [isPledgeAgreed, setIsPledgeAgreed] = useState(false);
-  const { data, isLoading, isError } = useModels();
+  const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
+  const [equipmentCurrentPage, setEquipmentCurrentPage] = useState(0);
+  const [kitCurrentPage, setKitCurrentPage] = useState(0);
+
+  const { data: models = [], isLoading, isError } = useModels();
   const { mutate: createReservation, isPending: isCreatingReservation } =
     useDoReserve();
 
-  const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
-  const models = data?.data ?? [];
+  const equipmentList = useMemo(() => {
+    return models.filter((item: ModelItem) => item.type === "EQUIPMENT");
+  }, [models]);
 
-  const equipmentList = models.filter((item) => item.courseName === "");
-  const kitList = models.filter((item) => item.courseName !== "");
+  const kitList = useMemo(() => {
+    return models.filter((item: ModelItem) => item.type === "KIT");
+  }, [models]);
+
+  const equipmentTotalPages = Math.ceil(equipmentList.length / ITEMS_PER_PAGE);
+  const kitTotalPages = Math.ceil(kitList.length / ITEMS_PER_PAGE);
+
+  const paginatedEquipmentList = useMemo(() => {
+    const startIndex = equipmentCurrentPage * ITEMS_PER_PAGE;
+    return equipmentList?.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [equipmentList, equipmentCurrentPage]);
+
+  const paginatedKitList = useMemo(() => {
+    const startIndex = kitCurrentPage * ITEMS_PER_PAGE;
+    return kitList?.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [kitList, kitCurrentPage]);
+
+  const equipmentPageNumbers = useMemo(() => {
+    return Array.from({ length: equipmentTotalPages }, (_, index) => index);
+  }, [equipmentTotalPages]);
+
+  const kitPageNumbers = useMemo(() => {
+    return Array.from({ length: kitTotalPages }, (_, index) => index);
+  }, [kitTotalPages]);
+
+  useEffect(() => {
+    if (
+      equipmentCurrentPage >= equipmentTotalPages &&
+      equipmentTotalPages > 0
+    ) {
+      setEquipmentCurrentPage(equipmentTotalPages - 1);
+    }
+  }, [equipmentCurrentPage, equipmentTotalPages]);
+
+  useEffect(() => {
+    if (kitCurrentPage >= kitTotalPages && kitTotalPages > 0) {
+      setKitCurrentPage(kitTotalPages - 1);
+    }
+  }, [kitCurrentPage, kitTotalPages]);
+
+  const handleEquipmentPageChange = (page: number) => {
+    if (page < 0 || page >= equipmentTotalPages) return;
+    setEquipmentCurrentPage(page);
+  };
+
+  const handleKitPageChange = (page: number) => {
+    if (page < 0 || page >= kitTotalPages) return;
+    setKitCurrentPage(page);
+  };
 
   const selectedEquipment = equipmentList.find(
-    (item) => item.modelId === selectedModelId,
+    (item: ModelItem) => item.modelId === selectedModelId,
   );
-  const selectedKit = kitList.find((item) => item.modelId === selectedModelId);
-
+  const selectedKit = kitList.find(
+    (item: ModelItem) => item.modelId === selectedModelId,
+  );
   const handleSelectModel = (modelId: number, checked: boolean) => {
     setSelectedModelId(checked ? modelId : null);
     setIsPledgeAgreed(false);
@@ -257,7 +319,7 @@ const Lend = () => {
 
                   {!isLoading &&
                     !isError &&
-                    equipmentList.map((item: ModelItem) => (
+                    paginatedEquipmentList?.map((item: ModelItem) => (
                       <TableRow
                         key={item.modelId}
                         onClick={() => {
@@ -292,6 +354,51 @@ const Lend = () => {
                   )}
                 </TableBody>
               </Table>
+              {equipmentTotalPages > 1 ? (
+                <div className="my-6">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleEquipmentPageChange(equipmentCurrentPage - 1);
+                          }}
+                          className={`border bg-black text-white hover:bg-neutral-800 hover:text-white ${equipmentCurrentPage === 0 ? "pointer-events-none opacity-50 border-neutral-700" : "cursor-pointer border-none"}`}
+                        />
+                      </PaginationItem>
+
+                      {equipmentPageNumbers.map((pageNumber) => (
+                        <PaginationItem key={pageNumber}>
+                          <PaginationLink
+                            href="#"
+                            isActive={pageNumber === equipmentCurrentPage}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleEquipmentPageChange(pageNumber);
+                            }}
+                            className={`cursor-pointer border text-white hover:bg-neutral-800 hover:text-white ${pageNumber === equipmentCurrentPage ? "bg-black border-white text-white" : "bg-transparent border-neutral-700 text-white"}`}
+                          >
+                            {pageNumber + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+
+                      <PaginationItem>
+                        <PaginationNext
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleEquipmentPageChange(equipmentCurrentPage + 1);
+                          }}
+                          className={`border bg-black text-white hover:bg-neutral-800 hover:text-white ${equipmentCurrentPage >= equipmentTotalPages - 1 ? "pointer-events-none opacity-50 border-neutral-700" : "cursor-pointer border-none"}`}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              ) : null}
             </div>
           </TabsContent>
 
@@ -469,7 +576,7 @@ const Lend = () => {
 
                   {!isLoading &&
                     !isError &&
-                    kitList.map((item: ModelItem) => (
+                    paginatedKitList?.map((item: ModelItem) => (
                       <TableRow
                         key={item.modelId}
                         onClick={() =>
@@ -503,6 +610,51 @@ const Lend = () => {
                   )}
                 </TableBody>
               </Table>
+              {kitTotalPages > 1 ? (
+                <div className="my-6">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleKitPageChange(kitCurrentPage - 1);
+                          }}
+                          className={`border bg-black text-white hover:bg-neutral-800 hover:text-white ${kitCurrentPage === 0 ? "pointer-events-none opacity-50 border-neutral-700" : "cursor-pointer border-none"}`}
+                        />
+                      </PaginationItem>
+
+                      {kitPageNumbers.map((pageNumber) => (
+                        <PaginationItem key={pageNumber}>
+                          <PaginationLink
+                            href="#"
+                            isActive={pageNumber === kitCurrentPage}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleKitPageChange(pageNumber);
+                            }}
+                            className={`cursor-pointer border text-white hover:bg-neutral-800 hover:text-white ${pageNumber === kitCurrentPage ? "bg-black border-white text-white" : "bg-transparent border-neutral-700 text-white"}`}
+                          >
+                            {pageNumber + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+
+                      <PaginationItem>
+                        <PaginationNext
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleKitPageChange(kitCurrentPage + 1);
+                          }}
+                          className={`border bg-black text-white hover:bg-neutral-800 hover:text-white ${kitCurrentPage >= kitTotalPages - 1 ? "pointer-events-none opacity-50 border-neutral-700" : "cursor-pointer border-none"}`}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              ) : null}
             </div>
           </TabsContent>
         </Tabs>

@@ -73,15 +73,24 @@ export const useUpdateAcademicTerm = () => {
   return useMutation({
     mutationFn: async ({
       termId,
+      year,
+      term,
       endDate,
+      active,
     }: {
       termId: number;
+      year: number;
+      term: string;
       endDate: string;
+      active: boolean;
     }) => {
       const updateAcademicTerm_res = await apiClient.patch(
-        `/api/admin/academic-terms/${termId}/end-date`,
+        `/api/admin/academic-terms/${termId}`,
         {
+          year,
+          term,
           endDate,
+          active,
         },
       );
 

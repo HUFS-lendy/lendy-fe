@@ -20,36 +20,50 @@ type ItemComboboxProps = {
     value: string;
     label: string;
   }[];
+  disabled?: boolean;
+  placeholder?: string;
+  searchPlaceholder?: string;
+  emptyText?: string;
 };
 
-export function ItemCombobox({ value, onChange, items }: ItemComboboxProps) {
+export function ItemCombobox({
+  value,
+  onChange,
+  items,
+  disabled = false,
+  placeholder = "기기 선택",
+  searchPlaceholder = "기기 검색",
+  emptyText = "검색에 맞는 기기가 없습니다.",
+}: ItemComboboxProps) {
   const [open, setOpen] = useState(false);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open && !disabled} onOpenChange={setOpen}>
       <PopoverTrigger className="border-none shadow-none" asChild>
         <Button
           variant="outline"
           role="combobox"
+          disabled={disabled}
           aria-expanded={open}
-          className="w-[200px] justify-between"
+          className="w-[200px] justify-between disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {value
             ? items.find((item) => item.value === value)?.label
-            : "기기 선택"}
+            : placeholder}
           <ChevronsUpDown className="opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[200px] p-0">
         <Command>
-          <CommandInput placeholder="기기 검색" className="h-9" />
+          <CommandInput placeholder={searchPlaceholder} className="h-9" />
           <CommandList>
-            <CommandEmpty>검색에 맞는 기기가 없습니다.</CommandEmpty>
+            <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup>
               {items.map((item) => (
                 <CommandItem
                   key={item.value}
                   value={item.label}
+                  disabled={disabled}
                   onSelect={() => {
                     const nextValue = item.value === value ? "" : item.value;
                     onChange(nextValue);

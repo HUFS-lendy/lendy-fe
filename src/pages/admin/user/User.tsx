@@ -35,6 +35,7 @@ import { toast } from "sonner";
 import { useFetchUser } from "../../../api/admin.api";
 import { useUserRentals } from "../../../api/adminUser.api";
 import { useReturnReservation } from "../../../api/adminRental.api";
+import { useDeleteReservations } from "../../../api/adminReservation.api";
 
 const User = () => {
   const [categoryName, setCategoryName] = useState("");
@@ -46,6 +47,8 @@ const User = () => {
   const { data: rentals = [] } = useUserRentals(numericUserId);
   const { mutate: returnReservation, isPending: isReturning } =
     useReturnReservation();
+  const { mutate: deleteReservation, isPending: isDeleting } =
+    useDeleteReservations();
 
   const selectedRental = useMemo(
     () =>
@@ -71,6 +74,23 @@ const User = () => {
         },
       },
     );
+  };
+
+  const handleDeleteRental = () => {
+    if (!selectedRental) {
+      toast("삭제할 대여 기록을 선택해주세요.");
+      return;
+    }
+
+    deleteReservation(selectedRental.rentalId, {
+      onSuccess: () => {
+        toast("사용자의 해당 대여 내용이 삭제되었습니다.");
+        setSelectedRentalId(null);
+      },
+      onError: () => {
+        toast("대여 기록 삭제에 실패했습니다.");
+      },
+    });
   };
 
   return (
@@ -115,10 +135,15 @@ const User = () => {
         <div>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <div className="hover:bg-neutral-800 cursor-pointer border border-neutral-400 text-neutral-200 text-sm px-3 py-1 rounded-sm">
+              <button
+                type="button"
+                disabled={!selectedRental}
+                className={`text-sm px-3 py-1 rounded-sm border ${selectedRental ? "hover:bg-neutral-800 cursor-pointer border-neutral-400 text-neutral-200" : "cursor-not-allowed border-neutral-700 text-neutral-600"}`}
+              >
                 수정
-              </div>
+              </button>
             </AlertDialogTrigger>
+
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>
@@ -130,6 +155,7 @@ const User = () => {
                   기기 대여 내용을 수정해보세요.
                 </AlertDialogDescription>
               </AlertDialogHeader>
+
               <div>
                 <Table className="text-center border border-neutral-200">
                   <TableBody>
@@ -141,6 +167,7 @@ const User = () => {
                         {selectedRental?.rentalId ?? ""}
                       </TableCell>
                     </TableRow>
+
                     <TableRow className="border-neutral-200 hover:bg-white">
                       <TableCell className="w-1/6 bg-neutral-300">
                         분류
@@ -152,6 +179,7 @@ const User = () => {
                         />
                       </TableCell>
                     </TableRow>
+
                     <TableRow className="border-neutral-200 hover:bg-white">
                       <TableCell className="w-1/6 bg-neutral-300">
                         기기명
@@ -164,6 +192,7 @@ const User = () => {
                         />
                       </TableCell>
                     </TableRow>
+
                     <TableRow className="border-neutral-200 hover:bg-white">
                       <TableCell className="w-1/6 bg-neutral-300">
                         코드번호
@@ -176,6 +205,7 @@ const User = () => {
                         />
                       </TableCell>
                     </TableRow>
+
                     <TableRow className="border-neutral-200 hover:bg-white">
                       <TableCell className="w-1/6 bg-neutral-300">
                         대여 학기
@@ -189,6 +219,7 @@ const User = () => {
                         />
                       </TableCell>
                     </TableRow>
+
                     <TableRow className="border-neutral-200 hover:bg-white">
                       <TableCell className="w-1/6 bg-neutral-300">
                         대여 상태
@@ -200,6 +231,7 @@ const User = () => {
                   </TableBody>
                 </Table>
               </div>
+
               <AlertDialogFooter className="mt-4">
                 <AlertDialogCancel className="cursor-pointer">
                   취소
@@ -257,30 +289,39 @@ const User = () => {
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <div className="border cursor-pointer px-3 py-1 rounded-sm hover:bg-red-400 hover:text-black border-red-400 text-sm text-red-300">
+            <button
+              type="button"
+              disabled={!selectedRental}
+              className={`text-sm px-3 py-1 rounded-sm border ${selectedRental ? "cursor-pointer hover:bg-red-400 hover:text-black border-red-400 text-red-300" : "cursor-not-allowed border-neutral-700 text-neutral-600"}`}
+            >
               삭제
-            </div>
+            </button>
           </AlertDialogTrigger>
+
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle className="break-keep">
-                2025-1 아이패드 Air(A20342) 대여 기록을 삭제하시겠습니까?
+                {selectedRental
+                  ? `${selectedRental.semester} ${selectedRental.modelName}(${selectedRental.itemSerial}) 대여 기록을 삭제하시겠습니까?`
+                  : "삭제할 대여 기록을 선택해주세요."}
               </AlertDialogTitle>
               <AlertDialogDescription>
-                대여 기록은 삭제하면 다시 되돌릴 수 없습니다.
+                {selectedRental
+                  ? "대여 기록은 삭제하면 다시 되돌릴 수 없습니다."
+                  : "테이블에서 삭제할 대여 기록을 선택해주세요."}
               </AlertDialogDescription>
             </AlertDialogHeader>
+
             <AlertDialogFooter>
               <AlertDialogCancel className="cursor-pointer">
                 취소
               </AlertDialogCancel>
               <AlertDialogAction
-                onClick={() =>
-                  toast("사용자의 해당 대여 내용이 삭제되었습니다.")
-                }
+                onClick={handleDeleteRental}
+                disabled={!selectedRental || isDeleting}
                 className="bg-red-600 hover:bg-red-500 font-bold cursor-pointer"
               >
-                삭제
+                {isDeleting ? "삭제 중..." : "삭제"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

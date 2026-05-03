@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "./client";
 import type {
   Reservation,
@@ -50,5 +50,23 @@ export const useConvertedReservations = (
     queryKey: ["reservations", "CONVERTED", semester, page, size, sort],
     queryFn: () => fetchConvertedReservations(semester, page, size, sort),
     enabled: !!semester,
+  });
+};
+
+// 예약 취소
+export const useDeleteReservations = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (reservationId: number) => {
+      const delete_reservation_res = await apiClient.delete(
+        `/api/admin/reservations/${reservationId}`,
+      );
+      return delete_reservation_res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reservations"] });
+      queryClient.invalidateQueries({ queryKey: ["user-rentals"] });
+    },
   });
 };

@@ -1,4 +1,4 @@
-// 요청 타입
+// 대여 승인 요청 타입
 export interface CreateRentalRequest {
   reservationId: number;
   itemId: number;
@@ -16,4 +16,10 @@ export interface Rental {
   semester: string;
   createdAt: string;
   dueAt: string;
+}
+
+// 수기 대여 등록 승인 요청 타입
+export interface CreateManualRentalRequest {
+  studentId: string;
+  itemId: number;
 }
