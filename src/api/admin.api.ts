@@ -89,3 +89,19 @@ export const useUserUpdate = () => {
     },
   });
 };
+
+// 유저 삭제
+
+export const useDeleteUser = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userId: number) => {
+      const res = await apiClient.delete(`/api/admin/users/${userId}`);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin_users"] });
+    },
+  });
+};
