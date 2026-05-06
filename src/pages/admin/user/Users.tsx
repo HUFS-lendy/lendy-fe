@@ -42,7 +42,11 @@ import { RoleCombobox } from "../../../components/ui/RoleCombobox";
 import { StateCombobox } from "../../../components/ui/StateCombobox";
 import { toast } from "sonner";
 import { Label } from "../../../components/ui/label";
-import { useAdminUsers, useUserUpdate, useDeleteUser } from "../../../api/admin.api";
+import {
+  useAdminUsers,
+  useUserUpdate,
+  useDeleteUser,
+} from "../../../api/admin.api";
 import { useRegisterExcel } from "../../../api/adminUser.api";
 import { useAcademicTerms } from "../../../api/academicTerm.api";
 
@@ -63,17 +67,17 @@ const Users = () => {
   const size = 10;
   const formatPhoneNumber = (phone?: string) => {
     if (!phone) return "";
-  
+
     const digits = phone.replace(/\D/g, "");
-  
+
     if (digits.length === 11) {
       return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
     }
-  
+
     if (digits.length === 10) {
       return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
     }
-  
+
     return phone;
   };
 
@@ -88,7 +92,7 @@ const Users = () => {
 
   const { mutateAsync: registerExcel, isPending: isRegisteringExcel } =
     useRegisterExcel();
-  
+
   const { data: academicTerms = [], isLoading: isAcademicTermsLoading } =
     useAcademicTerms();
 
@@ -168,7 +172,7 @@ const Users = () => {
   useEffect(() => {
     if (!academicTerms.length) return;
     if (excelTermId) return;
-  
+
     const activeTerm = academicTerms.find((term) => term.active);
     if (activeTerm) {
       setExcelTermId(String(activeTerm.id));
@@ -206,7 +210,7 @@ const Users = () => {
       toast("삭제할 사용자를 선택해주세요.");
       return;
     }
-  
+
     deleteUser(selectedUser.userId, {
       onSuccess: () => {
         toast("해당 사용자가 삭제되었습니다.");
@@ -336,24 +340,26 @@ const Users = () => {
               </AlertDialogHeader>
 
               <div className="space-y-4 pt-4">
-              <div>
-                <Label className="pb-2">학기 선택</Label>
-                <select
-                  value={excelTermId}
-                  onChange={(e) => setExcelTermId(e.target.value)}
-                  disabled={isAcademicTermsLoading}
-                  className="w-full rounded-md border border-neutral-400 bg-[#060a0c] px-3 py-2 text-sm text-white"
-                >
-                  <option value="">
-                    {isAcademicTermsLoading ? "학기 불러오는 중..." : "학기를 선택해주세요."}
-                  </option>
-                  {academicTerms.map((term) => (
-                    <option key={term.id} value={term.id}>
-                      {formatAcademicTermLabel(term)}
+                <div>
+                  <Label className="pb-2">학기 선택</Label>
+                  <select
+                    value={excelTermId}
+                    onChange={(e) => setExcelTermId(e.target.value)}
+                    disabled={isAcademicTermsLoading}
+                    className="w-full rounded-md border border-neutral-400 bg-[#060a0c] px-3 py-2 text-sm text-white"
+                  >
+                    <option value="">
+                      {isAcademicTermsLoading
+                        ? "학기 불러오는 중..."
+                        : "학기를 선택해주세요."}
                     </option>
-                  ))}
-                </select>
-              </div>
+                    {academicTerms.map((term) => (
+                      <option key={term.id} value={term.id}>
+                        {formatAcademicTermLabel(term)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div>
                   <Label className="pb-2">엑셀 파일</Label>
                   <Input
@@ -535,49 +541,49 @@ const Users = () => {
           </div>
           {/* 삭제 버튼 */}
           <div>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <button
-                    type="button"
-                    disabled={!selectedUser}
-                    className={`border px-3 py-1 rounded-sm text-sm ${
-                      selectedUser
-                        ? "cursor-pointer hover:bg-red-400 hover:text-black border-red-400 text-red-300"
-                        : "cursor-not-allowed border-neutral-700 text-neutral-600"
-                    }`}
-                  >
-                    삭제
-                  </button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      {selectedUser
-                        ? `#${selectedUser.userId} ${selectedUser.username}을(를) 삭제하시겠습니까?`
-                        : "삭제할 사용자를 선택해주세요."}
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      {selectedUser
-                        ? "사용자를 삭제하면 되돌릴 수 없습니다."
-                        : "테이블에서 삭제할 사용자를 선택해주세요."}
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button
+                  type="button"
+                  disabled={!selectedUser}
+                  className={`border px-3 py-1 rounded-sm text-sm ${
+                    selectedUser
+                      ? "cursor-pointer hover:bg-red-400 hover:text-black border-red-400 text-red-300"
+                      : "cursor-not-allowed border-neutral-700 text-neutral-600"
+                  }`}
+                >
+                  삭제
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    {selectedUser
+                      ? `#${selectedUser.userId} ${selectedUser.username}을(를) 삭제하시겠습니까?`
+                      : "삭제할 사용자를 선택해주세요."}
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {selectedUser
+                      ? "사용자를 삭제하면 되돌릴 수 없습니다."
+                      : "테이블에서 삭제할 사용자를 선택해주세요."}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
 
-                  <AlertDialogFooter className="mt-4">
-                    <AlertDialogCancel className="cursor-pointer">
-                      취소
-                    </AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleDeleteUser}
-                      disabled={!selectedUser || isDeletingUser}
-                      className="bg-red-600 hover:bg-red-500 font-bold cursor-pointer"
-                    >
-                      {isDeletingUser ? "삭제 중..." : "삭제"}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
+                <AlertDialogFooter className="mt-4">
+                  <AlertDialogCancel className="cursor-pointer">
+                    취소
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeleteUser}
+                    disabled={!selectedUser || isDeletingUser}
+                    className="bg-red-600 hover:bg-red-500 font-bold cursor-pointer"
+                  >
+                    {isDeletingUser ? "삭제 중..." : "삭제"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
       </div>
       {/* 권한 체크박스 */}
@@ -647,7 +653,7 @@ const Users = () => {
         <Table className="text-white text-center border border-neutral-700">
           <TableHeader className="text-center border-b bg-[#11141b] hover:bg-[#11141b] border-neutral-700">
             <TableHead></TableHead>
-            <TableHead className="text-white text-center">ID</TableHead>
+            {/* <TableHead className="text-white text-center">ID</TableHead> */}
             <TableHead className="text-white text-center">이름</TableHead>
             <TableHead className="text-white text-center">학번</TableHead>
             <TableHead className="text-white text-center">권한</TableHead>
@@ -678,7 +684,7 @@ const Users = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              users.map((user, index) => (
+              users.map((user) => (
                 <TableRow
                   key={user.userId}
                   className="cursor-pointer"
@@ -692,7 +698,7 @@ const Users = () => {
                       }}
                     />
                   </TableCell>
-                  <TableCell>{page * size + index + 1}</TableCell>
+                  {/* <TableCell>{page * size + index + 1}</TableCell> */}
                   <TableCell>{user.username}</TableCell>
                   <TableCell>{user.studentId}</TableCell>
                   <TableCell>

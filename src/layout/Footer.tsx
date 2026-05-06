@@ -4,7 +4,7 @@ const Footer = () => {
   // const navigate = useNavigate();
 
   return (
-    <div className="space-y-4 md:space-y-0 bg-[#060a0c] text-white px-4">
+    <div className="space-y-4 pt-10 md:space-y-0 bg-[#060a0c] text-white px-4">
       <img
         className="w-50 h-10"
         src="https://computer.hufs.ac.kr/sites/computer/masterSkin/computer_JW_MS_K2WT001_M/images/logo_footer.svg"

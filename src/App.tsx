@@ -5,6 +5,7 @@ import {
   RouterProvider,
   Navigate,
 } from "react-router-dom";
+import ProtectedRoute from "./routes/ProtectedRoute";
 import Main from "./pages/Main";
 import Layout from "./layout/Layout";
 import Lend from "./pages/Lend";
@@ -36,10 +37,24 @@ const router = createBrowserRouter([
     path: "/",
     children: [
       { element: <Main />, path: "/" },
-      { element: <Lend />, path: "/lend" },
+      {
+        element: (
+          <ProtectedRoute>
+            <Lend />
+          </ProtectedRoute>
+        ),
+        path: "/lend",
+      },
+      {
+        element: (
+          <ProtectedRoute>
+            <MyPage />
+          </ProtectedRoute>
+        ),
+        path: "/mypage",
+      },
       { element: <Login />, path: "/login" },
       { element: <PwReset />, path: "/pw-reset" },
-      { element: <MyPage />, path: "/mypage" },
       { element: <LendState />, path: "/lending-state" },
       { element: <PwChange />, path: "/pw-change" },
       { element: <EmailChange />, path: "/email-change" },

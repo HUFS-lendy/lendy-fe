@@ -78,17 +78,17 @@ const ManualRental = () => {
 
   const formatPhoneNumber = (phone?: string) => {
     if (!phone) return "";
-    
+
     const digits = phone.replace(/\D/g, "");
-    
+
     if (digits.length === 11) {
       return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
     }
-    
+
     if (digits.length === 10) {
       return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
     }
-    
+
     return phone;
   };
 
@@ -316,6 +316,9 @@ const ManualRental = () => {
                           placeholder="기기 선택"
                           searchPlaceholder="기기 검색"
                           emptyText="검색에 맞는 기기가 없습니다."
+                          triggerClassName="w-[300px]"
+                          contentClassName="w-[360px]"
+                          listClassName="max-h-[280px]"
                         />
                       </TableCell>
                     </TableRow>
@@ -486,7 +489,9 @@ const ManualRental = () => {
                       }
                     />
                   </TableCell>
-                  <TableCell>{currentPage * USERS_PAGE_SIZE + index + 1}</TableCell>
+                  <TableCell>
+                    {currentPage * USERS_PAGE_SIZE + index + 1}
+                  </TableCell>
                   <TableCell>{user.username}</TableCell>
                   <TableCell>{user.studentId}</TableCell>
                   <TableCell>
