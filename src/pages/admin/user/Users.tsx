@@ -79,7 +79,7 @@ const Users = () => {
 
   const formatAcademicTermLabel = (term: {
     year: number;
-    term: "SPRING" | "FALL";
+    term: string;
     active: boolean;
   }) => {
     const semesterText = term.term === "SPRING" ? "1학기" : "2학기";
