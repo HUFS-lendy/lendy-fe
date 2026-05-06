@@ -678,7 +678,7 @@ const Users = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              users.map((user) => (
+              users.map((user, index) => (
                 <TableRow
                   key={user.userId}
                   className="cursor-pointer"
@@ -692,7 +692,7 @@ const Users = () => {
                       }}
                     />
                   </TableCell>
-                  <TableCell>{user.userId}</TableCell>
+                  <TableCell>{page * size + index + 1}</TableCell>
                   <TableCell>{user.username}</TableCell>
                   <TableCell>{user.studentId}</TableCell>
                   <TableCell>
