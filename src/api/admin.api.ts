@@ -74,8 +74,7 @@ export const useUserUpdate = () => {
       email,
       phone,
     }: UpdateUserRequest) => {
-      const res = await apiClient.put(`/api/admin/users/${userId}`, {
-        userId,
+      const res = await apiClient.patch(`/api/admin/users/${userId}`, {
         role,
         state,
         email,

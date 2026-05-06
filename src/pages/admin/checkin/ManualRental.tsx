@@ -76,6 +76,22 @@ const ManualRental = () => {
   const { data: availableItems = [], isLoading: isAvailableItemsLoading } =
     useItemAvailable(selectedModelId);
 
+  const formatPhoneNumber = (phone?: string) => {
+    if (!phone) return "";
+    
+    const digits = phone.replace(/\D/g, "");
+    
+    if (digits.length === 11) {
+      return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+    }
+    
+    if (digits.length === 10) {
+      return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+    }
+    
+    return phone;
+  };
+
   const rolesParam = useMemo(() => {
     const roles: string[] = [];
     if (checkedRoles.ADMIN) roles.push("ADMIN");
@@ -427,7 +443,7 @@ const ManualRental = () => {
           <TableHeader className="text-center border-b bg-[#11141b] hover:bg-[#11141b] border-neutral-700">
             <TableRow>
               <TableHead></TableHead>
-              <TableHead className="text-white text-center">ID</TableHead>
+              <TableHead className="text-white text-center">순번</TableHead>
               <TableHead className="text-white text-center">이름</TableHead>
               <TableHead className="text-white text-center">학번</TableHead>
               <TableHead className="text-white text-center">권한</TableHead>
@@ -460,7 +476,7 @@ const ManualRental = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              users.map((user) => (
+              users.map((user, index) => (
                 <TableRow key={user.userId}>
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <Checkbox
@@ -470,7 +486,7 @@ const ManualRental = () => {
                       }
                     />
                   </TableCell>
-                  <TableCell>{user.userId}</TableCell>
+                  <TableCell>{currentPage * USERS_PAGE_SIZE + index + 1}</TableCell>
                   <TableCell>{user.username}</TableCell>
                   <TableCell>{user.studentId}</TableCell>
                   <TableCell>
@@ -478,7 +494,7 @@ const ManualRental = () => {
                   </TableCell>
                   <TableCell>{user.state}</TableCell>
                   <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.phone}</TableCell>
+                  <TableCell>{formatPhoneNumber(user.phone)}</TableCell>
                 </TableRow>
               ))
             )}
