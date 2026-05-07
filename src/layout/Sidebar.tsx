@@ -70,9 +70,9 @@ const items: NavItem[] = [
     ],
   },
   {
-    title: "종강일 설정",
+    title: "학기 설정",
     icon: CalendarClock,
-    children: [{ title: "종강일 설정", url: "/admin/view-limit" }],
+    children: [{ title: "학기 정보 관리", url: "/admin/view-limit" }],
   },
 ];
 

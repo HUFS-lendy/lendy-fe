@@ -29,6 +29,8 @@ export const useCreateAcademicTerm = () => {
     mutationFn: async ({
       year,
       term,
+      startDate,
+      reservationOpenAt,
       endDate,
       active,
     }: CreateAcademicTermRequest) => {
@@ -37,6 +39,8 @@ export const useCreateAcademicTerm = () => {
         {
           year,
           term,
+          startDate,
+          reservationOpenAt,
           endDate,
           active,
         },
@@ -75,12 +79,16 @@ export const useUpdateAcademicTerm = () => {
       termId,
       year,
       term,
+      startDate,
+      reservationOpenAt,
       endDate,
       active,
     }: {
       termId: number;
       year: number;
       term: string;
+      startDate: string;
+      reservationOpenAt: string;
       endDate: string;
       active: boolean;
     }) => {
@@ -89,6 +97,8 @@ export const useUpdateAcademicTerm = () => {
         {
           year,
           term,
+          startDate,
+          reservationOpenAt,
           endDate,
           active,
         },
