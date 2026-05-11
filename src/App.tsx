@@ -63,7 +63,7 @@ const router = createBrowserRouter([
       {
         path: "admin",
         children: [
-          { index: true, element: <Navigate to="devices" replace /> },
+          { index: true, element: <Navigate to="check-in" replace /> },
           { path: "devices", element: <Devices /> },
           { path: "devices/:itemId", element: <Device /> },
           { path: "devices/manage", element: <ManageDevices /> },

@@ -1,6 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "./client";
-import type { MyReservationsResponse } from "../type/reservationUser.type";
+import type {
+  MyReservationsResponse,
+  ApiResponse,
+} from "../type/reservationUser.type";
+import { isAxiosError } from "axios";
 
 // 내 예약 목록 조회
 const fetchMyReservations = async (
@@ -24,16 +28,40 @@ export const useMyReservations = (page = 0, size = 20) => {
   });
 };
 
+const getApiErrorMessage = (error: unknown) => {
+  if (isAxiosError<ApiResponse<null>>(error)) {
+    return error.response?.data?.message ?? "대여 신청에 실패했습니다.";
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "대여 신청에 실패했습니다.";
+};
+
 // 예약 신청
 export const useDoReserve = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ modelId }: { modelId: number }) => {
-      const do_reserve_res = await apiClient.post("/api/reservations", {
-        modelId,
-      });
-      return do_reserve_res.data.data;
+      try {
+        const doReserveRes = await apiClient.post<ApiResponse<unknown>>(
+          "/api/reservations",
+          { modelId },
+        );
+
+        if (!doReserveRes.data.success) {
+          throw new Error(
+            doReserveRes.data.message || "대여 신청에 실패했습니다.",
+          );
+        }
+
+        return doReserveRes.data.data;
+      } catch (error) {
+        throw new Error(getApiErrorMessage(error));
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });

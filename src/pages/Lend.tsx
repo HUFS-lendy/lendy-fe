@@ -139,8 +139,12 @@ const Lend = () => {
           toast("대여 신청이 완료되었습니다.");
           navigate("/lending-state");
         },
-        onError: () => {
-          toast("대여 신청에 실패했습니다.");
+        onError: (error) => {
+          toast(
+            error instanceof Error
+              ? error.message
+              : "대여 신청에 실패했습니다.",
+          );
         },
       },
     );
@@ -160,8 +164,12 @@ const Lend = () => {
           toast("대여 신청이 완료되었습니다.");
           navigate("/lending-state");
         },
-        onError: () => {
-          toast("대여 신청에 실패했습니다.");
+        onError: (error) => {
+          toast(
+            error instanceof Error
+              ? error.message
+              : "대여 신청에 실패했습니다.",
+          );
         },
       },
     );
