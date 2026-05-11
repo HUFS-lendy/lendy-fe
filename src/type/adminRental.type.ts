@@ -23,3 +23,10 @@ export interface CreateManualRentalRequest {
   studentId: string;
   itemId: number;
 }
+
+export type ApiResponse<T> = {
+  success: boolean;
+  code: string;
+  message: string;
+  data: T;
+};

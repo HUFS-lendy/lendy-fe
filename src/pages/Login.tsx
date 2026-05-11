@@ -31,7 +31,6 @@ const Login = () => {
         id: studentId.trim(),
         password,
       });
-
       toast(message ?? "로그인 되었습니다.");
       navigate("/", { replace: true });
     } catch (err) {

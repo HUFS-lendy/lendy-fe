@@ -41,7 +41,7 @@ import { useCreateRental } from "../../../api/adminRental.api";
 import { format, compareDesc } from "date-fns";
 import { Checkbox } from "../../../components/ui/checkbox";
 import { type CheckinItem } from "../../../type/adminCheckin.type";
-const CHECKIN_PAGE_SIZE = 20;
+const CHECKIN_PAGE_SIZE = 10;
 const MAX_PAGE_BUTTONS = 5;
 
 const CheckIn = () => {
@@ -126,7 +126,7 @@ const CheckIn = () => {
 
   const handleCreateRental = () => {
     if (!selectedReservationId || !selectedItemId) {
-      toast.error("대여 전환할 예약을 선택해주세요.");
+      toast("대여 전환할 예약을 선택해주세요.");
       return;
     }
 
@@ -136,13 +136,17 @@ const CheckIn = () => {
         itemId: selectedItemId,
       },
       {
-        onSuccess: () => {
-          toast.success("대여 전환이 완료되었습니다.");
+        onSuccess: (res) => {
+          toast(res.message ?? "대여 전환이 완료되었습니다.");
           setSelectedReservationId(null);
           setSelectedItemId(null);
         },
-        onError: () => {
-          toast.error("대여 전환 중 오류가 발생했습니다.");
+        onError: (error) => {
+          toast(
+            error instanceof Error
+              ? error.message
+              : "대여 전환 중 오류가 발생했습니다.",
+          );
         },
       },
     );
@@ -216,11 +220,13 @@ const CheckIn = () => {
             </AlertDialogHeader>
 
             <AlertDialogFooter>
-              <AlertDialogCancel>취소</AlertDialogCancel>
+              <AlertDialogCancel className="cursor-pointer">
+                취소
+              </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleCreateRental}
                 disabled={isPending}
-                className="bg-red-600 hover:bg-red-500 font-bold"
+                className="bg-neutral-900 hover:bg-neutral-800 font-bold cursor-pointer"
               >
                 {isPending ? "전환 중..." : "전환"}
               </AlertDialogAction>

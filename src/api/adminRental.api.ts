@@ -4,7 +4,9 @@ import type {
   CreateRentalRequest,
   CreateManualRentalRequest,
   Rental,
+  ApiResponse,
 } from "../type/adminRental.type";
+import { isAxiosError } from "axios";
 
 // 수기 대여 등록
 export const useManualRental = () => {
@@ -27,18 +29,41 @@ export const useManualRental = () => {
   });
 };
 
+// 대여 전환 동적 메시지
+const getApiErrorMessage = (error: unknown) => {
+  if (isAxiosError<ApiResponse<null>>(error)) {
+    return error.response?.data?.message ?? "대여 전환 중 오류가 발생했습니다.";
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "대여 전환 중 오류가 발생했습니다.";
+};
+
 // 대여 승인 (예약 -> 대여 전환)
 export const useCreateRental = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ reservationId, itemId }: CreateRentalRequest) => {
-      const res = await apiClient.post<Rental>("/api/admin/rentals", {
-        reservationId,
-        itemId,
-      });
+      try {
+        const res = await apiClient.post<ApiResponse<Rental>>(
+          "/api/admin/rentals",
+          { reservationId, itemId },
+        );
 
-      return res.data;
+        if (!res.data.success) {
+          throw new Error(
+            res.data.message || "대여 전환 중 오류가 발생했습니다.",
+          );
+        }
+
+        return res.data;
+      } catch (error) {
+        throw new Error(getApiErrorMessage(error));
+      }
     },
 
     onSuccess: () => {
