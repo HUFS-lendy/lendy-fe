@@ -8,18 +8,38 @@ import type {
 } from "../type/adminRental.type";
 import { isAxiosError } from "axios";
 
+const getManualRentalApiErrorMessage = (error: unknown) => {
+  if (isAxiosError<ApiResponse<null>>(error)) {
+    return error.response?.data?.message ?? "수기 대여 등록에 실패했습니다.";
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "수기 대여 등록에 실패했습니다.";
+};
+
 // 수기 대여 등록
 export const useManualRental = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ studentId, itemId }: CreateManualRentalRequest) => {
-      const res = await apiClient.post<Rental>("/api/admin/manual-rentals", {
-        studentId,
-        itemId,
-      });
+      try {
+        const res = await apiClient.post<ApiResponse<Rental>>(
+          "/api/admin/manual-rentals",
+          { studentId, itemId },
+        );
 
-      return res.data;
+        if (!res.data.success) {
+          throw new Error(res.data.message || "수기 대여 등록에 실패했습니다.");
+        }
+
+        return res.data;
+      } catch (error) {
+        throw new Error(getManualRentalApiErrorMessage(error));
+      }
     },
 
     onSuccess: () => {
@@ -30,7 +50,7 @@ export const useManualRental = () => {
 };
 
 // 대여 전환 동적 메시지
-const getApiErrorMessage = (error: unknown) => {
+const getCheckInApiErrorMessage = (error: unknown) => {
   if (isAxiosError<ApiResponse<null>>(error)) {
     return error.response?.data?.message ?? "대여 전환 중 오류가 발생했습니다.";
   }
@@ -62,7 +82,7 @@ export const useCreateRental = () => {
 
         return res.data;
       } catch (error) {
-        throw new Error(getApiErrorMessage(error));
+        throw new Error(getCheckInApiErrorMessage(error));
       }
     },
 

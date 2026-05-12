@@ -252,7 +252,9 @@ const CheckIn = () => {
                 대여 학기
               </TableHead>
               <TableHead className="text-white text-center">예약일</TableHead>
-              <TableHead className="text-white text-center">반납일</TableHead>
+              <TableHead className="text-white text-center">
+                에약 만료일
+              </TableHead>
             </TableRow>
           </TableHeader>
 
@@ -303,7 +305,9 @@ const CheckIn = () => {
                       <TableCell>{reservation.category}</TableCell>
                       <TableCell>{reservation.modelName}</TableCell>
                       <TableCell>{reservation.itemSerial}</TableCell>
-                      <TableCell>{reservation.status}</TableCell>
+                      <TableCell>
+                        {reservation.status === "RESERVED" ? "예약" : "-"}
+                      </TableCell>
                       <TableCell>{reservation.semester}</TableCell>
                       <TableCell>
                         {format(
