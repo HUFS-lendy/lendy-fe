@@ -46,8 +46,10 @@ import {
 } from "../../../api/academicTerm.api";
 
 const ViewLimit = () => {
-  const [open, setOpen] = useState(false);
-  const [date, setDate] = useState<Date | undefined>(undefined);
+  const [startDateOpen, setStartDateOpen] = useState(false);
+  const [endDateOpen, setEndDateOpen] = useState(false);
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [year, setYear] = useState("");
   const [selectedTerm, setSelectedTerm] = useState("");
   const [active, setActive] = useState("false");
@@ -79,8 +81,18 @@ const ViewLimit = () => {
       return;
     }
 
-    if (!date) {
-      toast("날짜를 선택해주세요.");
+    if (!startDate) {
+      toast("개강일을 선택해주세요.");
+      return;
+    }
+
+    if (!endDate) {
+      toast("종강일을 선택해주세요.");
+      return;
+    }
+
+    if (startDate > endDate) {
+      toast("개강일은 종강일보다 늦을 수 없습니다.");
       return;
     }
 
@@ -88,19 +100,25 @@ const ViewLimit = () => {
       {
         year: Number(year),
         term: selectedTerm,
-        endDate: formatDateToKSTString(date),
+        startDate: formatDateToKSTString(startDate),
+        endDate: formatDateToKSTString(endDate),
         active: active === "true",
       },
       {
-        onSuccess: () => {
-          toast("종강일이 추가되었습니다.");
+        onSuccess: (res) => {
+          toast(res.message ?? "학기가 추가되었습니다.");
           setYear("");
           setSelectedTerm("");
-          setDate(undefined);
+          setStartDate(undefined);
+          setEndDate(undefined);
           setActive("false");
         },
-        onError: () => {
-          toast("종강일 추가에 실패했습니다.");
+        onError: (error) => {
+          toast(
+            error instanceof Error
+              ? error.message
+              : "학기 추가에 실패했습니다.",
+          );
         },
       },
     );
@@ -116,12 +134,16 @@ const ViewLimit = () => {
     }
 
     deleteAcademicTerm(selectedTermId, {
-      onSuccess: () => {
-        toast("해당 종강일이 삭제되었습니다.");
+      onSuccess: (res) => {
+        toast(res.message ?? "해당 종강일이 삭제되었습니다.");
         setSelectedTermId(null);
       },
-      onError: () => {
-        toast("종강일 삭제에 실패했습니다.");
+      onError: (error) => {
+        toast(
+          error instanceof Error
+            ? error.message
+            : "종강일 삭제에 실패했습니다.",
+        );
       },
     });
   };
@@ -134,7 +156,12 @@ const ViewLimit = () => {
 
     setYear(String(selectedAcademicTerm.year));
     setSelectedTerm(selectedAcademicTerm.term);
-    setDate(
+    setStartDate(
+      selectedAcademicTerm.startDate
+        ? new Date(selectedAcademicTerm.startDate)
+        : undefined,
+    );
+    setEndDate(
       selectedAcademicTerm.endDate
         ? new Date(selectedAcademicTerm.endDate)
         : undefined,
@@ -158,8 +185,18 @@ const ViewLimit = () => {
       return;
     }
 
-    if (!date) {
-      toast("날짜를 선택해주세요.");
+    if (!startDate) {
+      toast("개강일을 선택해주세요.");
+      return;
+    }
+
+    if (!endDate) {
+      toast("종강일을 선택해주세요.");
+      return;
+    }
+
+    if (startDate > endDate) {
+      toast("개강일은 종강일보다 늦을 수 없습니다.");
       return;
     }
 
@@ -168,20 +205,26 @@ const ViewLimit = () => {
         termId: selectedAcademicTerm.id,
         year: Number(year),
         term: selectedTerm,
-        endDate: formatDateToKSTString(date),
+        startDate: formatDateToKSTString(startDate),
+        endDate: formatDateToKSTString(endDate),
         active: active === "true",
       },
       {
-        onSuccess: () => {
-          toast("종강일이 수정되었습니다.");
+        onSuccess: (res) => {
+          toast(res.message ?? "학기가 수정되었습니다.");
           setYear("");
           setSelectedTerm("");
-          setDate(undefined);
+          setStartDate(undefined);
+          setEndDate(undefined);
           setActive("false");
           setSelectedTermId(null);
         },
-        onError: () => {
-          toast("종강일 수정에 실패했습니다.");
+        onError: (error) => {
+          toast(
+            error instanceof Error
+              ? error.message
+              : "학기 수정에 실패했습니다.",
+          );
         },
       },
     );
@@ -251,11 +294,13 @@ const ViewLimit = () => {
                 </div>
 
                 <div>
-                  <Label className="pb-2">날짜</Label>
-                  <Popover open={open} onOpenChange={setOpen}>
+                  <Label className="pb-2">개강일</Label>
+                  <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
                     <PopoverTrigger asChild>
                       <div className="inline-block w-fit border text-sm rounded-sm px-3 py-1 cursor-pointer">
-                        {date ? date.toLocaleDateString() : "날짜 선택"}
+                        {startDate
+                          ? startDate.toLocaleDateString()
+                          : "개강일 선택"}
                       </div>
                     </PopoverTrigger>
 
@@ -265,11 +310,37 @@ const ViewLimit = () => {
                     >
                       <Calendar
                         mode="single"
-                        selected={date}
+                        selected={startDate}
                         captionLayout="dropdown"
                         onSelect={(d) => {
-                          setDate(d);
-                          setOpen(false);
+                          setStartDate(d);
+                          setStartDateOpen(false);
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div>
+                  <Label className="pb-2">종강일</Label>
+                  <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
+                    <PopoverTrigger asChild>
+                      <div className="inline-block w-fit border text-sm rounded-sm px-3 py-1 cursor-pointer">
+                        {endDate ? endDate.toLocaleDateString() : "종강일 선택"}
+                      </div>
+                    </PopoverTrigger>
+
+                    <PopoverContent
+                      className="w-auto rounded-2xl overflow-hidden p-0 bg-white text-black border border-black/10"
+                      align="start"
+                    >
+                      <Calendar
+                        mode="single"
+                        selected={endDate}
+                        captionLayout="dropdown"
+                        onSelect={(d) => {
+                          setEndDate(d);
+                          setEndDateOpen(false);
                         }}
                       />
                     </PopoverContent>
@@ -344,11 +415,13 @@ const ViewLimit = () => {
                 </div>
 
                 <div>
-                  <Label className="pb-2">날짜</Label>
-                  <Popover open={open} onOpenChange={setOpen}>
+                  <Label className="pb-2">개강일</Label>
+                  <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
                     <PopoverTrigger asChild>
                       <div className="inline-block w-fit border text-sm rounded-sm px-3 py-1 cursor-pointer">
-                        {date ? date.toLocaleDateString() : "날짜 선택"}
+                        {startDate
+                          ? startDate.toLocaleDateString()
+                          : "개강일 선택"}
                       </div>
                     </PopoverTrigger>
 
@@ -358,11 +431,37 @@ const ViewLimit = () => {
                     >
                       <Calendar
                         mode="single"
-                        selected={date}
+                        selected={startDate}
                         captionLayout="dropdown"
                         onSelect={(d) => {
-                          setDate(d);
-                          setOpen(false);
+                          setStartDate(d);
+                          setStartDateOpen(false);
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div>
+                  <Label className="pb-2">종강일</Label>
+                  <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
+                    <PopoverTrigger asChild>
+                      <div className="inline-block w-fit border text-sm rounded-sm px-3 py-1 cursor-pointer">
+                        {endDate ? endDate.toLocaleDateString() : "종강일 선택"}
+                      </div>
+                    </PopoverTrigger>
+
+                    <PopoverContent
+                      className="w-auto rounded-2xl overflow-hidden p-0 bg-white text-black border border-black/10"
+                      align="start"
+                    >
+                      <Calendar
+                        mode="single"
+                        selected={endDate}
+                        captionLayout="dropdown"
+                        onSelect={(d) => {
+                          setEndDate(d);
+                          setEndDateOpen(false);
                         }}
                       />
                     </PopoverContent>
@@ -417,14 +516,12 @@ const ViewLimit = () => {
                     : "종강일을 삭제하시겠습니까?"}
                 </AlertDialogTitle>
                 <AlertDialogDescription>
-                  {selectedAcademicTerm ? (
-                    <>
-                      {selectedAcademicTerm.code}의 종강일은{" "}
-                      <strong>'{selectedAcademicTerm.endDate}'</strong>입니다.
-                    </>
-                  ) : (
-                    "삭제할 학기를 먼저 선택해주세요."
-                  )}
+                  {selectedAcademicTerm?.code}의 기간은{" "}
+                  <strong>
+                    '{selectedAcademicTerm?.startDate} ~{" "}
+                    {selectedAcademicTerm?.endDate}'
+                  </strong>
+                  입니다.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -449,7 +546,8 @@ const ViewLimit = () => {
                 <TableHead></TableHead>
                 <TableHead className="text-white text-center">년도</TableHead>
                 <TableHead className="text-white text-center">학기</TableHead>
-                <TableHead className="text-white text-center">날짜</TableHead>
+                <TableHead className="text-white text-center">개강일</TableHead>
+                <TableHead className="text-white text-center">종강일</TableHead>
                 <TableHead className="text-white text-center">
                   현재 학기
                 </TableHead>
@@ -491,6 +589,7 @@ const ViewLimit = () => {
                     </TableCell>
                     <TableCell>{term.year}</TableCell>
                     <TableCell>{term.code}</TableCell>
+                    <TableCell>{term.startDate}</TableCell>
                     <TableCell>{term.endDate}</TableCell>
                     <TableCell>{term.active ? "O" : ""}</TableCell>
                   </TableRow>
