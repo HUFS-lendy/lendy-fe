@@ -3,7 +3,10 @@ import { apiClient } from "./client";
 import type {
   Reservation,
   ReservationListResponse,
+  ApiResponse,
 } from "../type/adminReservation.type";
+import { isAxiosError } from "axios";
+import { toast } from "sonner";
 
 // 예약 단건 조회
 const fetchReservation = async (itemId: number): Promise<Reservation[]> => {
@@ -53,20 +56,41 @@ export const useConvertedReservations = (
   });
 };
 
+const getDeleteReservationApiErrorMessage = (error: unknown) => {
+  if (isAxiosError<ApiResponse<null>>(error))
+    return error.response?.data?.message ?? "대여 기록 삭제에 실패했습니다.";
+  if (error instanceof Error) return error.message;
+  return "대여 기록 삭제에 실패했습니다.";
+};
+
+const checkApiSuccess = <T>(
+  response: ApiResponse<T>,
+  fallbackMessage: string,
+) => {
+  if (!response.success) throw new Error(response.message || fallbackMessage);
+  return response;
+};
+
 // 예약 취소
 export const useDeleteReservations = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (reservationId: number) => {
-      const delete_reservation_res = await apiClient.delete(
+    mutationFn: async (reservationId: number): Promise<ApiResponse<null>> => {
+      const res = await apiClient.delete<ApiResponse<null>>(
         `/api/admin/reservations/${reservationId}`,
       );
-      return delete_reservation_res.data;
+      return checkApiSuccess(res.data, "대여 기록 삭제에 실패했습니다.");
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      toast.success(
+        data.message ?? "사용자의 해당 대여 내용이 삭제되었습니다.",
+      );
       queryClient.invalidateQueries({ queryKey: ["reservations"] });
-      queryClient.invalidateQueries({ queryKey: ["user-rentals"] });
+      queryClient.invalidateQueries({ queryKey: ["user_rentals"] });
+    },
+    onError: (error) => {
+      toast.error(getDeleteReservationApiErrorMessage(error));
     },
   });
 };

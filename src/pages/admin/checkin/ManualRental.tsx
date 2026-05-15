@@ -187,16 +187,20 @@ const ManualRental = () => {
         itemId: Number(selectedItemId),
       },
       {
-        onSuccess: () => {
-          toast("수기 대여가 등록되었습니다.");
+        onSuccess: (res) => {
+          toast(res.message ?? "수기 대여가 등록되었습니다.");
           setIsEditDialogOpen(false);
           setSelectedUserId(null);
           setSelectedModelId(null);
           setSelectedItemId("");
           navigate(`/admin/users/${selectedUserId}`);
         },
-        onError: () => {
-          toast("수기 대여 등록에 실패했습니다.");
+        onError: (error) => {
+          toast(
+            error instanceof Error
+              ? error.message
+              : "수기 대여 등록에 실패했습니다.",
+          );
         },
       },
     );
