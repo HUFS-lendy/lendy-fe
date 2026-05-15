@@ -179,6 +179,7 @@ const Users = () => {
     }
   }, [academicTerms, excelTermId]);
 
+  // 사용자 정보 수정
   const handleUpdateUser = () => {
     if (!selectedUser) {
       toast("수정할 사용자를 선택해주세요.");
@@ -195,16 +196,13 @@ const Users = () => {
       },
       {
         onSuccess: () => {
-          toast("해당 사용자의 정보가 수정되었습니다.");
           setIsEditDialogOpen(false);
-        },
-        onError: () => {
-          toast("사용자 정보 수정에 실패했습니다.");
         },
       },
     );
   };
 
+  // 사용자 정보 삭제
   const handleDeleteUser = () => {
     if (!selectedUser) {
       toast("삭제할 사용자를 선택해주세요.");
@@ -213,11 +211,7 @@ const Users = () => {
 
     deleteUser(selectedUser.userId, {
       onSuccess: () => {
-        toast("해당 사용자가 삭제되었습니다.");
         setSelectedUserId(null);
-      },
-      onError: () => {
-        toast("사용자 삭제에 실패했습니다.");
       },
     });
   };

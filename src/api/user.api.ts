@@ -1,6 +1,43 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "./client";
-import type { UserMe, ApiResponse } from "../type/user.type";
+import type {
+  UserMe,
+  ApiResponse,
+  MyRental,
+  PageResponse,
+  MyRentalsParams,
+} from "../type/user.type";
+
+// 내 대여 기록 조회
+const fetchMyRentals = async ({
+  page = 0,
+  size = 20,
+  sort = [],
+}: MyRentalsParams): Promise<PageResponse<MyRental>> => {
+  const params = new URLSearchParams();
+
+  params.append("page", String(page));
+  params.append("size", String(size));
+  sort.forEach((value) => params.append("sort", value));
+
+  const res = await apiClient.get<ApiResponse<PageResponse<MyRental>>>(
+    "/api/users/me/rentals",
+    { params },
+  );
+  return res.data.data;
+};
+
+export const useMyRentals = ({
+  page = 0,
+  size = 20,
+  sort = [],
+}: MyRentalsParams = {}) => {
+  return useQuery({
+    queryKey: ["myRentals", page, size, sort],
+    queryFn: () => fetchMyRentals({ page, size, sort }),
+    retry: false,
+  });
+};
 
 export const usePasswordChange = () => {
   return useMutation({
