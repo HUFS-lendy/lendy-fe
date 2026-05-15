@@ -66,11 +66,7 @@ const User = () => {
       { rentalId: selectedRental.rentalId },
       {
         onSuccess: () => {
-          toast("기자재가 반납 처리되었습니다.");
           setSelectedRentalId(null);
-        },
-        onError: () => {
-          toast("반납 처리에 실패했습니다.");
         },
       },
     );
@@ -84,11 +80,7 @@ const User = () => {
 
     deleteReservation(selectedRental.rentalId, {
       onSuccess: () => {
-        toast("사용자의 해당 대여 내용이 삭제되었습니다.");
         setSelectedRentalId(null);
-      },
-      onError: () => {
-        toast("대여 기록 삭제에 실패했습니다.");
       },
     });
   };

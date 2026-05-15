@@ -57,3 +57,10 @@ export interface ReservationListResponse {
   numberOfElements: number;
   empty: boolean;
 }
+
+export type ApiResponse<T> = {
+  success: boolean;
+  code: string;
+  message: string;
+  data: T;
+};

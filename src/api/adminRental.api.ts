@@ -7,6 +7,7 @@ import type {
   ApiResponse,
 } from "../type/adminRental.type";
 import { isAxiosError } from "axios";
+import { toast } from "sonner";
 
 const getManualRentalApiErrorMessage = (error: unknown) => {
   if (isAxiosError<ApiResponse<null>>(error)) {
@@ -93,20 +94,42 @@ export const useCreateRental = () => {
   });
 };
 
+const getReturnRentalApiErrorMessage = (error: unknown) => {
+  if (isAxiosError<ApiResponse<null>>(error))
+    return error.response?.data?.message ?? "반납 처리에 실패했습니다.";
+  if (error instanceof Error) return error.message;
+  return "반납 처리에 실패했습니다.";
+};
+
+const checkApiSuccess = <T>(
+  response: ApiResponse<T>,
+  fallbackMessage: string,
+) => {
+  if (!response.success) throw new Error(response.message || fallbackMessage);
+  return response;
+};
+
 // 기자재 반납 처리
 export const useReturnReservation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ rentalId }: { rentalId: number }) => {
-      const returnReservation_res = await apiClient.patch(
+    mutationFn: async ({
+      rentalId,
+    }: {
+      rentalId: number;
+    }): Promise<ApiResponse<Rental>> => {
+      const res = await apiClient.patch<ApiResponse<Rental>>(
         `/api/admin/rentals/${rentalId}`,
       );
-
-      return returnReservation_res.data.data;
+      return checkApiSuccess(res.data, "반납 처리에 실패했습니다.");
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      toast.success(data.message ?? "기자재가 반납 처리되었습니다.");
       queryClient.invalidateQueries({ queryKey: ["user_rentals"] });
+    },
+    onError: (error) => {
+      toast.error(getReturnRentalApiErrorMessage(error));
     },
   });
 };

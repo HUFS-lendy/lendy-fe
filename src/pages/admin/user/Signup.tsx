@@ -68,8 +68,14 @@ const SignUp = () => {
     }
 
     try {
-      await doSignUp({ studentId, username, password, email, phone });
-      toast("회원가입 되었습니다.");
+      const res = await doSignUp({
+        studentId,
+        username,
+        password,
+        email,
+        phone,
+      });
+      toast.success(res.message ?? "회원가입 되었습니다.");
       navigate("/admin/users");
     } catch (error) {
       const errorMessage =
