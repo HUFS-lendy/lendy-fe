@@ -58,16 +58,24 @@ const Lend = () => {
   const [kitCurrentPage, setKitCurrentPage] = useState(0);
 
   const { data: models = [], isLoading, isError } = useModels();
+  const HIDDEN_MODEL_IDS_FOR_STUDENTS = [46];
   const { mutate: createReservation, isPending: isCreatingReservation } =
     useDoReserve();
 
-  const equipmentList = useMemo(() => {
-    return models.filter((item: ModelItem) => item.type === "EQUIPMENT");
+  const visibleModels = useMemo(() => {
+    return models.filter(
+      (item: ModelItem) =>
+        !HIDDEN_MODEL_IDS_FOR_STUDENTS.includes(item.modelId),
+    );
   }, [models]);
 
+  const equipmentList = useMemo(() => {
+    return visibleModels.filter((item: ModelItem) => item.type === "EQUIPMENT");
+  }, [visibleModels]);
+  
   const kitList = useMemo(() => {
-    return models.filter((item: ModelItem) => item.type === "KIT");
-  }, [models]);
+    return visibleModels.filter((item: ModelItem) => item.type === "KIT");
+  }, [visibleModels]);
 
   const equipmentTotalPages = Math.ceil(equipmentList.length / ITEMS_PER_PAGE);
   const kitTotalPages = Math.ceil(kitList.length / ITEMS_PER_PAGE);
