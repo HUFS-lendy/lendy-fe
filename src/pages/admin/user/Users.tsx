@@ -58,28 +58,12 @@ const Users = () => {
   const [editRole, setEditRole] = useState<"ADMIN" | "USER">("ADMIN");
   const [editState, setEditState] = useState<"ACTIVE" | "BANNED">("ACTIVE");
   const [editEmail, setEditEmail] = useState("");
-  const [editPhone, setEditPhone] = useState("");
   const [excelDialogOpen, setExcelDialogOpen] = useState(false);
   const [excelTermId, setExcelTermId] = useState("");
   const [excelFile, setExcelFile] = useState<File | null>(null);
   const [excelPreviewData, setExcelPreviewData] = useState<unknown>(null);
   const [page, setPage] = useState(0);
   const size = 10;
-  const formatPhoneNumber = (phone?: string) => {
-    if (!phone) return "";
-
-    const digits = phone.replace(/\D/g, "");
-
-    if (digits.length === 11) {
-      return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
-    }
-
-    if (digits.length === 10) {
-      return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
-    }
-
-    return phone;
-  };
 
   const formatAcademicTermLabel = (term: {
     year: number;
@@ -166,7 +150,6 @@ const Users = () => {
     setEditRole(selectedUser.role);
     setEditState(selectedUser.state);
     setEditEmail(selectedUser.email);
-    setEditPhone(selectedUser.phone);
   }, [selectedUser]);
 
   useEffect(() => {
@@ -179,7 +162,6 @@ const Users = () => {
     }
   }, [academicTerms, excelTermId]);
 
-  // 사용자 정보 수정
   const handleUpdateUser = () => {
     if (!selectedUser) {
       toast("수정할 사용자를 선택해주세요.");
@@ -192,7 +174,6 @@ const Users = () => {
         role: editRole,
         state: editState,
         email: editEmail,
-        phone: editPhone,
       },
       {
         onSuccess: () => {
@@ -202,7 +183,6 @@ const Users = () => {
     );
   };
 
-  // 사용자 정보 삭제
   const handleDeleteUser = () => {
     if (!selectedUser) {
       toast("삭제할 사용자를 선택해주세요.");
@@ -275,7 +255,6 @@ const Users = () => {
 
   return (
     <div className="bg-[#060a0c] w-screen px-8 text-white">
-      {/* 브래드크럼 */}
       <div className="pt-14">
         <Breadcrumb>
           <BreadcrumbList>
@@ -296,13 +275,12 @@ const Users = () => {
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-      {/* 제목 */}
+
       <div className="pt-8 pb-4">
         <div className="font-bold text-white text-3xl pb-4">사용자 관리</div>
       </div>
-      {/* 검색창 & 수정 버튼 */}
+
       <div className="flex justify-between items-center pr-2">
-        {/* 검색창 */}
         <div className="relative w-3/5 md:w-1/4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 w-3 h-3 md:w-5 md:h-5" />
           <Input
@@ -312,8 +290,8 @@ const Users = () => {
             onChange={(e) => setKeyword(e.target.value)}
           />
         </div>
+
         <div className="flex space-x-2">
-          {/* todo : 엑셀 일괄 등록 */}
           <AlertDialog open={excelDialogOpen} onOpenChange={setExcelDialogOpen}>
             <AlertDialogTrigger asChild>
               <button
@@ -354,6 +332,7 @@ const Users = () => {
                     ))}
                   </select>
                 </div>
+
                 <div>
                   <Label className="pb-2">엑셀 파일</Label>
                   <Input
@@ -401,7 +380,7 @@ const Users = () => {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-          {/* 수정 버튼 */}
+
           <div>
             <AlertDialog
               open={isEditDialogOpen}
@@ -429,7 +408,7 @@ const Users = () => {
                     사용자 정보를 수정해보세요.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
-                {/* 수정 모달 테이블 */}
+
                 <div>
                   <Table className="text-center border border-neutral-200">
                     <TableBody>
@@ -503,21 +482,10 @@ const Users = () => {
                           />
                         </TableCell>
                       </TableRow>
-                      <TableRow className="border-neutral-200 hover:bg-white">
-                        <TableCell className="w-1/6 bg-neutral-300">
-                          연락처
-                        </TableCell>
-                        <TableCell className="text-left px-4">
-                          <Input
-                            className="text-sm"
-                            value={editPhone}
-                            onChange={(e) => setEditPhone(e.target.value)}
-                          />
-                        </TableCell>
-                      </TableRow>
                     </TableBody>
                   </Table>
                 </div>
+
                 <AlertDialogFooter className="mt-4">
                   <AlertDialogCancel className="cursor-pointer">
                     취소
@@ -533,7 +501,7 @@ const Users = () => {
               </AlertDialogContent>
             </AlertDialog>
           </div>
-          {/* 삭제 버튼 */}
+
           <div>
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -580,7 +548,7 @@ const Users = () => {
           </div>
         </div>
       </div>
-      {/* 권한 체크박스 */}
+
       <div className="flex items-center space-x-4 py-4">
         <Label className="flex items-center gap-2 cursor-pointer">
           <Checkbox
@@ -611,7 +579,6 @@ const Users = () => {
         </Label>
       </div>
 
-      {/* 상태 체크박스 */}
       <div className="flex items-center space-x-4 pb-4">
         <Label className="flex items-center gap-2 cursor-pointer">
           <Checkbox
@@ -642,30 +609,27 @@ const Users = () => {
         </Label>
       </div>
 
-      {/* 사용자 테이블 */}
       <div className="mt-4">
         <Table className="text-white text-center border border-neutral-700">
           <TableHeader className="text-center border-b bg-[#11141b] hover:bg-[#11141b] border-neutral-700">
             <TableHead></TableHead>
-            {/* <TableHead className="text-white text-center">ID</TableHead> */}
             <TableHead className="text-white text-center">이름</TableHead>
             <TableHead className="text-white text-center">학번</TableHead>
             <TableHead className="text-white text-center">권한</TableHead>
             <TableHead className="text-white text-center">상태</TableHead>
             <TableHead className="text-white text-center">이메일</TableHead>
-            <TableHead className="text-white text-center">연락처</TableHead>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-6 text-center">
+                <TableCell colSpan={6} className="py-6 text-center">
                   불러오는 중...
                 </TableCell>
               </TableRow>
             ) : isError ? (
               <TableRow>
                 <TableCell
-                  colSpan={8}
+                  colSpan={6}
                   className="py-6 text-center text-red-300"
                 >
                   사용자 목록을 불러오지 못했습니다.
@@ -673,7 +637,7 @@ const Users = () => {
               </TableRow>
             ) : users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-6 text-center">
+                <TableCell colSpan={6} className="py-6 text-center">
                   조회된 사용자가 없습니다.
                 </TableCell>
               </TableRow>
@@ -692,7 +656,6 @@ const Users = () => {
                       }}
                     />
                   </TableCell>
-                  {/* <TableCell>{page * size + index + 1}</TableCell> */}
                   <TableCell>{user.username}</TableCell>
                   <TableCell>{user.studentId}</TableCell>
                   <TableCell>
@@ -700,12 +663,12 @@ const Users = () => {
                   </TableCell>
                   <TableCell>{user.state}</TableCell>
                   <TableCell>{user.email}</TableCell>
-                  <TableCell>{formatPhoneNumber(user.phone)}</TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
+
         {totalPages > 1 ? (
           <div className="my-6">
             <Pagination>

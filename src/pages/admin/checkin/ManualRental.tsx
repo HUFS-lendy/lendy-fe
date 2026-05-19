@@ -45,6 +45,7 @@ import { useAdminUsers } from "../../../api/admin.api";
 import { useModels } from "../../../api/adminModel.api";
 import { useItemAvailable } from "../../../api/adminItem.api";
 import { useManualRental } from "../../../api/adminRental.api";
+
 const USERS_PAGE_SIZE = 20;
 const MAX_PAGE_BUTTONS = 5;
 
@@ -75,22 +76,6 @@ const ManualRental = () => {
 
   const { data: availableItems = [], isLoading: isAvailableItemsLoading } =
     useItemAvailable(selectedModelId);
-
-  const formatPhoneNumber = (phone?: string) => {
-    if (!phone) return "";
-
-    const digits = phone.replace(/\D/g, "");
-
-    if (digits.length === 11) {
-      return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
-    }
-
-    if (digits.length === 10) {
-      return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
-    }
-
-    return phone;
-  };
 
   const rolesParam = useMemo(() => {
     const roles: string[] = [];
@@ -208,7 +193,6 @@ const ManualRental = () => {
 
   return (
     <div className="bg-[#060a0c] w-screen px-8 text-white">
-      {/* 브래드크럼 */}
       <div className="pt-14">
         <Breadcrumb>
           <BreadcrumbList>
@@ -230,12 +214,10 @@ const ManualRental = () => {
         </Breadcrumb>
       </div>
 
-      {/* 제목 */}
       <div className="pt-8 pb-4">
         <div className="font-bold text-white text-3xl pb-4">수기 대여 등록</div>
       </div>
 
-      {/* 검색창 & 대여 등록 버튼 */}
       <div className="flex justify-between items-center pr-2">
         <div className="relative w-3/5 md:w-1/4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 w-3 h-3 md:w-5 md:h-5" />
@@ -380,7 +362,6 @@ const ManualRental = () => {
         </div>
       </div>
 
-      {/* 권한 체크박스 */}
       <div className="flex items-center space-x-4 py-4">
         <Label className="flex items-center gap-2 cursor-pointer">
           <Checkbox
@@ -409,7 +390,6 @@ const ManualRental = () => {
         </Label>
       </div>
 
-      {/* 상태 체크박스 */}
       <div className="flex items-center space-x-4 pb-4">
         <Label className="flex items-center gap-2 cursor-pointer">
           <Checkbox
@@ -444,7 +424,6 @@ const ManualRental = () => {
         </Label>
       </div>
 
-      {/* 사용자 테이블 */}
       <div className="mt-4">
         <Table className="text-white text-center border border-neutral-700">
           <TableHeader className="text-center border-b bg-[#11141b] hover:bg-[#11141b] border-neutral-700">
@@ -456,21 +435,20 @@ const ManualRental = () => {
               <TableHead className="text-white text-center">권한</TableHead>
               <TableHead className="text-white text-center">상태</TableHead>
               <TableHead className="text-white text-center">이메일</TableHead>
-              <TableHead className="text-white text-center">연락처</TableHead>
             </TableRow>
           </TableHeader>
 
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-6 text-center">
+                <TableCell colSpan={7} className="py-6 text-center">
                   불러오는 중...
                 </TableCell>
               </TableRow>
             ) : isError ? (
               <TableRow>
                 <TableCell
-                  colSpan={8}
+                  colSpan={7}
                   className="py-6 text-center text-red-300"
                 >
                   사용자 목록을 불러오지 못했습니다.
@@ -478,7 +456,7 @@ const ManualRental = () => {
               </TableRow>
             ) : users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-6 text-center">
+                <TableCell colSpan={7} className="py-6 text-center">
                   조회된 사용자가 없습니다.
                 </TableCell>
               </TableRow>
@@ -503,12 +481,12 @@ const ManualRental = () => {
                   </TableCell>
                   <TableCell>{user.state}</TableCell>
                   <TableCell>{user.email}</TableCell>
-                  <TableCell>{formatPhoneNumber(user.phone)}</TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
+
         {totalPages > 1 ? (
           <div className="my-6">
             <Pagination>

@@ -9,6 +9,8 @@ export type ModelItem = {
   availableQty: number;
   reservedQty: number;
   rentedQty: number;
+  breakdownQty: number;
+  lostQty: number;
   createdAt: string;
   updatedAt: string;
 };

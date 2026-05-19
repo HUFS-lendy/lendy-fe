@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-// import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -46,13 +46,14 @@ import {
   useDeleteModel,
   useModels,
 } from "../../../api/adminModel.api";
-import { type ModelItem } from "../../../type/adminModel.type";
 import { useRegisterItemsByExcel } from "../../../api/adminItem.api";
-import { type RegisterItemsExcelData } from "../../../type/adminItem.type";
+import type { ModelItem } from "../../../type/adminModel.type";
+import type { RegisterItemsExcelData } from "../../../type/adminItem.type";
+
 const ITEMS_PER_PAGE = 10;
 
 const Devices = () => {
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const [deviceNumber, setDeviceNumber] = useState<string[]>([]);
   const [categoryName, setCategoryName] = useState("");
@@ -157,10 +158,7 @@ const Devices = () => {
     }
 
     try {
-      await Promise.all(
-        selectedModelIds.map((modelId) => deleteModel(modelId)),
-      );
-
+      await Promise.all(selectedModelIds.map((modelId) => deleteModel(modelId)));
       toast.success("선택한 기자재가 삭제되었습니다.");
       setSelectedModelIds([]);
       setDeleteDialogOpen(false);
@@ -263,7 +261,6 @@ const Devices = () => {
         <div className="font-bold text-white text-3xl pb-8">기자재 현황</div>
 
         <div className="flex space-x-4 justify-end">
-          {/* 일괄 등록 버튼 */}
           <AlertDialog
             open={excelDialogOpen}
             onOpenChange={(open) => {
@@ -406,7 +403,7 @@ const Devices = () => {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-          {/* 기자재 추가 버튼 */}
+
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <div className="border cursor-pointer px-3 py-1 rounded-sm hover:bg-neutral-400 hover:text-black border-neutral-400 text-sm">
@@ -476,7 +473,6 @@ const Devices = () => {
             </AlertDialogContent>
           </AlertDialog>
 
-          {/* 기자재 삭제 버튼 */}
           <AlertDialog
             open={deleteDialogOpen}
             onOpenChange={setDeleteDialogOpen}
@@ -538,6 +534,7 @@ const Devices = () => {
                 <TableHead className="text-white text-center">
                   대여 완료
                 </TableHead>
+                <TableHead className="text-white text-center">고장/분실</TableHead>
                 <TableHead className="text-white text-center">총합</TableHead>
               </TableRow>
             </TableHeader>
@@ -545,14 +542,14 @@ const Devices = () => {
             <TableBody className="cursor-pointer">
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-6">
+                  <TableCell colSpan={8} className="text-center py-6">
                     불러오는 중...
                   </TableCell>
                 </TableRow>
               ) : isError ? (
                 <TableRow>
                   <TableCell
-                    colSpan={7}
+                    colSpan={8}
                     className="text-center py-6 text-red-300"
                   >
                     기자재 목록을 불러오지 못했습니다.
@@ -560,20 +557,18 @@ const Devices = () => {
                 </TableRow>
               ) : deviceModels.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-6">
+                  <TableCell colSpan={8} className="text-center py-6">
                     등록된 기자재가 없습니다.
                   </TableCell>
                 </TableRow>
               ) : (
-                paginatedDeviceModels?.map((device: ModelItem) => {
+                paginatedDeviceModels.map((device: ModelItem) => {
                   const checked = selectedModelIds.includes(device.modelId);
 
                   return (
                     <TableRow
                       key={device.modelId}
-                      // onClick={() =>
-                      //   navigate(`/admin/devices/${device.modelId}`)
-                      // }
+                      onClick={() => navigate(`/admin/devices/${device.modelId}`)}
                     >
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <Checkbox
@@ -588,6 +583,7 @@ const Devices = () => {
                       <TableCell>{device.availableQty}</TableCell>
                       <TableCell>{device.reservedQty}</TableCell>
                       <TableCell>{device.rentedQty}</TableCell>
+                      <TableCell>{device.breakdownQty + device.lostQty}</TableCell>
                       <TableCell className="font-bold">
                         {device.totalQty}
                       </TableCell>
@@ -597,6 +593,7 @@ const Devices = () => {
               )}
             </TableBody>
           </Table>
+
           {totalPages > 1 && (
             <div className="mt-6">
               <Pagination>

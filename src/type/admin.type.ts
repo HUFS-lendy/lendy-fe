@@ -8,7 +8,6 @@ export type AdminUser = {
   role: UserRole;
   state: UserState;
   email: string;
-  phone: string;
 };
 
 export type AdminUsersResponseData = {
@@ -40,5 +39,4 @@ export type UpdateUserRequest = {
   role: "ADMIN" | "USER";
   state: "ACTIVE" | "BANNED";
   email: string;
-  phone: string;
 };
