@@ -43,6 +43,7 @@ export const useCreateAcademicTerm = () => {
       year,
       term,
       startDate,
+      reservationOpenAt,
       endDate,
       active,
     }: CreateAcademicTermRequest) => {
@@ -53,7 +54,7 @@ export const useCreateAcademicTerm = () => {
             year,
             term,
             startDate,
-            reservationOpenAt: `${startDate}T00:00:00`,
+            reservationOpenAt,
             endDate,
             active,
           },
@@ -86,14 +87,12 @@ export const useDeleteAcademicTerm = () => {
         );
 
         if (!res.data.success) {
-          throw new Error(res.data.message || "종강일 삭제에 실패했습니다.");
+          throw new Error(res.data.message || "학기 삭제에 실패했습니다.");
         }
 
         return res.data;
       } catch (error) {
-        throw new Error(
-          getApiErrorMessage(error, "종강일 삭제에 실패했습니다."),
-        );
+        throw new Error(getApiErrorMessage(error, "학기 삭제에 실패했습니다."));
       }
     },
     onSuccess: () => {
@@ -112,6 +111,7 @@ export const useUpdateAcademicTerm = () => {
       year,
       term,
       startDate,
+      reservationOpenAt,
       endDate,
       active,
     }: {
@@ -119,6 +119,7 @@ export const useUpdateAcademicTerm = () => {
       year: number;
       term: string;
       startDate: string;
+      reservationOpenAt: string;
       endDate: string;
       active: boolean;
     }) => {
@@ -129,7 +130,7 @@ export const useUpdateAcademicTerm = () => {
             year,
             term,
             startDate,
-            reservationOpenAt: `${startDate}T00:00:00`,
+            reservationOpenAt,
             endDate,
             active,
           },

@@ -65,7 +65,7 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <Navigate to="check-in" replace /> },
           { path: "devices", element: <Devices /> },
-          { path: "devices/:itemId", element: <Device /> },
+          { path: "devices/:modelId", element: <Device /> },
           { path: "devices/manage", element: <ManageDevices /> },
           { path: "kits", element: <Kits /> },
           { path: "kits/:itemId", element: <Kit /> },

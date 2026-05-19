@@ -80,11 +80,10 @@ export const useUserUpdate = () => {
       role,
       state,
       email,
-      phone,
     }: UpdateUserRequest): Promise<ApiResponse<AdminUser>> => {
       const res = await apiClient.patch<ApiResponse<AdminUser>>(
         `/api/admin/users/${userId}`,
-        { role, state, email, phone },
+        { role, state, email},
       );
       return checkApiSuccess(res.data);
     },
