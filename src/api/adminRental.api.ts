@@ -1,9 +1,10 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "./client";
 import type {
   CreateRentalRequest,
   CreateManualRentalRequest,
   Rental,
+  AdminReturnsPage,
   ApiResponse,
 } from "../type/adminRental.type";
 import { isAxiosError } from "axios";
@@ -21,16 +22,54 @@ const getManualRentalApiErrorMessage = (error: unknown) => {
   return "수기 대여 등록에 실패했습니다.";
 };
 
+const fetchAdminReturns = async ({
+  keyword = "",
+  page = 0,
+  size = 20,
+}: {
+  keyword?: string;
+  page?: number;
+  size?: number;
+}): Promise<AdminReturnsPage> => {
+  const res = await apiClient.get<ApiResponse<AdminReturnsPage>>(
+    "/api/admin/rentals",
+    {
+      params: { keyword, page, size },
+    },
+  );
+
+  if (!res.data.success) {
+    throw new Error(res.data.message || "반납 대상 조회에 실패했습니다.");
+  }
+
+  return res.data.data;
+};
+
+export const useAdminReturns = ({
+  keyword = "",
+  page = 0,
+  size = 20,
+}: {
+  keyword?: string;
+  page?: number;
+  size?: number;
+}) => {
+  return useQuery({
+    queryKey: ["admin_returns", keyword, page, size],
+    queryFn: () => fetchAdminReturns({ keyword, page, size }),
+  });
+};
+
 // 수기 대여 등록
 export const useManualRental = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ studentId, itemId }: CreateManualRentalRequest) => {
+    mutationFn: async ({ studentId, itemId, sendMail }: CreateManualRentalRequest) => {
       try {
         const res = await apiClient.post<ApiResponse<Rental>>(
           "/api/admin/manual-rentals",
-          { studentId, itemId },
+          { studentId, itemId, sendMail },
         );
 
         if (!res.data.success) {
@@ -127,6 +166,9 @@ export const useReturnReservation = () => {
     onSuccess: (data) => {
       toast.success(data.message ?? "기자재가 반납 처리되었습니다.");
       queryClient.invalidateQueries({ queryKey: ["user_rentals"] });
+      queryClient.invalidateQueries({ queryKey: ["admin_returns"] });
+      queryClient.invalidateQueries({ queryKey: ["check-in"] });
+      queryClient.invalidateQueries({ queryKey: ["reservations"] });
     },
     onError: (error) => {
       toast.error(getReturnRentalApiErrorMessage(error));

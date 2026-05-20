@@ -14,7 +14,6 @@ type SignUpRequest = {
   username: string;
   password: string;
   email: string;
-  phone: string;
 };
 
 type SignUpData = {
@@ -22,7 +21,6 @@ type SignUpData = {
   username?: string;
   studentId?: string;
   email?: string;
-  phone?: string;
 };
 
 const getAuthApiErrorMessage = (error: unknown, fallbackMessage: string) => {
@@ -47,12 +45,11 @@ export const useSignUp = () => {
       username,
       password,
       email,
-      phone,
     }: SignUpRequest): Promise<ApiResponse<SignUpData | null>> => {
       try {
         const res = await apiClient.post<ApiResponse<SignUpData | null>>(
           "/api/auth/signup",
-          { studentId, username, password, email, phone },
+          { studentId, username, password, email },
         );
         return checkApiSuccess(res.data, "회원가입 중 오류가 발생했습니다.");
       } catch (error) {

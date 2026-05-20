@@ -2,12 +2,31 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "./client";
 import type {
   AdminItem,
+  AdminItemOccupancy,
   ApiResponse,
   CreateAdminItemRequest,
   RegisterItemsExcelRequest,
   RegisterItemsExcelResponse,
   UpdateAdminItemRequest,
 } from "../type/adminItem.type";
+
+// 현재 점유자조회(대여/예약)
+const fetchAdminItemOccupancy = async (
+  itemId: number,
+): Promise<AdminItemOccupancy | null> => {
+  const res = await apiClient.get<ApiResponse<AdminItemOccupancy | null>>(
+    `/api/admin/items/${itemId}/occupancy`,
+  );
+  return res.data.data;
+};
+
+export const useAdminItemOccupancy = (itemId?: number, enabled = true) => {
+  return useQuery({
+    queryKey: ["admin_item_occupancy", itemId],
+    queryFn: () => fetchAdminItemOccupancy(itemId as number),
+    enabled: !!itemId && enabled,
+  });
+};
 
 const fetchItemAvailable = async (modelId: number) => {
   const response = await apiClient.get<ApiResponse<AdminItem[]>>(

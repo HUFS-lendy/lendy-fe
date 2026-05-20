@@ -13,7 +13,6 @@ const SignUp = () => {
   const [username, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const { mutateAsync: doSignUp } = useSignUp();
 
@@ -33,10 +32,6 @@ const SignUp = () => {
 
   const handleEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
-  };
-
-  const handlePhone = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPhone(e.target.value);
   };
 
   const handleSignUp = async (e?: React.FormEvent<HTMLFormElement>) => {
@@ -62,18 +57,12 @@ const SignUp = () => {
       return;
     }
 
-    if (!phone.trim()) {
-      toast("전화번호를 입력해주세요.");
-      return;
-    }
-
     try {
       const res = await doSignUp({
         studentId,
         username,
         password,
         email,
-        phone,
       });
       toast.success(res.message ?? "회원가입 되었습니다.");
       navigate("/admin/users");
@@ -163,20 +152,6 @@ const SignUp = () => {
                   required
                   value={email}
                   onChange={handleEmail}
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label className="pb-1 text-md" htmlFor="phone">
-                  전화번호
-                </Label>
-                <Input
-                  id="phone"
-                  className="border border-neutral-400 text-sm"
-                  placeholder="전화번호를 입력해주세요."
-                  required
-                  value={phone}
-                  onChange={handlePhone}
                 />
               </div>
             </div>

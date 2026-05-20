@@ -30,6 +30,7 @@ import ViewLimit from "./pages/admin/limit/ViewLimit";
 import Category from "./pages/admin/category/Category";
 import CheckIn from "./pages/admin/checkin/CheckIn";
 import ManualRental from "./pages/admin/checkin/ManualRental";
+import Returns from "./pages/admin/checkin/Returns";
 
 const router = createBrowserRouter([
   {
@@ -77,6 +78,7 @@ const router = createBrowserRouter([
           { path: "category", element: <Category /> },
           { path: "check-in", element: <CheckIn /> },
           { path: "manual-rental", element: <ManualRental /> },
+          { path: "returns", element: <Returns /> },
         ],
       },
     ],

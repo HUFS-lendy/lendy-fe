@@ -65,3 +65,18 @@ export type UpdateAdminItemRequest = {
   state: ItemState;
   acquiredAt: string;
 };
+
+export interface AdminItemOccupancy {
+  itemId: number;
+  serial: string;
+  modelName: string;
+  currentState: ItemState;
+  occupancyType: "RESERVATION" | "RENTAL";
+  userId: number;
+  username: string;
+  studentId: string;
+  email: string;
+  semester: string;
+  startedAt: string;
+  dueAt: string;
+}
