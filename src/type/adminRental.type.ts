@@ -22,6 +22,31 @@ export interface Rental {
 export interface CreateManualRentalRequest {
   studentId: string;
   itemId: number;
+  sendMail: boolean;
+}
+
+// 반납 조회 타입
+export interface AdminReturnItem {
+  rentalId: number;
+  itemId: number;
+  modelId: number;
+  modelName: string;
+  serial: string;
+  userId: number;
+  username: string;
+  studentId: string;
+  email: string;
+  semester: string;
+  rentedAt: string;
+  dueAt: string;
+}
+
+export interface AdminReturnsPage {
+  content: AdminReturnItem[];
+  totalPages: number;
+  totalElements: number;
+  size: number;
+  number: number;
 }
 
 export type ApiResponse<T> = {

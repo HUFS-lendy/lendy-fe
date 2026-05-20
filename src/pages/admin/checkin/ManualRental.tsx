@@ -57,6 +57,7 @@ const ManualRental = () => {
   const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
   const [selectedItemId, setSelectedItemId] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
+  const [sendMail, setSendMail] = useState(false);
 
   const [checkedRoles, setCheckedRoles] = useState({
     ADMIN: true,
@@ -148,6 +149,7 @@ const ManualRental = () => {
   const handleOpenManualRentalDialog = () => {
     setSelectedModelId(null);
     setSelectedItemId("");
+    setSendMail(false);
   };
 
   const handleSubmitManualRental = () => {
@@ -170,6 +172,7 @@ const ManualRental = () => {
       {
         studentId: selectedUser.studentId,
         itemId: Number(selectedItemId),
+        sendMail,
       },
       {
         onSuccess: (res) => {
@@ -178,6 +181,7 @@ const ManualRental = () => {
           setSelectedUserId(null);
           setSelectedModelId(null);
           setSelectedItemId("");
+          setSendMail(false);
           navigate(`/admin/users/${selectedUserId}`);
         },
         onError: (error) => {
@@ -258,6 +262,7 @@ const ManualRental = () => {
                 </AlertDialogTitle>
                 <AlertDialogDescription>
                   사용자에게 기기 대여가 수동으로 부여됩니다.
+                  필요 시 대여 안내 메일 발송 여부를 선택할 수 있습니다.
                 </AlertDialogDescription>
               </AlertDialogHeader>
 
@@ -338,6 +343,16 @@ const ManualRental = () => {
                     </TableRow>
                   </TableBody>
                 </Table>
+              </div>
+              <div className="flex items-center space-x-2 pt-4">
+                <Checkbox
+                  id="manual-rental-send-mail"
+                  checked={sendMail}
+                  onCheckedChange={(checked) => setSendMail(checked === true)}
+                />
+                <Label htmlFor="manual-rental-send-mail" className="text-sm">
+                  대여 안내 메일 발송
+                </Label>
               </div>
 
               <AlertDialogFooter className="mt-4">

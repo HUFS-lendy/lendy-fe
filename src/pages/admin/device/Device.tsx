@@ -32,6 +32,7 @@ import {
 } from "../../../components/ui/alert-dialog";
 import { toast } from "sonner";
 import {
+  useAdminItemOccupancy,
   useAdminItemsByModel,
   useCreateAdminItem,
   useDeleteAdminItem,
@@ -69,6 +70,10 @@ const Device = () => {
   const [editSerial, setEditSerial] = useState("");
   const [editState, setEditState] = useState<ItemState>("BREAKDOWN");
 
+  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
+  const [isOccupancyDialogOpen, setIsOccupancyDialogOpen] = useState(false);
+  const [occupancyItemId, setOccupancyItemId] = useState<number | null>(null);
+
   const selectedItem =
     items.find((item: AdminItem) => item.itemId === selectedItemId) ?? null;
 
@@ -77,6 +82,9 @@ const Device = () => {
       (model) => model.modelId === parsedModelId,
     );
   }, [models, parsedModelId]);
+
+  const { data: occupancyData, isLoading: isOccupancyLoading } =
+  useAdminItemOccupancy(occupancyItemId ?? undefined, isOccupancyDialogOpen);
 
   const getStateLabel = (state: ItemState) => {
     switch (state) {
@@ -126,6 +134,21 @@ const Device = () => {
       default:
         return [];
     }
+  };
+
+  const canViewOccupancy = (state: ItemState) => {
+    return state === "RESERVED" || state === "RENTED";
+  };
+  
+  const getOccupancyButtonLabel = (state: ItemState) => {
+    if (state === "RESERVED") return "예약자 보기";
+    if (state === "RENTED") return "대여자 보기";
+    return "";
+  };
+  
+  const handleOpenOccupancyDialog = (itemId: number) => {
+    setOccupancyItemId(itemId);
+    setIsOccupancyDialogOpen(true);
   };
 
   useEffect(() => {
@@ -211,6 +234,7 @@ const Device = () => {
       {
         onSuccess: (res) => {
           toast.success(res.message ?? "기자재 상태가 수정되었습니다.");
+          setIsUpdateDialogOpen(false);
           setSelectedItemId(null);
         },
         onError: (error) => {
@@ -344,7 +368,7 @@ const Device = () => {
               </AlertDialogContent>
             </AlertDialog>
 
-            <AlertDialog>
+            <AlertDialog open={isUpdateDialogOpen} onOpenChange={setIsUpdateDialogOpen}>
               <AlertDialogTrigger asChild>
                 <button
                   type="button"
@@ -542,6 +566,7 @@ const Device = () => {
                   시리얼 번호
                 </TableHead>
                 <TableHead className="text-white text-center">상태</TableHead>
+                <TableHead className="text-white text-center">현재 이용자</TableHead>
                 <TableHead className="text-white text-center">취득일</TableHead>
               </TableRow>
             </TableHeader>
@@ -549,14 +574,14 @@ const Device = () => {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="py-6 text-center">
+                  <TableCell colSpan={5} className="py-6 text-center">
                     불러오는 중...
                   </TableCell>
                 </TableRow>
               ) : isError ? (
                 <TableRow>
                   <TableCell
-                    colSpan={4}
+                    colSpan={5}
                     className="py-6 text-center text-red-300"
                   >
                     기자재 상세 목록을 불러오지 못했습니다.
@@ -564,7 +589,7 @@ const Device = () => {
                 </TableRow>
               ) : items.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="py-6 text-center">
+                  <TableCell colSpan={5} className="py-6 text-center">
                     등록된 item이 없습니다.
                   </TableCell>
                 </TableRow>
@@ -587,16 +612,129 @@ const Device = () => {
                         }
                       />
                     </TableCell>
+
                     <TableCell>{item.serial}</TableCell>
+
                     <TableCell className={getStateBadgeClass(item.state)}>
                       {getStateLabel(item.state)}
                     </TableCell>
+
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      {canViewOccupancy(item.state) ? (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenOccupancyDialog(item.itemId)}
+                          className="rounded-sm border border-neutral-500 px-2 py-1 text-xs text-neutral-200 hover:bg-neutral-800"
+                        >
+                          {getOccupancyButtonLabel(item.state)}
+                        </button>
+                      ) : (
+                        <span className="text-neutral-500 text-sm">-</span>
+                      )}
+                    </TableCell>
+
                     <TableCell>{item.acquiredAt || "-"}</TableCell>
                   </TableRow>
                 ))
               )}
             </TableBody>
           </Table>
+          <AlertDialog
+            open={isOccupancyDialogOpen}
+            onOpenChange={(open) => {
+              setIsOccupancyDialogOpen(open);
+              if (!open) {
+                setOccupancyItemId(null);
+              }
+            }}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  {occupancyData?.occupancyType === "RESERVATION"
+                    ? "현재 예약자 정보"
+                    : occupancyData?.occupancyType === "RENTAL"
+                      ? "현재 대여자 정보"
+                      : "현재 이용자 정보"}
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  선택한 시리얼의 현재 점유 정보를 확인합니다.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+
+              {isOccupancyLoading ? (
+                <div className="py-6 text-center text-sm text-neutral-400">
+                  불러오는 중...
+                </div>
+              ) : !occupancyData ? (
+                <div className="py-6 text-center text-sm text-neutral-400">
+                  현재 점유자가 없습니다.
+                </div>
+              ) : (
+                <Table className="text-center border border-neutral-200">
+                  <TableBody>
+                    <TableRow className="border-neutral-200 hover:bg-white">
+                      <TableCell className="w-1/4 bg-neutral-300">이름</TableCell>
+                      <TableCell className="text-left px-6 text-black">
+                        {occupancyData.username}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow className="border-neutral-200 hover:bg-white">
+                      <TableCell className="bg-neutral-300">학번</TableCell>
+                      <TableCell className="text-left px-6 text-black">
+                        {occupancyData.studentId}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow className="border-neutral-200 hover:bg-white">
+                      <TableCell className="bg-neutral-300">이메일</TableCell>
+                      <TableCell className="text-left px-6 text-black">
+                        {occupancyData.email}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow className="border-neutral-200 hover:bg-white">
+                      <TableCell className="bg-neutral-300">학기</TableCell>
+                      <TableCell className="text-left px-6 text-black">
+                        {occupancyData.semester}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow className="border-neutral-200 hover:bg-white">
+                      <TableCell className="bg-neutral-300">
+                        {occupancyData.occupancyType === "RESERVATION"
+                          ? "예약 시작 시각"
+                          : "대여 시작 시각"}
+                      </TableCell>
+                      <TableCell className="text-left px-6 text-black">
+                        {occupancyData.startedAt
+                          ? new Date(occupancyData.startedAt).toLocaleString("ko-KR")
+                          : "-"}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow className="border-neutral-200 hover:bg-white">
+                      <TableCell className="bg-neutral-300">
+                        {occupancyData.occupancyType === "RESERVATION"
+                          ? "예약 만료 시각"
+                          : "반납 기한"}
+                      </TableCell>
+                      <TableCell className="text-left px-6 text-black">
+                        {occupancyData.dueAt
+                          ? new Date(occupancyData.dueAt).toLocaleString("ko-KR")
+                          : "-"}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              )}
+
+              <AlertDialogFooter>
+                <AlertDialogCancel>닫기</AlertDialogCancel>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </div>
