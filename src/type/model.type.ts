@@ -4,6 +4,10 @@ export interface ModelItem {
   categoryName: string;
   type: "EQUIPMENT" | "KIT";
   name: string;
+  displayName: string;
+  subName: string;
+  description: string;
+  visibleToUsers: boolean;
   courseName: string | null;
   availableQty: number;
 }

@@ -45,6 +45,7 @@ import {
   useCreateModel,
   useDeleteModel,
   useModels,
+  useUpdateModel,
 } from "../../../api/adminModel.api";
 import { useRegisterItemsByExcel } from "../../../api/adminItem.api";
 import type { ModelItem } from "../../../type/adminModel.type";
@@ -59,6 +60,22 @@ const Devices = () => {
   const [categoryName, setCategoryName] = useState("");
   const [deviceName, setDeviceName] = useState("");
   const [totalQty, setTotalQty] = useState("");
+
+  const [displayName, setDisplayName] = useState("");
+  const [subName, setSubName] = useState("");
+  const [description, setDescription] = useState("");
+  const [visibleToUsers, setVisibleToUsers] = useState(true);
+
+  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
+
+  const [editCategoryName, setEditCategoryName] = useState("");
+  const [editName, setEditName] = useState("");
+  const [editTotalQty, setEditTotalQty] = useState("");
+  const [editDisplayName, setEditDisplayName] = useState("");
+  const [editSubName, setEditSubName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editVisibleToUsers, setEditVisibleToUsers] = useState(true);
+
   const [selectedModelIds, setSelectedModelIds] = useState<number[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [excelDialogOpen, setExcelDialogOpen] = useState(false);
@@ -71,6 +88,7 @@ const Devices = () => {
     useRegisterItemsByExcel();
   const { data: devices = [], isLoading, isError } = useModels();
   const { mutateAsync: createModel, isPending: isCreating } = useCreateModel();
+  const { mutateAsync: updateModel, isPending: isUpdating } = useUpdateModel();
   const { mutateAsync: deleteModel, isPending: isDeleting } = useDeleteModel();
 
   const deviceModels = useMemo(() => {
@@ -78,6 +96,11 @@ const Devices = () => {
       (model) => model.type === "EQUIPMENT",
     );
   }, [devices]);
+
+  const selectedSingleModel =
+  selectedModelIds.length === 1
+    ? deviceModels.find((model) => model.modelId === selectedModelIds[0]) ?? null
+    : null;
 
   const totalPages = Math.ceil(deviceModels.length / ITEMS_PER_PAGE);
 
@@ -104,8 +127,22 @@ const Devices = () => {
   const resetCreateForm = () => {
     setCategoryName("");
     setDeviceName("");
+    setDisplayName("");
+    setSubName("");
+    setDescription("");
+    setVisibleToUsers(true);
     setTotalQty("");
     setDeviceNumber([]);
+  };
+
+  const resetUpdateForm = () => {
+    setEditCategoryName("");
+    setEditName("");
+    setEditDisplayName("");
+    setEditSubName("");
+    setEditDescription("");
+    setEditVisibleToUsers(true);
+    setEditTotalQty("");
   };
 
   const toggleModelSelection = (modelId: number) => {
@@ -114,6 +151,25 @@ const Devices = () => {
         ? prev.filter((id) => id !== modelId)
         : [...prev, modelId],
     );
+  };
+
+  const handleOpenUpdateDialog = () => {
+    if (!selectedSingleModel) {
+      toast.error("수정할 기자재를 1개만 선택해주세요.");
+      return;
+    }
+  
+    setEditCategoryName(selectedSingleModel.categoryName ?? "");
+    setEditName(selectedSingleModel.name ?? "");
+    setEditDisplayName(
+      selectedSingleModel.displayName ?? selectedSingleModel.name ?? "",
+    );
+    setEditSubName(selectedSingleModel.subName ?? "");
+    setEditDescription(selectedSingleModel.description ?? "");
+    setEditVisibleToUsers(selectedSingleModel.visibleToUsers ?? true);
+    setEditTotalQty(String(selectedSingleModel.totalQty ?? ""));
+  
+    setUpdateDialogOpen(true);
   };
 
   const handleCreateDevice = async () => {
@@ -137,6 +193,10 @@ const Devices = () => {
         categoryName,
         type: "EQUIPMENT",
         name: deviceName.trim(),
+        displayName: displayName.trim() || deviceName.trim(),
+        subName: subName.trim(),
+        description: description.trim(),
+        visibleToUsers,
         courseName: "",
         totalQty: Number(totalQty),
         serials: deviceNumber,
@@ -165,6 +225,53 @@ const Devices = () => {
     } catch (error) {
       console.error(error);
       toast.error("기자재 삭제에 실패했습니다.");
+    }
+  };
+
+  const handleUpdateDevice = async () => {
+    if (!selectedSingleModel) {
+      toast.error("수정할 기자재를 1개만 선택해주세요.");
+      return;
+    }
+  
+    if (!editCategoryName.trim()) {
+      toast.error("카테고리를 선택해주세요.");
+      return;
+    }
+  
+    if (!editName.trim()) {
+      toast.error("내부 모델명을 입력해주세요.");
+      return;
+    }
+  
+    if (!editTotalQty || Number(editTotalQty) < 0) {
+      toast.error("총 수량을 올바르게 입력해주세요.");
+      return;
+    }
+  
+    try {
+      await updateModel({
+        modelId: selectedSingleModel.modelId,
+        categoryName: editCategoryName,
+        type: "EQUIPMENT",
+        name: editName.trim(),
+        displayName: editDisplayName.trim() || editName.trim(),
+        subName: editSubName.trim(),
+        description: editDescription.trim(),
+        visibleToUsers: editVisibleToUsers,
+        courseName: "",
+        totalQty: Number(editTotalQty),
+        serials: [],
+        qtyAndSerialsSizeMatching: true,
+      });
+  
+      toast.success("기자재 정보가 수정되었습니다.");
+      setUpdateDialogOpen(false);
+      resetUpdateForm();
+      setSelectedModelIds([]);
+    } catch (error) {
+      console.error(error);
+      toast.error("기자재 정보 수정에 실패했습니다.");
     }
   };
 
@@ -256,10 +363,10 @@ const Devices = () => {
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-
+  
       <div className="pt-8">
         <div className="font-bold text-white text-3xl pb-8">기자재 현황</div>
-
+  
         <div className="flex space-x-4 justify-end">
           <AlertDialog
             open={excelDialogOpen}
@@ -273,7 +380,7 @@ const Devices = () => {
                 일괄 등록
               </div>
             </AlertDialogTrigger>
-
+  
             <AlertDialogContent className="max-w-3xl">
               <AlertDialogHeader>
                 <AlertDialogTitle>기자재 엑셀 일괄 등록</AlertDialogTitle>
@@ -282,7 +389,7 @@ const Devices = () => {
                   실제 등록을 진행합니다.
                 </AlertDialogDescription>
               </AlertDialogHeader>
-
+  
               <div className="space-y-4">
                 <div>
                   <Label className="pb-2">엑셀 파일</Label>
@@ -295,16 +402,20 @@ const Devices = () => {
                     }}
                   />
                 </div>
-
+  
                 <button
                   type="button"
                   onClick={handleExcelPreview}
                   disabled={isExcelRegistering || !excelFile}
-                  className={`w-full rounded-sm border px-3 py-2 text-sm ${excelFile ? "cursor-pointer border-neutral-400 hover:bg-neutral-200" : "cursor-not-allowed border-neutral-300 text-neutral-400"}`}
+                  className={`w-full rounded-sm border px-3 py-2 text-sm ${
+                    excelFile
+                      ? "cursor-pointer border-neutral-400 hover:bg-neutral-200"
+                      : "cursor-not-allowed border-neutral-300 text-neutral-400"
+                  }`}
                 >
                   {isExcelRegistering ? "처리 중..." : "미리보기"}
                 </button>
-
+  
                 {excelPreviewData && (
                   <div className="rounded-md border border-neutral-300 p-4 space-y-4">
                     <div className="grid grid-cols-3 gap-3 text-sm">
@@ -327,7 +438,7 @@ const Devices = () => {
                         </div>
                       </div>
                     </div>
-
+  
                     <div className="max-h-64 overflow-y-auto border rounded-md">
                       <table className="w-full text-sm">
                         <thead className="sticky top-0 bg-neutral-100">
@@ -386,7 +497,7 @@ const Devices = () => {
                   </div>
                 )}
               </div>
-
+  
               <AlertDialogFooter className="pt-4">
                 <AlertDialogCancel disabled={isExcelRegistering}>
                   취소
@@ -403,7 +514,7 @@ const Devices = () => {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-
+  
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <div className="border cursor-pointer px-3 py-1 rounded-sm hover:bg-neutral-400 hover:text-black border-neutral-400 text-sm">
@@ -411,68 +522,336 @@ const Devices = () => {
               </div>
             </AlertDialogTrigger>
 
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>기자재 추가</AlertDialogTitle>
-                <AlertDialogDescription>
-                  새 기자재를 추가하면 됩니다.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
+            <AlertDialogContent className="w-[92vw] sm:w-[76vw] sm:max-w-[1200px] max-h-[88vh] overflow-y-auto border border-neutral-300 bg-white text-black">
+              <div className="flex items-start justify-between gap-4">
+                <AlertDialogHeader className="space-y-2 text-left">
+                  <AlertDialogTitle className="text-black">
+                    기자재 추가
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="text-neutral-500">
+                    내부 관리 정보와 학생 화면 표기 정보를 함께 등록합니다.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
 
-              <div className="space-y-4">
-                <div>
-                  <Label className="pb-2">카테고리</Label>
-                  <DeviceCategoryCombobox
-                    value={categoryName}
-                    onChange={setCategoryName}
-                  />
-                </div>
+                <div className="flex shrink-0 items-center gap-2 pt-1">
+                  <AlertDialogCancel
+                    disabled={isCreating}
+                    className="mt-0 border-neutral-300 bg-white text-black hover:bg-neutral-100"
+                  >
+                    취소
+                  </AlertDialogCancel>
 
-                <div>
-                  <Label className="pb-2">기자재명</Label>
-                  <Input
-                    value={deviceName}
-                    onChange={(e) => setDeviceName(e.target.value)}
-                    placeholder="기자재명을 입력하세요"
-                  />
-                </div>
-
-                <div>
-                  <Label className="pb-2">기자재 대수</Label>
-                  <Input
-                    type="number"
-                    min={1}
-                    value={totalQty}
-                    onChange={(e) => setTotalQty(e.target.value)}
-                    placeholder="기자재 대수를 입력하세요"
-                  />
-                </div>
-
-                <div>
-                  <DeviceNumberTag
-                    value={deviceNumber}
-                    onChange={setDeviceNumber}
-                  />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      void handleCreateDevice();
+                    }}
+                    disabled={isCreating}
+                    className="inline-flex h-9 items-center justify-center rounded-md bg-black px-4 text-sm font-medium text-white hover:bg-neutral-800 disabled:pointer-events-none disabled:opacity-50"
+                  >
+                    {isCreating ? "추가 중..." : "추가"}
+                  </button>
                 </div>
               </div>
 
-              <AlertDialogFooter className="pt-8">
-                <AlertDialogCancel disabled={isCreating}>
-                  취소
-                </AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={(e) => {
-                    e.preventDefault();
-                    void handleCreateDevice();
-                  }}
-                  disabled={isCreating}
-                >
-                  {isCreating ? "추가 중..." : "추가"}
-                </AlertDialogAction>
-              </AlertDialogFooter>
+              <div className="space-y-4">
+                <div className="grid gap-5 md:grid-cols-2">
+                  <div className="space-y-4 rounded-xl border border-neutral-200 bg-white p-4">
+                    <div className="text-sm font-semibold text-black">내부 관리 정보</div>
+
+                    <div>
+                      <Label className="pb-2 text-neutral-700">카테고리</Label>
+                      <DeviceCategoryCombobox
+                        value={categoryName}
+                        onChange={setCategoryName}
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="pb-2 text-neutral-700">내부 모델명</Label>
+                      <Input
+                        className="border-neutral-300 bg-white text-black placeholder:text-neutral-400"
+                        value={deviceName}
+                        onChange={(e) => setDeviceName(e.target.value)}
+                        placeholder="관리자용 모델명을 입력하세요"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="pb-2 text-neutral-700">총 보유 수량</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        className="border-neutral-300 bg-white text-black placeholder:text-neutral-400"
+                        value={totalQty}
+                        onChange={(e) => setTotalQty(e.target.value)}
+                        placeholder="기자재 대수를 입력하세요"
+                      />
+                    </div>
+
+                    <div>
+                      <DeviceNumberTag
+                        value={deviceNumber}
+                        onChange={setDeviceNumber}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 rounded-xl border border-neutral-200 bg-white p-4">
+                    <div className="text-sm font-semibold text-black">학생 화면 정보</div>
+
+                    <div>
+                      <Label className="pb-2 text-neutral-700">기기 분류</Label>
+                      <Input
+                        className="border-neutral-300 bg-white text-black placeholder:text-neutral-400"
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value)}
+                        placeholder="예: 갤럭시 탭"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="pb-2 text-neutral-700">모델명</Label>
+                      <Input
+                        className="border-neutral-300 bg-white text-black placeholder:text-neutral-400"
+                        value={subName}
+                        onChange={(e) => setSubName(e.target.value)}
+                        placeholder="예: S8"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="pb-2 text-neutral-700">상세 안내 문구</Label>
+                      <textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        rows={3}
+                        placeholder="학생 화면에서 더보기로 보여줄 설명"
+                        className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-black outline-none placeholder:text-neutral-400 resize-none"
+                      />
+                    </div>
+
+                    <Label className="flex items-center gap-2 cursor-pointer pt-1">
+                      <Checkbox
+                        checked={visibleToUsers}
+                        onCheckedChange={(checked) =>
+                          setVisibleToUsers(checked === true)
+                        }
+                      />
+                      <span className="text-sm text-neutral-700">학생 화면에 표시</span>
+                    </Label>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-neutral-200 bg-white p-4">
+                  <div className="text-sm font-semibold text-black">학생 화면 미리보기</div>
+
+                  <div className="mt-3 rounded-2xl border border-neutral-700 bg-[#060a0c] p-5 min-h-[240px]">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0 max-w-[85%]">
+                        <div className="text-2xl font-semibold text-white leading-tight break-keep">
+                          {displayName || deviceName || "사용자 표기 분류"}
+                        </div>
+
+                        <div className="mt-3 text-sm text-neutral-300 leading-6 break-keep">
+                          {subName || "모델명이 여기에 표시됩니다."}
+                        </div>
+                      </div>
+
+                      <div
+                        className={`shrink-0 rounded-full border px-3 py-1 text-xs ${
+                          visibleToUsers
+                            ? "border-green-400/40 bg-green-500/10 text-green-300"
+                            : "border-neutral-500/40 bg-neutral-500/10 text-neutral-400"
+                        }`}
+                      >
+                        {visibleToUsers ? "표시" : "숨김"}
+                      </div>
+                    </div>
+
+                    <div className="mt-6 text-sm leading-7 whitespace-pre-wrap text-neutral-400 break-keep">
+                      {description || "상세 안내 문구가 여기에 표시됩니다."}
+                    </div>
+
+                    <div className="mt-8 border-t border-neutral-800 pt-4 text-xs text-neutral-500">
+                      내부 모델명: {deviceName || "-"}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </AlertDialogContent>
           </AlertDialog>
+  
+          <AlertDialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
+            <AlertDialogTrigger asChild>
+              <button
+                type="button"
+                disabled={selectedModelIds.length !== 1}
+                onClick={handleOpenUpdateDialog}
+                className={`text-sm px-3 py-1 rounded-sm border ${
+                  selectedModelIds.length === 1
+                    ? "cursor-pointer hover:bg-neutral-400 hover:text-black border-neutral-400 text-white"
+                    : "cursor-not-allowed border-neutral-700 text-neutral-600"
+                }`}
+              >
+                수정
+              </button>
+            </AlertDialogTrigger>
 
+            <AlertDialogContent className="w-[92vw] sm:w-[76vw] sm:max-w-[1200px] max-h-[88vh] overflow-y-auto border border-neutral-300 bg-white text-black">
+              <div className="flex items-start justify-between gap-4">
+                <AlertDialogHeader className="space-y-2 text-left">
+                  <AlertDialogTitle className="text-black">
+                    기자재 정보 수정
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="text-neutral-500">
+                    관리 정보와 학생 화면 정보를 함께 수정합니다.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+
+                <div className="flex shrink-0 items-center gap-2 pt-1">
+                  <AlertDialogCancel
+                    disabled={isUpdating}
+                    className="mt-0 border-neutral-300 bg-white text-black hover:bg-neutral-100"
+                  >
+                    취소
+                  </AlertDialogCancel>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      void handleUpdateDevice();
+                    }}
+                    disabled={isUpdating}
+                    className="inline-flex h-9 items-center justify-center rounded-md bg-black px-4 text-sm font-medium text-white hover:bg-neutral-800 disabled:pointer-events-none disabled:opacity-50"
+                  >
+                    {isUpdating ? "수정 중..." : "저장"}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid gap-5 md:grid-cols-2">
+                  <div className="space-y-4 rounded-xl border border-neutral-200 bg-white p-4">
+                    <div className="text-sm font-semibold text-black">관리 정보</div>
+
+                    <div>
+                      <Label className="pb-2 text-neutral-700">카테고리</Label>
+                      <DeviceCategoryCombobox
+                        value={editCategoryName}
+                        onChange={setEditCategoryName}
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="pb-2 text-neutral-700">내부 모델명</Label>
+                      <Input
+                        className="border-neutral-300 bg-white text-black placeholder:text-neutral-400"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        placeholder="관리자용 모델명을 입력하세요"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="pb-2 text-neutral-700">총 보유 수량</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        className="border-neutral-300 bg-white text-black placeholder:text-neutral-400"
+                        value={editTotalQty}
+                        onChange={(e) => setEditTotalQty(e.target.value)}
+                        placeholder="총 수량을 입력하세요"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 rounded-xl border border-neutral-200 bg-white p-4">
+                    <div className="text-sm font-semibold text-black">학생 화면 정보</div>
+
+                    <div>
+                      <Label className="pb-2 text-neutral-700">기기 분류</Label>
+                      <Input
+                        className="border-neutral-300 bg-white text-black placeholder:text-neutral-400"
+                        value={editDisplayName}
+                        onChange={(e) => setEditDisplayName(e.target.value)}
+                        placeholder="예: 갤럭시 탭"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="pb-2 text-neutral-700">모델명</Label>
+                      <Input
+                        className="border-neutral-300 bg-white text-black placeholder:text-neutral-400"
+                        value={editSubName}
+                        onChange={(e) => setEditSubName(e.target.value)}
+                        placeholder="예: S8"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="pb-2 text-neutral-700">상세 안내 문구</Label>
+                      <textarea
+                        value={editDescription}
+                        onChange={(e) => setEditDescription(e.target.value)}
+                        rows={1}
+                        placeholder="학생 화면에서 더보기로 보여줄 설명"
+                        className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-black outline-none placeholder:text-neutral-400 resize-none"
+                      />
+                    </div>
+
+                    <Label className="flex items-center gap-2 cursor-pointer pt-1">
+                      <Checkbox
+                        checked={editVisibleToUsers}
+                        onCheckedChange={(checked) =>
+                          setEditVisibleToUsers(checked === true)
+                        }
+                      />
+                      <span className="text-sm text-neutral-700">학생 화면에 표시</span>
+                    </Label>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-neutral-200 bg-white p-4">
+                  <div className="text-sm font-semibold text-black">학생 화면 미리보기</div>
+
+                  <div className="mt-3 rounded-2xl border border-neutral-700 bg-[#060a0c] p-5 min-h-[240px]">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0 max-w-[85%]">
+                        <div className="text-2xl font-semibold text-white leading-tight break-keep">
+                          {editDisplayName || editName || "사용자 표기 분류"}
+                        </div>
+
+                        <div className="mt-3 text-sm text-neutral-300 leading-6 break-keep">
+                          {editSubName || "모델명이 여기에 표시됩니다."}
+                        </div>
+                      </div>
+
+                      <div
+                        className={`shrink-0 rounded-full border px-3 py-1 text-xs ${
+                          editVisibleToUsers
+                            ? "border-green-400/40 bg-green-500/10 text-green-300"
+                            : "border-neutral-500/40 bg-neutral-500/10 text-neutral-400"
+                        }`}
+                      >
+                        {editVisibleToUsers ? "표시" : "숨김"}
+                      </div>
+                    </div>
+
+                    <div className="mt-6 text-sm leading-7 whitespace-pre-wrap text-neutral-400 break-keep">
+                      {editDescription || "상세 안내 문구가 여기에 표시됩니다."}
+                    </div>
+
+                    <div className="mt-8 border-t border-neutral-800 pt-4 text-xs text-neutral-500">
+                      내부 모델명: {editName || "-"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </AlertDialogContent>
+          </AlertDialog>
           <AlertDialog
             open={deleteDialogOpen}
             onOpenChange={setDeleteDialogOpen}
@@ -481,12 +860,16 @@ const Devices = () => {
               <button
                 type="button"
                 disabled={selectedModelIds.length === 0}
-                className={`text-sm px-3 py-1 rounded-sm border ${selectedModelIds.length > 0 ? "cursor-pointer hover:bg-red-400 hover:text-black border-red-400 text-red-300" : "cursor-not-allowed border-neutral-700 text-neutral-600"}`}
+                className={`text-sm px-3 py-1 rounded-sm border ${
+                  selectedModelIds.length > 0
+                    ? "cursor-pointer hover:bg-red-400 hover:text-black border-red-400 text-red-300"
+                    : "cursor-not-allowed border-neutral-700 text-neutral-600"
+                }`}
               >
                 삭제
               </button>
             </AlertDialogTrigger>
-
+  
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>
@@ -496,7 +879,7 @@ const Devices = () => {
                   기자재를 삭제하면 다시 되돌릴 수 없습니다.
                 </AlertDialogDescription>
               </AlertDialogHeader>
-
+  
               <AlertDialogFooter>
                 <AlertDialogCancel disabled={isDeleting}>
                   취소
@@ -515,41 +898,36 @@ const Devices = () => {
             </AlertDialogContent>
           </AlertDialog>
         </div>
-
+  
         <div className="mt-4">
           <Table className="text-white text-center border border-neutral-700">
             <TableHeader className="text-center border-b bg-[#11141b] hover:bg-[#11141b] border-neutral-700">
               <TableRow>
                 <TableHead></TableHead>
                 <TableHead className="text-white text-center">분류</TableHead>
+                <TableHead className="text-white text-center">기자재명</TableHead>
+                <TableHead className="text-white text-center">잔여 대수</TableHead>
+                <TableHead className="text-white text-center">예약 중</TableHead>
+                <TableHead className="text-white text-center">대여 완료</TableHead>
                 <TableHead className="text-white text-center">
-                  기자재명
+                  고장/분실
                 </TableHead>
-                <TableHead className="text-white text-center">
-                  잔여 대수
-                </TableHead>
-                <TableHead className="text-white text-center">
-                  예약 중
-                </TableHead>
-                <TableHead className="text-white text-center">
-                  대여 완료
-                </TableHead>
-                <TableHead className="text-white text-center">고장/분실</TableHead>
+                <TableHead className="text-white text-center">표시 상태</TableHead>
                 <TableHead className="text-white text-center">총합</TableHead>
               </TableRow>
             </TableHeader>
-
+  
             <TableBody className="cursor-pointer">
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-6">
+                  <TableCell colSpan={9} className="text-center py-6">
                     불러오는 중...
                   </TableCell>
                 </TableRow>
               ) : isError ? (
                 <TableRow>
                   <TableCell
-                    colSpan={8}
+                    colSpan={9}
                     className="text-center py-6 text-red-300"
                   >
                     기자재 목록을 불러오지 못했습니다.
@@ -557,14 +935,14 @@ const Devices = () => {
                 </TableRow>
               ) : deviceModels.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-6">
+                  <TableCell colSpan={9} className="text-center py-6">
                     등록된 기자재가 없습니다.
                   </TableCell>
                 </TableRow>
               ) : (
                 paginatedDeviceModels.map((device: ModelItem) => {
                   const checked = selectedModelIds.includes(device.modelId);
-
+  
                   return (
                     <TableRow
                       key={device.modelId}
@@ -579,21 +957,39 @@ const Devices = () => {
                         />
                       </TableCell>
                       <TableCell>{device.categoryName}</TableCell>
-                      <TableCell>{device.name}</TableCell>
+                      <TableCell>
+                        <div className="font-medium">
+                          {device.displayName || device.name}
+                        </div>
+                        {device.displayName && device.displayName !== device.name ? (
+                          <div className="text-xs text-neutral-500 mt-1">
+                            {device.name}
+                          </div>
+                        ) : null}
+                      </TableCell>
                       <TableCell>{device.availableQty}</TableCell>
                       <TableCell>{device.reservedQty}</TableCell>
                       <TableCell>{device.rentedQty}</TableCell>
                       <TableCell>{device.breakdownQty + device.lostQty}</TableCell>
-                      <TableCell className="font-bold">
-                        {device.totalQty}
+                      <TableCell>
+                        {device.visibleToUsers ? (
+                          <span className="rounded-full border border-green-400 px-2 py-1 text-xs text-green-300">
+                            표시
+                          </span>
+                        ) : (
+                          <span className="rounded-full border border-neutral-500 px-2 py-1 text-xs text-neutral-400">
+                            숨김
+                          </span>
+                        )}
                       </TableCell>
+                      <TableCell className="font-bold">{device.totalQty}</TableCell>
                     </TableRow>
                   );
                 })
               )}
             </TableBody>
           </Table>
-
+  
           {totalPages > 1 && (
             <div className="mt-6">
               <Pagination>
@@ -612,7 +1008,7 @@ const Devices = () => {
                       }
                     />
                   </PaginationItem>
-
+  
                   {pageNumbers.map((pageNumber) => (
                     <PaginationItem key={pageNumber}>
                       <PaginationLink
@@ -632,7 +1028,7 @@ const Devices = () => {
                       </PaginationLink>
                     </PaginationItem>
                   ))}
-
+  
                   <PaginationItem>
                     <PaginationNext
                       href="#"
