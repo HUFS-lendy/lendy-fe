@@ -45,6 +45,9 @@ const Kits = () => {
 
   const [courseName, setCourseName] = useState("");
   const [kitName, setKitName] = useState("");
+  const [subName, setSubName] = useState("");
+  const [description, setDescription] = useState("");
+  const [visibleToUsers, setVisibleToUsers] = useState(true);
   const [totalQty, setTotalQty] = useState("");
   const [kitNumbers, setKitNumbers] = useState<string[]>([]);
   const [selectedKitIds, setSelectedKitIds] = useState<number[]>([]);
@@ -92,6 +95,10 @@ const Kits = () => {
         categoryName: kitName.trim(),
         type: "KIT",
         name: kitName.trim(),
+        displayName: kitName.trim(),
+        subName: subName.trim(),
+        description: description.trim(),
+        visibleToUsers: visibleToUsers,
         courseName: courseName.trim(),
         totalQty: Number(totalQty),
         serials: kitNumbers,
@@ -102,6 +109,9 @@ const Kits = () => {
           toast.success("실습키트가 추가되었습니다.");
           setCourseName("");
           setKitName("");
+          setSubName("");
+          setDescription("");
+          setVisibleToUsers(true);
           setTotalQty("");
           setKitNumbers([]);
           navigate("/admin/kits");
@@ -181,14 +191,12 @@ const Kits = () => {
               </AlertDialogHeader>
 
               <div className="space-y-4">
-                <div className="flex space-x-8">
-                  <div className="w-full max-w-[280px]">
-                    <Label className="pb-2">강의명</Label>
-                    <Input
-                      value={courseName}
-                      onChange={(e) => setCourseName(e.target.value)}
-                    />
-                  </div>
+                <div>
+                  <Label className="pb-2">강의명</Label>
+                  <Input
+                    value={courseName}
+                    onChange={(e) => setCourseName(e.target.value)}
+                  />
                 </div>
 
                 <div>
@@ -200,15 +208,43 @@ const Kits = () => {
                 </div>
 
                 <div>
-                  <Label className="pb-2">키트 수량</Label>
+                  <Label className="pb-2">부제목</Label>
                   <Input
-                    type="number"
-                    value={totalQty}
-                    onChange={(e) => setTotalQty(e.target.value)}
+                    value={subName}
+                    onChange={(e) => setSubName(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <Label className="pb-2">설명</Label>
+                  <Input
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
                   />
                 </div>
 
                 <KitNumberTags value={kitNumbers} onChange={setKitNumbers} />
+
+                {kitNumbers.length > 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    총{" "}
+                    <span className="font-semibold">{kitNumbers.length}</span>개
+                    등록 예정
+                  </p>
+                )}
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="visibleToUsers"
+                    checked={visibleToUsers}
+                    onCheckedChange={(checked) =>
+                      setVisibleToUsers(checked as boolean)
+                    }
+                  />
+                  <Label htmlFor="visibleToUsers" className="cursor-pointer">
+                    사용자에게 공개
+                  </Label>
+                </div>
               </div>
 
               <AlertDialogFooter className="pt-8">
