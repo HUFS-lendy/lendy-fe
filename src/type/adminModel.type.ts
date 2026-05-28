@@ -4,6 +4,10 @@ export type ModelItem = {
   categoryName: string;
   type: string;
   name: string;
+  displayName: string | null;
+  subName: string | null;
+  description: string | null;
+  visibleToUsers: boolean;
   courseName: string;
   totalQty: number;
   availableQty: number;

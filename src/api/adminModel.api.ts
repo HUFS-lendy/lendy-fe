@@ -1,44 +1,110 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "./client";
+
+type CreateOrUpdateModelRequest = {
+  categoryName: string;
+  type: string;
+  name: string;
+  displayName: string;
+  subName: string;
+  description: string;
+  visibleToUsers: boolean;
+  courseName: string;
+  totalQty: number;
+  serials: string[];
+  qtyAndSerialsSizeMatching?: boolean;
+};
+
+type UpdateModelRequest = CreateOrUpdateModelRequest & {
+  modelId: number;
+};
 
 // 모델 등록
 export const useCreateModel = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({
       categoryName,
       type,
       name,
+      displayName,
+      subName,
+      description,
+      visibleToUsers,
       courseName,
       totalQty,
       serials,
       qtyAndSerialsSizeMatching,
-    }: {
-      categoryName: string;
-      type: string;
-      name: string;
-      courseName: string;
-      totalQty: number;
-      serials: string[];
-      qtyAndSerialsSizeMatching: boolean;
-    }) => {
-      const create_model_res = await apiClient.post("/api/admin/models", {
+    }: CreateOrUpdateModelRequest) => {
+      const createModelRes = await apiClient.post("/api/admin/models", {
         categoryName,
         type,
         name,
+        displayName,
+        subName,
+        description,
+        visibleToUsers,
         courseName,
         totalQty,
         serials,
         qtyAndSerialsSizeMatching,
       });
-      return create_model_res.data;
+      return createModelRes.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["models"] });
+    },
+  });
+};
+
+// 모델 수정
+export const useUpdateModel = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      modelId,
+      categoryName,
+      type,
+      name,
+      displayName,
+      subName,
+      description,
+      visibleToUsers,
+      courseName,
+      totalQty,
+      serials,
+      qtyAndSerialsSizeMatching,
+    }: UpdateModelRequest) => {
+      const updateModelRes = await apiClient.patch(
+        `/api/admin/models/${modelId}`,
+        {
+          categoryName,
+          type,
+          name,
+          displayName,
+          subName,
+          description,
+          visibleToUsers,
+          courseName,
+          totalQty,
+          serials,
+          qtyAndSerialsSizeMatching,
+        },
+      );
+      return updateModelRes.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["models"] });
     },
   });
 };
 
 // 전체 모델 조회 - 관리자
 const fetchModels = async () => {
-  const models_res = await apiClient.get("/api/admin/models");
-  return models_res.data.data;
+  const modelsRes = await apiClient.get("/api/admin/models");
+  return modelsRes.data.data;
 };
 
 export const useModels = () => {
@@ -50,12 +116,17 @@ export const useModels = () => {
 
 // 모델 삭제
 export const useDeleteModel = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (modelId: number) => {
-      const delete_model_res = await apiClient.delete(
+      const deleteModelRes = await apiClient.delete(
         `/api/admin/models/${modelId}`,
       );
-      return delete_model_res.data;
+      return deleteModelRes.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["models"] });
     },
   });
 };

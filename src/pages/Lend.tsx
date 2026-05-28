@@ -9,12 +9,6 @@ import {
   BreadcrumbSeparator,
 } from "../components/ui/breadcrumb";
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../components/ui/tabs";
-import {
   Table,
   TableBody,
   TableCell,
@@ -47,88 +41,53 @@ import { toast } from "sonner";
 import { useModels } from "../api/model.api";
 import type { ModelItem } from "../type/model.type";
 import { useDoReserve } from "../api/reservationUser.api";
+
 const ITEMS_PER_PAGE = 10;
 
 const Lend = () => {
   const navigate = useNavigate();
+
   const [pledgeDialogOpen, setPledgeDialogOpen] = useState(false);
   const [isPledgeAgreed, setIsPledgeAgreed] = useState(false);
   const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
-  const [equipmentCurrentPage, setEquipmentCurrentPage] = useState(0);
-  const [kitCurrentPage, setKitCurrentPage] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0);
 
   const { data: models = [], isLoading, isError } = useModels();
-  const HIDDEN_MODEL_IDS_FOR_STUDENTS = [46];
   const { mutate: createReservation, isPending: isCreatingReservation } =
     useDoReserve();
 
-  const visibleModels = useMemo(() => {
+  const equipmentList = useMemo(() => {
     return models.filter(
-      (item: ModelItem) =>
-        !HIDDEN_MODEL_IDS_FOR_STUDENTS.includes(item.modelId),
+      (item: ModelItem) => item.type === "EQUIPMENT" && item.visibleToUsers,
     );
   }, [models]);
 
-  const equipmentList = useMemo(() => {
-    return visibleModels.filter((item: ModelItem) => item.type === "EQUIPMENT");
-  }, [visibleModels]);
-  
-  const kitList = useMemo(() => {
-    return visibleModels.filter((item: ModelItem) => item.type === "KIT");
-  }, [visibleModels]);
-
-  const equipmentTotalPages = Math.ceil(equipmentList.length / ITEMS_PER_PAGE);
-  const kitTotalPages = Math.ceil(kitList.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(equipmentList.length / ITEMS_PER_PAGE);
 
   const paginatedEquipmentList = useMemo(() => {
-    const startIndex = equipmentCurrentPage * ITEMS_PER_PAGE;
-    return equipmentList?.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [equipmentList, equipmentCurrentPage]);
+    const startIndex = currentPage * ITEMS_PER_PAGE;
+    return equipmentList.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [equipmentList, currentPage]);
 
-  const paginatedKitList = useMemo(() => {
-    const startIndex = kitCurrentPage * ITEMS_PER_PAGE;
-    return kitList?.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [kitList, kitCurrentPage]);
-
-  const equipmentPageNumbers = useMemo(() => {
-    return Array.from({ length: equipmentTotalPages }, (_, index) => index);
-  }, [equipmentTotalPages]);
-
-  const kitPageNumbers = useMemo(() => {
-    return Array.from({ length: kitTotalPages }, (_, index) => index);
-  }, [kitTotalPages]);
+  const pageNumbers = useMemo(() => {
+    return Array.from({ length: totalPages }, (_, index) => index);
+  }, [totalPages]);
 
   useEffect(() => {
-    if (
-      equipmentCurrentPage >= equipmentTotalPages &&
-      equipmentTotalPages > 0
-    ) {
-      setEquipmentCurrentPage(equipmentTotalPages - 1);
+    if (currentPage >= totalPages && totalPages > 0) {
+      setCurrentPage(totalPages - 1);
     }
-  }, [equipmentCurrentPage, equipmentTotalPages]);
+  }, [currentPage, totalPages]);
 
-  useEffect(() => {
-    if (kitCurrentPage >= kitTotalPages && kitTotalPages > 0) {
-      setKitCurrentPage(kitTotalPages - 1);
-    }
-  }, [kitCurrentPage, kitTotalPages]);
-
-  const handleEquipmentPageChange = (page: number) => {
-    if (page < 0 || page >= equipmentTotalPages) return;
-    setEquipmentCurrentPage(page);
+  const handlePageChange = (page: number) => {
+    if (page < 0 || page >= totalPages) return;
+    setCurrentPage(page);
   };
 
-  const handleKitPageChange = (page: number) => {
-    if (page < 0 || page >= kitTotalPages) return;
-    setKitCurrentPage(page);
-  };
+  const selectedEquipment =
+    equipmentList.find((item: ModelItem) => item.modelId === selectedModelId) ??
+    null;
 
-  const selectedEquipment = equipmentList.find(
-    (item: ModelItem) => item.modelId === selectedModelId,
-  );
-  const selectedKit = kitList.find(
-    (item: ModelItem) => item.modelId === selectedModelId,
-  );
   const handleSelectModel = (modelId: number, checked: boolean) => {
     setSelectedModelId(checked ? modelId : null);
     setIsPledgeAgreed(false);
@@ -140,31 +99,6 @@ const Lend = () => {
       return;
     }
 
-    createReservation(
-      { modelId: selectedModelId },
-      {
-        onSuccess: () => {
-          toast("대여 신청이 완료되었습니다.");
-          navigate("/lending-state");
-        },
-        onError: (error) => {
-          toast(
-            error instanceof Error
-              ? error.message
-              : "대여 신청에 실패했습니다.",
-          );
-        },
-      },
-    );
-  };
-
-  const handleReserveKit = () => {
-    if (!selectedModelId) {
-      toast("대여할 실습 키트를 선택해주세요.");
-      return;
-    }
-
-    // todo: 에러메시지 동적처리
     createReservation(
       { modelId: selectedModelId },
       {
@@ -206,474 +140,224 @@ const Lend = () => {
 
       <div className="pt-8">
         <div className="font-bold text-white text-3xl pb-8">
-          기자재 / 키트 대여 신청
+          기자재 대여 신청
         </div>
 
-        <Tabs defaultValue="기자재">
-          <TabsList className="bg-[#1e2427]">
-            <TabsTrigger className="text-white bg-[#1e2427]" value="기자재">
-              기자재
-            </TabsTrigger>
-            <TabsTrigger className="text-white bg-[#1e2427]" value="실습 키트">
-              실습 키트
-            </TabsTrigger>
-          </TabsList>
+        <div className="mt-4">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <div className="flex justify-end mb-4">
+                <button
+                  type="button"
+                  disabled={!selectedModelId || isCreatingReservation}
+                  className="bg-[#060a0c] hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-sm text-white border border-neutral-400 rounded-md px-3 py-1"
+                >
+                  대여
+                </button>
+              </div>
+            </AlertDialogTrigger>
 
-          {/* 기자재 */}
-          <TabsContent value="기자재">
-            <div className="mt-4">
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <div className="flex justify-end mb-4">
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="pb-4">
+                  기자재를 대여하시겠습니까?
+                </AlertDialogTitle>
+
+                <AlertDialogDescription className="break-keep text-left">
+                  {selectedEquipment && (
+                    <div className="mb-4 text-black">
+                      선택 항목:{" "}
+                      <strong>
+                        {selectedEquipment.displayName}
+                        {selectedEquipment.subName
+                          ? ` / ${selectedEquipment.subName}`
+                          : ""}
+                      </strong>
+                    </div>
+                  )}
+
+                  <div className="text-black">
+                    반납 기한은 해당 <span className="font-bold">학기 종강일</span>
+                    까지이며, 기한 내 미반납 시 일주일 간 이메일로 경고 메일이
+                    발송되며 대여 서비스 내 패널티가 부여될 수 있습니다.
+                  </div>
+
+                  <div className="mt-5 rounded-md border p-4">
                     <button
                       type="button"
-                      disabled={!selectedModelId || isCreatingReservation}
-                      className="bg-[#060a0c] hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-sm text-white border border-neutral-400 rounded-md px-3 py-1"
+                      className="rounded-md cursor-pointer border px-4 py-2 text-sm text-black hover:bg-neutral-100"
+                      onClick={() => setPledgeDialogOpen(true)}
                     >
-                      대여
+                      기자재 대여 서약 조항 보기
                     </button>
-                  </div>
-                </AlertDialogTrigger>
 
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className="pb-4">
-                      기자재를 대여하시겠습니까?
-                    </AlertDialogTitle>
-
-                    <AlertDialogDescription className="break-keep text-left">
-                      {selectedEquipment && (
-                        <div className="mb-4 text-black">
-                          선택 항목: <strong>{selectedEquipment.name}</strong>
-                        </div>
+                    <div className="mt-3 text-sm">
+                      {isPledgeAgreed ? (
+                        <span className="text-green-600 font-medium">
+                          서약 조항에 동의했습니다.
+                        </span>
+                      ) : (
+                        <span className="text-red-500 font-medium">
+                          서약 조항 동의가 필요합니다.
+                        </span>
                       )}
-
-                      <div className="text-black">
-                        반납 기한은 해당{" "}
-                        <span className="font-bold">학기 종강일</span>까지이며,
-                        기한 내 미반납 시 일주일 간 이메일로 경고 메일이
-                        발송되며 대여 서비스 내 패널티가 부여 될 수 있습니다.
-                      </div>
-
-                      <div className="mt-5 rounded-md border p-4">
-                        <button
-                          type="button"
-                          className="rounded-md cursor-pointer border px-4 py-2 text-sm text-black hover:bg-neutral-100"
-                          onClick={() => setPledgeDialogOpen(true)}
-                        >
-                          기자재 대여 서약 조항 보기
-                        </button>
-
-                        <div className="mt-3 text-sm">
-                          {isPledgeAgreed ? (
-                            <span className="text-green-600 font-medium">
-                              서약 조항에 동의했습니다.
-                            </span>
-                          ) : (
-                            <span className="text-red-500 font-medium">
-                              서약 조항 동의가 필요합니다.
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-
-                  <AlertDialogFooter>
-                    <AlertDialogCancel className="cursor-pointer">
-                      취소
-                    </AlertDialogCancel>
-                    <AlertDialogAction
-                      className="cursor-pointer"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleReserveEquipment();
-                      }}
-                      disabled={!isPledgeAgreed || isCreatingReservation}
-                    >
-                      {isCreatingReservation ? "처리 중..." : "대여"}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-
-              <Table className="text-white text-center border border-neutral-700">
-                <TableHeader className="text-center border-b bg-[#11141b] hover:bg-[#11141b] border-neutral-700">
-                  <TableRow>
-                    <TableHead></TableHead>
-                    <TableHead className="text-white text-center">
-                      분류
-                    </TableHead>
-                    <TableHead className="text-white text-center">
-                      기자재명
-                    </TableHead>
-                    <TableHead className="text-white text-center">
-                      잔여 대수
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-
-                <TableBody className="cursor-pointer">
-                  {isLoading && (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center">
-                        로딩 중...
-                      </TableCell>
-                    </TableRow>
-                  )}
-
-                  {isError && (
-                    <TableRow>
-                      <TableCell
-                        colSpan={4}
-                        className="text-center text-red-400"
-                      >
-                        기자재 목록을 불러오지 못했습니다.
-                      </TableCell>
-                    </TableRow>
-                  )}
-
-                  {!isLoading &&
-                    !isError &&
-                    paginatedEquipmentList?.map((item: ModelItem) => (
-                      <TableRow
-                        key={item.modelId}
-                        onClick={() => {
-                          setSelectedModelId((prev) =>
-                            prev === item.modelId ? null : item.modelId,
-                          );
-                          setIsPledgeAgreed(false);
-                        }}
-                      >
-                        <TableCell>
-                          <Checkbox
-                            className="border-neutral-400"
-                            checked={selectedModelId === item.modelId}
-                            onCheckedChange={(checked) =>
-                              handleSelectModel(item.modelId, checked === true)
-                            }
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                        </TableCell>
-                        <TableCell>{item.categoryName}</TableCell>
-                        <TableCell>{item.name}</TableCell>
-                        <TableCell>{item.availableQty}</TableCell>
-                      </TableRow>
-                    ))}
-
-                  {!isLoading && !isError && equipmentList.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center">
-                        기자재가 없습니다.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-              {equipmentTotalPages > 1 ? (
-                <div className="my-6">
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleEquipmentPageChange(equipmentCurrentPage - 1);
-                          }}
-                          className={`border bg-black text-white hover:bg-neutral-800 hover:text-white ${equipmentCurrentPage === 0 ? "pointer-events-none opacity-50 border-neutral-700" : "cursor-pointer border-none"}`}
-                        />
-                      </PaginationItem>
-
-                      {equipmentPageNumbers.map((pageNumber) => (
-                        <PaginationItem key={pageNumber}>
-                          <PaginationLink
-                            href="#"
-                            isActive={pageNumber === equipmentCurrentPage}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleEquipmentPageChange(pageNumber);
-                            }}
-                            className={`cursor-pointer border text-white hover:bg-neutral-800 hover:text-white ${pageNumber === equipmentCurrentPage ? "bg-black border-white text-white" : "bg-transparent border-neutral-700 text-white"}`}
-                          >
-                            {pageNumber + 1}
-                          </PaginationLink>
-                        </PaginationItem>
-                      ))}
-
-                      <PaginationItem>
-                        <PaginationNext
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleEquipmentPageChange(equipmentCurrentPage + 1);
-                          }}
-                          className={`border bg-black text-white hover:bg-neutral-800 hover:text-white ${equipmentCurrentPage >= equipmentTotalPages - 1 ? "pointer-events-none opacity-50 border-neutral-700" : "cursor-pointer border-none"}`}
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                </div>
-              ) : null}
-            </div>
-          </TabsContent>
-
-          {/* 실습 키트 */}
-          <TabsContent value="실습 키트">
-            <div className="mt-4">
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <div className="flex justify-end mb-4">
-                    <button
-                      type="button"
-                      disabled={!selectedModelId || isCreatingReservation}
-                      className="bg-[#060a0c] hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-sm text-white border border-neutral-400 rounded-md px-3 py-1"
-                    >
-                      대여
-                    </button>
-                  </div>
-                </AlertDialogTrigger>
-
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className="pb-4">
-                      실습 키트를 대여하시겠습니까?
-                    </AlertDialogTitle>
-
-                    <AlertDialogDescription className="break-keep text-left">
-                      {selectedKit && (
-                        <div className="mb-4 text-black">
-                          선택 항목: {selectedKit.name}
-                        </div>
-                      )}
-                      반납 기한은 해당{" "}
-                      <span className="font-bold">학기 종강일</span>까지이며,{" "}
-                      <span className="text-red-500">
-                        기한 내 미반납 시 일주일 간 이메일로 경고 메일이
-                        발송되며 대여 서비스 내 패널티가 부여
-                      </span>
-                      될 수 있습니다.
-                      <br />
-                      <br />
-                      ※ 대리 제출 및 수령 불가합니다.
-                      <br />※ 타학과와 휴학생은 대여 불가합니다.
-                      <br />※ 방학 중 대여 및 연장 불가 합니다.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-
-                  <AlertDialogFooter>
-                    <AlertDialogCancel className="cursor-pointer">
-                      취소
-                    </AlertDialogCancel>
-                    <AlertDialogAction
-                      className="cursor-pointer"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleReserveKit();
-                      }}
-                      disabled={isCreatingReservation}
-                    >
-                      {isCreatingReservation ? "처리 중..." : "대여"}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-              <AlertDialog
-                open={pledgeDialogOpen}
-                onOpenChange={setPledgeDialogOpen}
-              >
-                <AlertDialogContent className="max-w-2xl">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>기자재 대여 서약 조항</AlertDialogTitle>
-                    <AlertDialogDescription className="text-left break-keep">
-                      아래 조항을 반드시 확인해주세요.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-
-                  <div className="max-h-[420px] overflow-y-auto rounded-md border p-4 text-sm leading-7 text-black">
-                    <p>
-                      1. 대여한 기자재는 본인만 사용하며 타인에게 양도하거나
-                      대여하지 않습니다.
-                    </p>
-                    <p>
-                      2. 대여 기자재의 분실, 파손, 침수, 임의 개조 시 관련
-                      규정에 따라 책임을 부담합니다.
-                    </p>
-                    <p>
-                      3. 반납 기한을 준수하며, 미반납 시 경고 메일 발송 및
-                      패널티 부여에 동의합니다.
-                    </p>
-                    <p>
-                      4. 방학 중 대여 및 연장이 제한될 수 있음을 확인합니다.
-                    </p>
-                    <p>5. 대리 제출 및 대리 수령이 불가함을 확인합니다.</p>
-                    <p>6. 학과 규정 및 기자재실 운영 지침을 준수합니다.</p>
-                    <p>
-                      7. 허위 정보로 대여 신청할 경우 대여가 취소될 수 있습니다.
-                    </p>
-                    <p>
-                      8. 기자재 반납 시 정상 동작 여부 확인 절차에 협조합니다.
-                    </p>
-
-                    <div className="mt-6 rounded-md bg-neutral-100 p-3">
-                      위 내용을 모두 확인한 뒤 아래 체크박스를 선택해주세요.
                     </div>
                   </div>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
 
-                  <div className="flex items-center space-x-2 pt-2">
-                    <Checkbox
-                      id="pledge-dialog-agree"
-                      checked={isPledgeAgreed}
-                      onCheckedChange={(checked) =>
-                        setIsPledgeAgreed(checked === true)
-                      }
-                    />
-                    <Label
-                      htmlFor="pledge-dialog-agree"
-                      className="text-sm text-black"
-                    >
-                      위 내용을 확인했고 동의합니다.
-                    </Label>
-                  </div>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="cursor-pointer">
+                  취소
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  className="cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleReserveEquipment();
+                  }}
+                  disabled={!isPledgeAgreed || isCreatingReservation}
+                >
+                  {isCreatingReservation ? "처리 중..." : "대여"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
-                  <AlertDialogFooter>
-                    <AlertDialogCancel
-                      onClick={() => setPledgeDialogOpen(false)}
-                      className="cursor-pointer"
-                    >
-                      닫기
-                    </AlertDialogCancel>
-                    <AlertDialogAction
-                      className="cursor-pointer"
-                      onClick={() => setPledgeDialogOpen(false)}
-                      disabled={!isPledgeAgreed}
-                    >
-                      확인
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+          <Table className="text-white text-center border border-neutral-700">
+            <TableHeader className="text-center border-b bg-[#11141b] hover:bg-[#11141b] border-neutral-700">
+              <TableRow>
+                <TableHead></TableHead>
+                <TableHead className="text-white text-center">
+                  기기 분류
+                </TableHead>
+                <TableHead className="text-white text-center">모델명</TableHead>
+                <TableHead className="text-white text-center">
+                  상세 안내
+                </TableHead>
+                <TableHead className="text-white text-center">
+                  잔여 수량
+                </TableHead>
+              </TableRow>
+            </TableHeader>
 
-              <Table className="text-white text-center border border-neutral-700">
-                <TableHeader className="text-center border-b bg-[#11141b] hover:bg-[#11141b] border-neutral-700">
-                  <TableRow>
-                    <TableHead></TableHead>
-                    <TableHead className="text-white text-center">
-                      키트명
-                    </TableHead>
-                    <TableHead className="text-white text-center">
-                      사용 수업명
-                    </TableHead>
-                    <TableHead className="text-white text-center">
-                      잔여 대수
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
+            <TableBody className="cursor-pointer">
+              {isLoading && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center">
+                    로딩 중...
+                  </TableCell>
+                </TableRow>
+              )}
 
-                <TableBody className="cursor-pointer">
-                  {isLoading && (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center">
-                        로딩 중...
-                      </TableCell>
-                    </TableRow>
-                  )}
+              {isError && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-red-400">
+                    기자재 목록을 불러오지 못했습니다.
+                  </TableCell>
+                </TableRow>
+              )}
 
-                  {isError && (
-                    <TableRow>
-                      <TableCell
-                        colSpan={4}
-                        className="text-center text-red-400"
-                      >
-                        실습 키트 목록을 불러오지 못했습니다.
-                      </TableCell>
-                    </TableRow>
-                  )}
-
-                  {!isLoading &&
-                    !isError &&
-                    paginatedKitList?.map((item: ModelItem) => (
-                      <TableRow
-                        key={item.modelId}
-                        onClick={() =>
-                          setSelectedModelId((prev) =>
-                            prev === item.modelId ? null : item.modelId,
-                          )
+              {!isLoading &&
+                !isError &&
+                paginatedEquipmentList.map((item: ModelItem) => (
+                  <TableRow
+                    key={item.modelId}
+                    onClick={() => {
+                      setSelectedModelId((prev) =>
+                        prev === item.modelId ? null : item.modelId,
+                      );
+                      setIsPledgeAgreed(false);
+                    }}
+                  >
+                    <TableCell>
+                      <Checkbox
+                        className="border-neutral-400"
+                        checked={selectedModelId === item.modelId}
+                        onCheckedChange={(checked) =>
+                          handleSelectModel(item.modelId, checked === true)
                         }
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </TableCell>
+                    <TableCell>{item.displayName}</TableCell>
+                    <TableCell>{item.subName || "-"}</TableCell>
+                    <TableCell className="max-w-[420px] text-left">
+                      <div className="truncate">{item.description || "-"}</div>
+                    </TableCell>
+                    <TableCell>{item.availableQty}</TableCell>
+                  </TableRow>
+                ))}
+
+              {!isLoading && !isError && equipmentList.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center">
+                    대여 가능한 기자재가 없습니다.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+
+          {totalPages > 1 ? (
+            <div className="my-6">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePageChange(currentPage - 1);
+                      }}
+                      className={`border bg-black text-white hover:bg-neutral-800 hover:text-white ${
+                        currentPage === 0
+                          ? "pointer-events-none opacity-50 border-neutral-700"
+                          : "cursor-pointer border-none"
+                      }`}
+                    />
+                  </PaginationItem>
+
+                  {pageNumbers.map((pageNumber) => (
+                    <PaginationItem key={pageNumber}>
+                      <PaginationLink
+                        href="#"
+                        isActive={pageNumber === currentPage}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handlePageChange(pageNumber);
+                        }}
+                        className={`cursor-pointer border text-white hover:bg-neutral-800 hover:text-white ${
+                          pageNumber === currentPage
+                            ? "bg-black border-white text-white"
+                            : "bg-transparent border-neutral-700 text-white"
+                        }`}
                       >
-                        <TableCell>
-                          <Checkbox
-                            className="border-neutral-400"
-                            checked={selectedModelId === item.modelId}
-                            onCheckedChange={(checked) =>
-                              handleSelectModel(item.modelId, checked === true)
-                            }
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                        </TableCell>
-                        <TableCell>{item.name}</TableCell>
-                        <TableCell>{item.courseName}</TableCell>
-                        <TableCell>{item.availableQty}</TableCell>
-                      </TableRow>
-                    ))}
+                        {pageNumber + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
 
-                  {!isLoading && !isError && kitList.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center">
-                        실습 키트가 없습니다.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-              {kitTotalPages > 1 ? (
-                <div className="my-6">
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleKitPageChange(kitCurrentPage - 1);
-                          }}
-                          className={`border bg-black text-white hover:bg-neutral-800 hover:text-white ${kitCurrentPage === 0 ? "pointer-events-none opacity-50 border-neutral-700" : "cursor-pointer border-none"}`}
-                        />
-                      </PaginationItem>
-
-                      {kitPageNumbers.map((pageNumber) => (
-                        <PaginationItem key={pageNumber}>
-                          <PaginationLink
-                            href="#"
-                            isActive={pageNumber === kitCurrentPage}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleKitPageChange(pageNumber);
-                            }}
-                            className={`cursor-pointer border text-white hover:bg-neutral-800 hover:text-white ${pageNumber === kitCurrentPage ? "bg-black border-white text-white" : "bg-transparent border-neutral-700 text-white"}`}
-                          >
-                            {pageNumber + 1}
-                          </PaginationLink>
-                        </PaginationItem>
-                      ))}
-
-                      <PaginationItem>
-                        <PaginationNext
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleKitPageChange(kitCurrentPage + 1);
-                          }}
-                          className={`border bg-black text-white hover:bg-neutral-800 hover:text-white ${kitCurrentPage >= kitTotalPages - 1 ? "pointer-events-none opacity-50 border-neutral-700" : "cursor-pointer border-none"}`}
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                </div>
-              ) : null}
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePageChange(currentPage + 1);
+                      }}
+                      className={`border bg-black text-white hover:bg-neutral-800 hover:text-white ${
+                        currentPage >= totalPages - 1
+                          ? "pointer-events-none opacity-50 border-neutral-700"
+                          : "cursor-pointer border-none"
+                      }`}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
             </div>
-          </TabsContent>
-        </Tabs>
+          ) : null}
+        </div>
+
         <AlertDialog open={pledgeDialogOpen} onOpenChange={setPledgeDialogOpen}>
           <AlertDialogContent className="max-w-2xl">
             <AlertDialogHeader>

@@ -299,9 +299,17 @@ const ManualRental = () => {
                             setSelectedItemId("");
                           }}
                           items={models.map(
-                            (model: { modelId: number; name: string }) => ({
+                            (model: {
+                              modelId: number;
+                              name: string;
+                              displayName?: string;
+                              subName?: string;
+                            }) => ({
                               value: String(model.modelId),
-                              label: model.name,
+                              label:
+                                model.displayName && model.subName
+                                  ? `${model.displayName} / ${model.subName}`
+                                  : model.displayName || model.subName || model.name,
                             }),
                           )}
                           placeholder="기기 선택"
