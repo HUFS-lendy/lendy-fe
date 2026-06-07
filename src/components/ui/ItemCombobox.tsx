@@ -58,7 +58,7 @@ export function ItemCombobox({
 
   return (
     <Popover open={open && !disabled} onOpenChange={setOpen}>
-      <PopoverTrigger className="border-none shadow-none" asChild>
+      <PopoverTrigger asChild>
         <Button
           variant="outline"
           role="combobox"

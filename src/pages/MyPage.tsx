@@ -69,18 +69,21 @@ const MyPage = () => {
       </div>
       {/* 메뉴 */}
       <div className="text-white px-2 md:px-12 space-y-12">
-        {me.role == "ADMIN" && (
-          // 관리자 페이지
+        {(me.role === "ADMIN" || me.role === "TA") && (
           <div>
             <div className="text-lg font-bold mb-2">권한</div>
-            <div className="mx-2">
-              <div
-                onClick={() => navigate("/admin")}
-                className="border-b border-neutral-500 text-lg py-3 cursor-pointer"
-              >
-                관리자 페이지
+
+            {me.role === "ADMIN" && (
+              <div className="mx-2">
+                <div
+                  onClick={() => navigate("/admin")}
+                  className="border-b border-neutral-500 text-lg py-3 cursor-pointer"
+                >
+                  관리자 페이지
+                </div>
               </div>
-            </div>
+            )}
+
             <div className="mx-2">
               <div
                 onClick={() => navigate("/ta/students")}
