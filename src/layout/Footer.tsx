@@ -14,10 +14,10 @@ const Footer = () => {
             <div className="font-bold">TEL</div>
             <div>031-330-4268</div>
           </div>
-          <div className="flex space-x-2">
+          {/* <div className="flex space-x-2">
             <div className="font-bold">EMAIL</div>
             <div>ces@hufs.ac.kr</div>
-          </div>
+          </div> */}
         </div>
         <div className="flex space-x-2">
           <div className="font-bold">ADDRESS</div>

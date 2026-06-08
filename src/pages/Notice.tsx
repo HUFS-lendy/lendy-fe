@@ -75,6 +75,10 @@ const Notice = () => {
                   마이페이지 - 대여 현황에서 대여한 기기의 불량을 접수할 수
                   있습니다.
                 </p>
+                <p>
+                  본 사이트 이용 중 문제 발생 시{" "}
+                  <strong>ce.lendy@hufs.ac.kr</strong>로 문의해 주시기 바랍니다.
+                </p>
               </AccordionContent>
             </AccordionItem>
           </Accordion>

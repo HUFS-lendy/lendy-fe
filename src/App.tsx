@@ -31,6 +31,9 @@ import Category from "./pages/admin/category/Category";
 import CheckIn from "./pages/admin/checkin/CheckIn";
 import ManualRental from "./pages/admin/checkin/ManualRental";
 import Returns from "./pages/admin/checkin/Returns";
+import Students from "./pages/ta/students/Students";
+import KitCourseOffering from "./pages/ta/students/kitCourseOffering";
+import Courses from "./pages/admin/kit/Courses";
 
 const router = createBrowserRouter([
   {
@@ -79,6 +82,15 @@ const router = createBrowserRouter([
           { path: "check-in", element: <CheckIn /> },
           { path: "manual-rental", element: <ManualRental /> },
           { path: "returns", element: <Returns /> },
+          { path: "courses", element: <Courses /> },
+        ],
+      },
+      {
+        path: "ta",
+        children: [
+          { index: true, element: <Navigate to="students" replace /> },
+          { path: "students", element: <Students /> },
+          { path: "kit-course-offering", element: <KitCourseOffering /> },
         ],
       },
     ],

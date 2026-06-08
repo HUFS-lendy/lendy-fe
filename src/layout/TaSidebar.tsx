@@ -1,13 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import {
-  TabletSmartphone,
-  User,
-  ToolCase,
-  ChevronRight,
-  Archive,
-  ClipboardCheck,
-  CalendarClock,
-} from "lucide-react";
+import { School, BookUser, ChevronRight } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -37,53 +29,35 @@ type NavItem = {
 
 // Menu items (예시)
 const items: NavItem[] = [
+  // {
+  //   title: "체크인",
+  //   icon: ClipboardCheck,
+  //   children: [
+  //     { title: "체크인", url: "/admin/check-in" },
+  //     { title: "수기 대여 등록", url: "/admin/manual-rental" },
+  //     { title: "반납 처리", url: "/admin/returns" },
+  //   ],
+  // },
   {
-    title: "체크인",
-    icon: ClipboardCheck,
-    children: [
-      { title: "체크인", url: "/admin/check-in" },
-      { title: "수기 대여 등록", url: "/admin/manual-rental" },
-      { title: "반납 처리", url: "/admin/returns" },
-    ],
-  },
-  {
-    title: "기자재",
-    icon: TabletSmartphone,
+    title: "강의 운영 정보",
+    icon: School,
     defaultOpen: true,
-    children: [{ title: "기자재 현황", url: "/admin/devices" }],
+    children: [{ title: "내 강의 운영 정보", url: "/ta/kit-course-offering" }],
   },
   {
-    title: "실습키트",
-    icon: ToolCase,
-    children: [{ title: "키트 현황", url: "/admin/kits" }],
-  },
-  {
-    title: "카테고리",
-    icon: Archive,
-    children: [{ title: "카테고리", url: "/admin/category" }],
-  },
-  {
-    title: "사용자 관리",
-    icon: User,
-    children: [
-      { title: "사용자 목록", url: "/admin/users" },
-      { title: "회원가입", url: "/admin/sign-up" },
-    ],
-  },
-  {
-    title: "학기 설정",
-    icon: CalendarClock,
-    children: [{ title: "학기 정보 관리", url: "/admin/view-limit" }],
+    title: "수강생",
+    icon: BookUser,
+    children: [{ title: "수강생 관리", url: "/ta/students" }],
   },
 ];
 
-export function AppSidebar() {
+export function TaSidebar() {
   const navigate = useNavigate();
   return (
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>관리자</SidebarGroupLabel>
+          <SidebarGroupLabel>조교</SidebarGroupLabel>
           <SidebarGroupLabel
             onClick={() => navigate("/")}
             className="cursor-pointer"
