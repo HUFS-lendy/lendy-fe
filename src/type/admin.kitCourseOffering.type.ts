@@ -26,3 +26,9 @@ export type CreateKitCourseOfferingRequest = {
   modelId: number;
   assistantUserId: number;
 };
+
+export type UpdateKitCourseOfferingRequest = {
+  modelId: number;
+  assistantUserId: number;
+  active: boolean;
+};

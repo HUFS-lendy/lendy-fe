@@ -5,6 +5,7 @@ import { apiClient } from "./client";
 import type {
   ApiResponse,
   CreateKitCourseOfferingRequest,
+  UpdateKitCourseOfferingRequest,
   KitCourseOffering,
 } from "../type/admin.kitCourseOffering.type";
 
@@ -17,6 +18,7 @@ const getErrorMessage = (error: unknown, fallbackMessage: string) => {
   return fallbackMessage;
 };
 
+// 전체 KIT 강의 운영 조회
 const fetchKitCourseOfferings = async (): Promise<KitCourseOffering[]> => {
   const res = await apiClient.get<ApiResponse<KitCourseOffering[]>>(
     "/api/admin/kit-course-offerings",
@@ -28,6 +30,14 @@ const fetchKitCourseOfferings = async (): Promise<KitCourseOffering[]> => {
   return res.data.data ?? [];
 };
 
+export const useKitCourseOfferings = () => {
+  return useQuery<KitCourseOffering[]>({
+    queryKey: KIT_COURSE_OFFERINGS_QUERY_KEY,
+    queryFn: fetchKitCourseOfferings,
+  });
+};
+
+// KIT 강의 운영 생성
 const createKitCourseOffering = async (
   request: CreateKitCourseOfferingRequest,
 ): Promise<ApiResponse<KitCourseOffering>> => {
@@ -38,24 +48,6 @@ const createKitCourseOffering = async (
   if (!res.data.success)
     throw new Error(res.data.message || "KIT 강의 운영 생성에 실패했습니다.");
   return res.data;
-};
-
-const deleteKitCourseOffering = async (
-  id: number,
-): Promise<ApiResponse<unknown>> => {
-  const res = await apiClient.delete<ApiResponse<unknown>>(
-    `/api/admin/kit-course-offerings/${id}`,
-  );
-  if (!res.data.success)
-    throw new Error(res.data.message || "KIT 강의 운영 삭제에 실패했습니다.");
-  return res.data;
-};
-
-export const useKitCourseOfferings = () => {
-  return useQuery<KitCourseOffering[]>({
-    queryKey: KIT_COURSE_OFFERINGS_QUERY_KEY,
-    queryFn: fetchKitCourseOfferings,
-  });
 };
 
 export const useCreateKitCourseOffering = () => {
@@ -73,6 +65,52 @@ export const useCreateKitCourseOffering = () => {
       toast.error(getErrorMessage(error, "KIT 강의 운영 생성에 실패했습니다."));
     },
   });
+};
+
+// KIT 강의 운영 수정
+const updateKitCourseOffering = async ({
+  id,
+  request,
+}: {
+  id: number;
+  request: UpdateKitCourseOfferingRequest;
+}): Promise<ApiResponse<KitCourseOffering>> => {
+  const res = await apiClient.patch<ApiResponse<KitCourseOffering>>(
+    `/api/admin/kit-course-offerings/${id}`,
+    request,
+  );
+  if (!res.data.success)
+    throw new Error(res.data.message || "KIT 강의 운영 수정에 실패했습니다.");
+  return res.data;
+};
+
+export const useUpdateKitCourseOffering = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateKitCourseOffering,
+    onSuccess: async (response) => {
+      toast.success(response.message || "KIT 강의 운영이 수정되었습니다.");
+      await queryClient.invalidateQueries({
+        queryKey: KIT_COURSE_OFFERINGS_QUERY_KEY,
+      });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, "KIT 강의 운영 수정에 실패했습니다."));
+    },
+  });
+};
+
+// KIT 강의 운영 삭제
+const deleteKitCourseOffering = async (
+  id: number,
+): Promise<ApiResponse<unknown>> => {
+  const res = await apiClient.delete<ApiResponse<unknown>>(
+    `/api/admin/kit-course-offerings/${id}`,
+  );
+  if (!res.data.success)
+    throw new Error(res.data.message || "KIT 강의 운영 삭제에 실패했습니다.");
+  return res.data;
 };
 
 export const useDeleteKitCourseOffering = () => {

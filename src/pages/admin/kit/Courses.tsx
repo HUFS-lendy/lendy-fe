@@ -37,15 +37,23 @@ import {
   useCreateKitCourseOffering,
   useDeleteKitCourseOffering,
   useKitCourseOfferings,
+  useUpdateKitCourseOffering,
 } from "../../../api/admin.kitCourseOffering.api";
 
 const Courses = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
   const [selectedAcademicTermId, setSelectedAcademicTermId] = useState("");
   const [selectedCourseId, setSelectedCourseId] = useState("");
   const [selectedKitModelId, setSelectedKitModelId] = useState("");
   const [selectedAssistantUserId, setSelectedAssistantUserId] = useState("");
+
+  const [updateKitModelId, setUpdateKitModelId] = useState("");
+  const [updateAssistantUserId, setUpdateAssistantUserId] = useState("");
+  const [updateActive, setUpdateActive] = useState(true);
+
   const [selectedCourseOfferingId, setSelectedCourseOfferingId] = useState<
     number | null
   >(null);
@@ -57,6 +65,8 @@ const Courses = () => {
   } = useKitCourseOfferings();
   const { mutate: createKitCourseOffering, isPending: isCreating } =
     useCreateKitCourseOffering();
+  const { mutate: updateKitCourseOffering, isPending: isUpdating } =
+    useUpdateKitCourseOffering();
   const { mutate: deleteKitCourseOffering, isPending: isDeleting } =
     useDeleteKitCourseOffering();
 
@@ -74,6 +84,19 @@ const Courses = () => {
     setSelectedCourseId("");
     setSelectedKitModelId("");
     setSelectedAssistantUserId("");
+  };
+
+  const resetUpdateForm = () => {
+    setUpdateKitModelId("");
+    setUpdateAssistantUserId("");
+    setUpdateActive(true);
+  };
+
+  const setUpdateFormBySelectedCourseOffering = () => {
+    if (!selectedCourseOffering) return;
+    setUpdateKitModelId(String(selectedCourseOffering.modelId));
+    setUpdateAssistantUserId(String(selectedCourseOffering.assistantUserId));
+    setUpdateActive(selectedCourseOffering.active);
   };
 
   const handleCreateKitCourseOffering = () => {
@@ -108,6 +131,40 @@ const Courses = () => {
         onSuccess: () => {
           resetCreateForm();
           setIsCreateDialogOpen(false);
+        },
+      },
+    );
+  };
+
+  const handleUpdateKitCourseOffering = () => {
+    if (selectedCourseOfferingId === null) {
+      toast.warning("수정할 강의 운영을 선택해주세요.");
+      return;
+    }
+
+    if (!updateKitModelId) {
+      toast.warning("키트를 선택해주세요.");
+      return;
+    }
+
+    if (!updateAssistantUserId) {
+      toast.warning("조교를 선택해주세요.");
+      return;
+    }
+
+    updateKitCourseOffering(
+      {
+        id: selectedCourseOfferingId,
+        request: {
+          modelId: Number(updateKitModelId),
+          assistantUserId: Number(updateAssistantUserId),
+          active: updateActive,
+        },
+      },
+      {
+        onSuccess: () => {
+          resetUpdateForm();
+          setIsUpdateDialogOpen(false);
         },
       },
     );
@@ -216,10 +273,14 @@ const Courses = () => {
               </div>
 
               <AlertDialogFooter className="pt-8">
-                <AlertDialogCancel disabled={isCreating}>
+                <AlertDialogCancel
+                  className="cursor-pointer"
+                  disabled={isCreating}
+                >
                   취소
                 </AlertDialogCancel>
                 <AlertDialogAction
+                  className="cursor-pointer"
                   disabled={isCreating}
                   onClick={(event) => {
                     event.preventDefault();
@@ -227,6 +288,100 @@ const Courses = () => {
                   }}
                 >
                   {isCreating ? "추가 중..." : "추가"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <AlertDialog
+            open={isUpdateDialogOpen}
+            onOpenChange={(open) => {
+              if (isUpdating) return;
+              if (open && !selectedCourseOffering) {
+                toast.warning("수정할 강의 운영을 선택해주세요.");
+                return;
+              }
+              setIsUpdateDialogOpen(open);
+              if (open) setUpdateFormBySelectedCourseOffering();
+              if (!open) resetUpdateForm();
+            }}
+          >
+            <AlertDialogTrigger asChild>
+              <button
+                type="button"
+                disabled={selectedCourseOfferingId === null}
+                className="border cursor-pointer px-3 py-1 rounded-sm border-neutral-400 text-white hover:bg-neutral-400 hover:text-black disabled:cursor-not-allowed disabled:border-neutral-600 disabled:text-neutral-600 disabled:hover:bg-transparent"
+              >
+                수정
+              </button>
+            </AlertDialogTrigger>
+
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>운영 강의 수정</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {selectedCourseOffering
+                    ? `${selectedCourseOffering.courseName} 강의 운영 정보를 수정합니다.`
+                    : "선택한 강의 운영 정보를 수정합니다."}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <div className="space-y-4">
+                <div>
+                  <Label className="pb-2">강의</Label>
+                  <div className="border rounded-md px-3 py-2 text-sm text-muted-foreground">
+                    {selectedCourseOffering
+                      ? `${selectedCourseOffering.courseName} (${selectedCourseOffering.academicTermCode})`
+                      : "-"}
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="pb-2">키트</Label>
+                  <KitCombobox
+                    value={updateKitModelId}
+                    onChange={setUpdateKitModelId}
+                  />
+                </div>
+
+                <div>
+                  <Label className="pb-2">조교</Label>
+                  <TACombobox
+                    value={updateAssistantUserId}
+                    onChange={setUpdateAssistantUserId}
+                  />
+                </div>
+
+                <div className="flex items-center space-x-2 pt-2">
+                  <Checkbox
+                    id="update-active"
+                    checked={updateActive}
+                    onCheckedChange={(checked) =>
+                      setUpdateActive(checked === true)
+                    }
+                  />
+                  <Label htmlFor="update-active" className="cursor-pointer">
+                    운영중
+                  </Label>
+                </div>
+              </div>
+
+              <AlertDialogFooter className="pt-8">
+                <AlertDialogCancel
+                  className="cursor-pointer"
+                  disabled={isUpdating}
+                >
+                  취소
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  className="cursor-pointer"
+                  disabled={isUpdating}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    handleUpdateKitCourseOffering();
+                  }}
+                >
+                  {isUpdating ? "수정 중..." : "수정"}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -255,7 +410,7 @@ const Courses = () => {
                 <AlertDialogDescription>
                   {selectedCourseOffering
                     ? `${selectedCourseOffering.courseName} 강의 운영 정보를 삭제하시겠습니까?`
-                    : "선택한 강의 운영 정보를 삭제하시겠습니까?"}{" "}
+                    : "선택한 강의 운영 정보를 삭제하시겠습니까?"}
                   <br />
                   삭제한 정보는 복구할 수 없습니다.
                 </AlertDialogDescription>
