@@ -1,4 +1,11 @@
-export interface MyCourseOffering {
+export type ApiResponse<T> = {
+  success: boolean;
+  code: string;
+  message: string;
+  data: T;
+};
+
+export type MyCourseOffering = {
   kitCourseOfferingId: number;
   academicTermId: number;
   academicTermCode: string;
@@ -11,4 +18,4 @@ export interface MyCourseOffering {
   active: boolean;
   createdAt: string;
   updatedAt: string;
-}
+};

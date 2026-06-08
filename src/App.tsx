@@ -88,8 +88,14 @@ const router = createBrowserRouter([
       {
         path: "ta",
         children: [
-          { index: true, element: <Navigate to="students" replace /> },
-          { path: "students", element: <Students /> },
+          {
+            index: true,
+            element: <Navigate to="kit-course-offering" replace />,
+          },
+          {
+            path: "kit-course-offering/:kitCourseOfferingId",
+            element: <Students />,
+          },
           { path: "kit-course-offering", element: <KitCourseOffering /> },
         ],
       },
