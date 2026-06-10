@@ -86,7 +86,7 @@ const MyPage = () => {
 
             <div className="mx-2">
               <div
-                onClick={() => navigate("/ta/students")}
+                onClick={() => navigate("/ta/kit-course-offering")}
                 className="border-b border-neutral-500 text-lg py-3 cursor-pointer"
               >
                 조교 페이지

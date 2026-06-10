@@ -34,6 +34,7 @@ import Returns from "./pages/admin/checkin/Returns";
 import Students from "./pages/ta/students/Students";
 import KitCourseOffering from "./pages/ta/students/kitCourseOffering";
 import Courses from "./pages/admin/kit/Courses";
+import KitOffering from "./pages/ta/students/kitOffering";
 
 const router = createBrowserRouter([
   {
@@ -88,9 +89,20 @@ const router = createBrowserRouter([
       {
         path: "ta",
         children: [
-          { index: true, element: <Navigate to="students" replace /> },
-          { path: "students", element: <Students /> },
+          {
+            index: true,
+            element: <Navigate to="kit-course-offering" replace />,
+          },
+          {
+            path: "kit-course-offering/:kitCourseOfferingId",
+            element: <Students />,
+          },
           { path: "kit-course-offering", element: <KitCourseOffering /> },
+
+          {
+            path: "kit-course-offering/:kitCourseOfferingId/kits",
+            element: <KitOffering />,
+          },
         ],
       },
     ],

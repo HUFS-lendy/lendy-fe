@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+import { Package, Users } from "lucide-react";
 import { useMyCourse } from "../../../api/ta.kitCourseOffering.api";
 import {
   Breadcrumb,
@@ -7,9 +9,31 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "../../../components/ui/breadcrumb";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../../components/ui/table";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "../../../components/ui/context-menu";
 
 const KitCourseOffering = () => {
-  const { data: courses, isLoading, isError } = useMyCourse();
+  const navigate = useNavigate();
+  const { data: courses = [], isLoading, isError } = useMyCourse();
+
+  const formatDate = (date?: string) => {
+    if (!date) return "-";
+    return new Date(date).toLocaleDateString("ko-KR");
+  };
 
   return (
     <div className="min-h-screen bg-[#060a0c] w-screen px-8 text-white">
@@ -39,78 +63,123 @@ const KitCourseOffering = () => {
       </div>
 
       <div className="mt-10">
-        <h1 className="text-2xl font-bold">내 KIT 강의 운영 목록</h1>
+        <h1 className="text-3xl font-bold">내 KIT 강의 운영 목록</h1>
         <p className="mt-2 text-sm text-gray-400">
           현재 로그인한 조교가 담당하는 KIT 강의 목록입니다.
         </p>
+        <p className="mt-1 text-xs text-gray-500">
+          강의 행을 마우스 오른쪽 버튼으로 클릭하여 관리 메뉴를 열 수 있습니다.
+        </p>
 
-        {isLoading && (
-          <div className="mt-8 text-gray-300">
-            강의 목록을 불러오는 중입니다.
-          </div>
-        )}
+        <div className="mt-8">
+          <Table className="text-white text-center border border-neutral-700">
+            <TableHeader className="text-center border-b bg-[#11141b] hover:bg-[#11141b] border-neutral-700">
+              <TableRow>
+                <TableHead className="text-white text-center">강의명</TableHead>
+                <TableHead className="text-white text-center">학기</TableHead>
+                <TableHead className="text-white text-center">
+                  KIT 모델명
+                </TableHead>
+                <TableHead className="text-white text-center">
+                  담당 조교
+                </TableHead>
+                <TableHead className="text-white text-center">
+                  운영 상태
+                </TableHead>
+                <TableHead className="text-white text-center">생성일</TableHead>
+                <TableHead className="text-white text-center">수정일</TableHead>
+              </TableRow>
+            </TableHeader>
 
-        {isError && (
-          <div className="mt-8 text-red-400">
-            강의 목록 조회 중 오류가 발생했습니다.
-          </div>
-        )}
-
-        {!isLoading && !isError && courses?.length === 0 && (
-          <div className="mt-8 rounded-xl border border-gray-700 bg-[#0f1519] p-6 text-gray-300">
-            조회된 KIT 강의 운영 목록이 없습니다.
-          </div>
-        )}
-
-        {!isLoading && !isError && courses && courses.length > 0 && (
-          <div className="mt-8 grid grid-cols-1 gap-4">
-            {courses.map((course) => (
-              <div
-                key={course.kitCourseOfferingId}
-                className="rounded-xl border border-gray-700 bg-[#0f1519] p-6"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h2 className="text-lg font-semibold">
-                      {course.courseName}
-                    </h2>
-                    <p className="mt-1 text-sm text-gray-400">
-                      {course.academicTermCode}
-                    </p>
-                  </div>
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-medium ${course.active ? "bg-green-500/20 text-green-300" : "bg-gray-500/20 text-gray-300"}`}
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={7}
+                    className="text-center py-8 text-gray-300"
                   >
-                    {course.active ? "운영중" : "비활성"}
-                  </span>
-                </div>
+                    강의 목록을 불러오는 중입니다.
+                  </TableCell>
+                </TableRow>
+              ) : isError ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={7}
+                    className="text-center py-8 text-red-400"
+                  >
+                    강의 목록 조회 중 오류가 발생했습니다.
+                  </TableCell>
+                </TableRow>
+              ) : courses.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={7}
+                    className="text-center py-8 text-gray-400"
+                  >
+                    조회된 KIT 강의 운영 목록이 없습니다.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                courses.map((course) => (
+                  <ContextMenu key={course.kitCourseOfferingId}>
+                    <ContextMenuTrigger asChild>
+                      <TableRow className="cursor-context-menu hover:bg-neutral-900/70">
+                        <TableCell>{course.courseName}</TableCell>
+                        <TableCell>{course.academicTermCode}</TableCell>
+                        <TableCell>{course.modelName}</TableCell>
+                        <TableCell>{course.assistantUsername}</TableCell>
+                        <TableCell>
+                          <span
+                            className={
+                              course.active
+                                ? "text-green-300 font-semibold"
+                                : "text-gray-400 font-semibold"
+                            }
+                          >
+                            {course.active ? "운영중" : "비활성"}
+                          </span>
+                        </TableCell>
+                        <TableCell>{formatDate(course.createdAt)}</TableCell>
+                        <TableCell>{formatDate(course.updatedAt)}</TableCell>
+                      </TableRow>
+                    </ContextMenuTrigger>
 
-                <div className="mt-5 grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <div className="text-gray-500">모델명</div>
-                    <div className="mt-1 text-gray-200">{course.modelName}</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-500">조교</div>
-                    <div className="mt-1 text-gray-200">
-                      {course.assistantUsername}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-gray-500">강의 ID</div>
-                    <div className="mt-1 text-gray-200">{course.courseId}</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-500">KIT 운영 ID</div>
-                    <div className="mt-1 text-gray-200">
-                      {course.kitCourseOfferingId}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+                    <ContextMenuContent className="w-52">
+                      <ContextMenuLabel className="truncate">
+                        {course.courseName}
+                      </ContextMenuLabel>
+                      <ContextMenuSeparator />
+
+                      <ContextMenuItem
+                        className="cursor-pointer"
+                        onSelect={() =>
+                          navigate(
+                            `/ta/kit-course-offering/${course.kitCourseOfferingId}`,
+                          )
+                        }
+                      >
+                        <Users className="mr-2 h-4 w-4" />
+                        수강생 관리
+                      </ContextMenuItem>
+
+                      <ContextMenuItem
+                        className="cursor-pointer"
+                        onSelect={() =>
+                          navigate(
+                            `/ta/kit-course-offering/${course.kitCourseOfferingId}/kits`,
+                          )
+                        }
+                      >
+                        <Package className="mr-2 h-4 w-4" />
+                        키트 관리
+                      </ContextMenuItem>
+                    </ContextMenuContent>
+                  </ContextMenu>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </div>
   );
