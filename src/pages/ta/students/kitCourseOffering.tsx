@@ -1,4 +1,6 @@
 import { useNavigate } from "react-router-dom";
+import { Package, Users } from "lucide-react";
+import { useMyCourse } from "../../../api/ta.kitCourseOffering.api";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -15,7 +17,14 @@ import {
   TableHeader,
   TableRow,
 } from "../../../components/ui/table";
-import { useMyCourse } from "../../../api/ta.kitCourseOffering.api";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "../../../components/ui/context-menu";
 
 const KitCourseOffering = () => {
   const navigate = useNavigate();
@@ -57,6 +66,9 @@ const KitCourseOffering = () => {
         <h1 className="text-3xl font-bold">내 KIT 강의 운영 목록</h1>
         <p className="mt-2 text-sm text-gray-400">
           현재 로그인한 조교가 담당하는 KIT 강의 목록입니다.
+        </p>
+        <p className="mt-1 text-xs text-gray-500">
+          강의 행을 마우스 오른쪽 버튼으로 클릭하여 관리 메뉴를 열 수 있습니다.
         </p>
 
         <div className="mt-8">
@@ -109,33 +121,60 @@ const KitCourseOffering = () => {
                 </TableRow>
               ) : (
                 courses.map((course) => (
-                  <TableRow
-                    key={course.kitCourseOfferingId}
-                    className="cursor-pointer"
-                    onClick={() =>
-                      navigate(
-                        `/ta/kit-course-offering/${course.kitCourseOfferingId}`,
-                      )
-                    }
-                  >
-                    <TableCell>{course.courseName}</TableCell>
-                    <TableCell>{course.academicTermCode}</TableCell>
-                    <TableCell>{course.modelName}</TableCell>
-                    <TableCell>{course.assistantUsername}</TableCell>
-                    <TableCell>
-                      <span
-                        className={
-                          course.active
-                            ? "text-green-300 font-semibold"
-                            : "text-gray-400 font-semibold"
+                  <ContextMenu key={course.kitCourseOfferingId}>
+                    <ContextMenuTrigger asChild>
+                      <TableRow className="cursor-context-menu hover:bg-neutral-900/70">
+                        <TableCell>{course.courseName}</TableCell>
+                        <TableCell>{course.academicTermCode}</TableCell>
+                        <TableCell>{course.modelName}</TableCell>
+                        <TableCell>{course.assistantUsername}</TableCell>
+                        <TableCell>
+                          <span
+                            className={
+                              course.active
+                                ? "text-green-300 font-semibold"
+                                : "text-gray-400 font-semibold"
+                            }
+                          >
+                            {course.active ? "운영중" : "비활성"}
+                          </span>
+                        </TableCell>
+                        <TableCell>{formatDate(course.createdAt)}</TableCell>
+                        <TableCell>{formatDate(course.updatedAt)}</TableCell>
+                      </TableRow>
+                    </ContextMenuTrigger>
+
+                    <ContextMenuContent className="w-52">
+                      <ContextMenuLabel className="truncate">
+                        {course.courseName}
+                      </ContextMenuLabel>
+                      <ContextMenuSeparator />
+
+                      <ContextMenuItem
+                        className="cursor-pointer"
+                        onSelect={() =>
+                          navigate(
+                            `/ta/kit-course-offering/${course.kitCourseOfferingId}`,
+                          )
                         }
                       >
-                        {course.active ? "운영중" : "비활성"}
-                      </span>
-                    </TableCell>
-                    <TableCell>{formatDate(course.createdAt)}</TableCell>
-                    <TableCell>{formatDate(course.updatedAt)}</TableCell>
-                  </TableRow>
+                        <Users className="mr-2 h-4 w-4" />
+                        수강생 관리
+                      </ContextMenuItem>
+
+                      <ContextMenuItem
+                        className="cursor-pointer"
+                        onSelect={() =>
+                          navigate(
+                            `/ta/kit-course-offering/${course.kitCourseOfferingId}/kits`,
+                          )
+                        }
+                      >
+                        <Package className="mr-2 h-4 w-4" />
+                        키트 관리
+                      </ContextMenuItem>
+                    </ContextMenuContent>
+                  </ContextMenu>
                 ))
               )}
             </TableBody>

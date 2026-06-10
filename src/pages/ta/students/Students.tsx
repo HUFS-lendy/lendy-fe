@@ -60,6 +60,13 @@ const Students = () => {
   const { mutate: createGuestEnrollment, isPending: isCreatingGuest } =
     useCreateGuestEnrollment();
 
+  const ROLE_NAME_MAP: Record<string, string> = {
+    GUEST: "타과 학생",
+    USER: "사용자",
+    ADMIN: "관리자",
+    TA: "조교",
+  };
+
   const isInvalidCourseOfferingId =
     !Number.isFinite(courseOfferingId) || courseOfferingId <= 0;
 
@@ -448,7 +455,11 @@ const Students = () => {
                     <TableCell>{student.studentId}</TableCell>
                     <TableCell>{student.email}</TableCell>
                     <TableCell>{student.departmentName}</TableCell>
-                    <TableCell>{student.role}</TableCell>
+                    <TableCell>
+                      {ROLE_NAME_MAP[student.role?.trim().toUpperCase()] ??
+                        student.role ??
+                        "-"}
+                    </TableCell>
                     <TableCell>{student.status}</TableCell>
                     <TableCell>{formatDate(student.createdAt)}</TableCell>
                   </TableRow>
