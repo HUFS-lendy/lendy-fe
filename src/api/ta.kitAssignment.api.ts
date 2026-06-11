@@ -14,13 +14,12 @@ const getKitAssignmentsQueryKey = (kitCourseOfferingId: number) => [
 ];
 
 const getErrorMessage = (error: unknown, fallbackMessage: string) => {
-  if (axios.isAxiosError<ApiResponse<null>>(error))
+  if (axios.isAxiosError<ApiResponse<unknown>>(error))
     return error.response?.data?.message ?? fallbackMessage;
   if (error instanceof Error) return error.message;
   return fallbackMessage;
 };
 
-// KIT 배정 목록 조회
 const fetchKitAssignments = async (
   kitCourseOfferingId: number,
 ): Promise<KitAssignment[]> => {
@@ -42,7 +41,6 @@ export const useKitAssignments = (kitCourseOfferingId: number) => {
   });
 };
 
-// KIT 자동 배정
 const generateKitAssignments = async (
   kitCourseOfferingId: number,
 ): Promise<ApiResponse<GenerateKitAssignmentsResult>> => {
@@ -76,6 +74,87 @@ export const useGenerateKitAssignments = () => {
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, "KIT 자동 배정에 실패했습니다."));
+    },
+  });
+};
+
+const rentKitAssignment = async (
+  kitAssignmentId: number,
+): Promise<ApiResponse<unknown>> => {
+  const res = await apiClient.post<ApiResponse<unknown>>(
+    `/api/ta/kit-assignments/${kitAssignmentId}/rent`,
+  );
+
+  if (!res.data.success)
+    throw new Error(res.data.message || "KIT 대여 처리에 실패했습니다.");
+
+  return res.data;
+};
+
+const returnKitAssignment = async (
+  kitAssignmentId: number,
+): Promise<ApiResponse<unknown>> => {
+  const res = await apiClient.post<ApiResponse<unknown>>(
+    `/api/ta/kit-assignments/${kitAssignmentId}/return`,
+  );
+
+  if (!res.data.success)
+    throw new Error(res.data.message || "KIT 반납 처리에 실패했습니다.");
+
+  return res.data;
+};
+
+type KitAssignmentActionParams = {
+  kitCourseOfferingId: number;
+  kitAssignmentIds: number[];
+};
+
+export const useRentKitAssignments = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ kitAssignmentIds }: KitAssignmentActionParams) => {
+      for (const kitAssignmentId of kitAssignmentIds) {
+        await rentKitAssignment(kitAssignmentId);
+      }
+
+      return kitAssignmentIds.length;
+    },
+    onSuccess: async (count, variables) => {
+      toast.success("KIT 대여 처리가 완료되었습니다.", {
+        description: `총 ${count}건 처리되었습니다.`,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: getKitAssignmentsQueryKey(variables.kitCourseOfferingId),
+      });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, "KIT 대여 처리에 실패했습니다."));
+    },
+  });
+};
+
+export const useReturnKitAssignments = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ kitAssignmentIds }: KitAssignmentActionParams) => {
+      for (const kitAssignmentId of kitAssignmentIds) {
+        await returnKitAssignment(kitAssignmentId);
+      }
+
+      return kitAssignmentIds.length;
+    },
+    onSuccess: async (count, variables) => {
+      toast.success("KIT 반납 처리가 완료되었습니다.", {
+        description: `총 ${count}건 처리되었습니다.`,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: getKitAssignmentsQueryKey(variables.kitCourseOfferingId),
+      });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, "KIT 반납 처리에 실패했습니다."));
     },
   });
 };

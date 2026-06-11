@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
   useGenerateKitAssignments,
   useKitAssignments,
+  useRentKitAssignments,
+  useReturnKitAssignments,
 } from "../../../api/ta.kitAssignment.api";
+import type { KitAssignment } from "../../../type/ta.kitAssignmnet.type";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -32,12 +35,18 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../../../components/ui/alert-dialog";
+import { Checkbox } from "../../../components/ui/checkbox";
 
 const KitOffering = () => {
   const { kitCourseOfferingId } = useParams();
   const courseOfferingId = Number(kitCourseOfferingId);
 
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
+  const [isRentDialogOpen, setIsRentDialogOpen] = useState(false);
+  const [isReturnDialogOpen, setIsReturnDialogOpen] = useState(false);
+  const [selectedAssignmentIds, setSelectedAssignmentIds] = useState<number[]>(
+    [],
+  );
 
   const {
     data: assignments = [],
@@ -47,9 +56,42 @@ const KitOffering = () => {
   } = useKitAssignments(courseOfferingId);
   const { mutate: generateKitAssignments, isPending: isGenerating } =
     useGenerateKitAssignments();
+  const { mutate: rentKitAssignments, isPending: isRenting } =
+    useRentKitAssignments();
+  const { mutate: returnKitAssignments, isPending: isReturning } =
+    useReturnKitAssignments();
 
   const isInvalidCourseOfferingId =
     !Number.isFinite(courseOfferingId) || courseOfferingId <= 0;
+  const isProcessing = isGenerating || isRenting || isReturning;
+
+  const selectedAssignmentIdSet = useMemo(
+    () => new Set(selectedAssignmentIds),
+    [selectedAssignmentIds],
+  );
+  const selectedAssignments = useMemo(
+    () =>
+      assignments.filter((assignment) =>
+        selectedAssignmentIdSet.has(assignment.kitAssignmentId),
+      ),
+    [assignments, selectedAssignmentIdSet],
+  );
+
+  const selectedCount = selectedAssignments.length;
+  const isAllSelected =
+    assignments.length > 0 &&
+    assignments.every((assignment) =>
+      selectedAssignmentIdSet.has(assignment.kitAssignmentId),
+    );
+  const isSomeSelected = selectedCount > 0 && !isAllSelected;
+
+  const normalizeStatus = (status?: string) =>
+    status?.trim().toUpperCase() ?? "";
+
+  const isRentableAssignment = (assignment: KitAssignment) =>
+    normalizeStatus(assignment.status) === "ASSIGNED";
+  const isReturnableAssignment = (assignment: KitAssignment) =>
+    normalizeStatus(assignment.status) === "RENTED";
 
   const formatDateTime = (date?: string) => {
     if (!date) return "-";
@@ -57,7 +99,7 @@ const KitOffering = () => {
   };
 
   const getStatusName = (status?: string) => {
-    switch (status?.trim().toUpperCase()) {
+    switch (normalizeStatus(status)) {
       case "ASSIGNED":
         return "배정됨";
       case "RESERVED":
@@ -75,7 +117,7 @@ const KitOffering = () => {
   };
 
   const getStatusClassName = (status?: string) => {
-    switch (status?.trim().toUpperCase()) {
+    switch (normalizeStatus(status)) {
       case "ASSIGNED":
         return "text-blue-300 font-semibold";
       case "RESERVED":
@@ -92,6 +134,27 @@ const KitOffering = () => {
     }
   };
 
+  const handleSelectAssignment = (
+    kitAssignmentId: number,
+    checked: boolean,
+  ) => {
+    setSelectedAssignmentIds((prev) => {
+      if (checked) return Array.from(new Set([...prev, kitAssignmentId]));
+      return prev.filter((id) => id !== kitAssignmentId);
+    });
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedAssignmentIds(
+        assignments.map((assignment) => assignment.kitAssignmentId),
+      );
+      return;
+    }
+
+    setSelectedAssignmentIds([]);
+  };
+
   const handleGenerateKitAssignments = () => {
     if (isInvalidCourseOfferingId) {
       toast.warning("잘못된 강의 운영 ID입니다.");
@@ -103,6 +166,78 @@ const KitOffering = () => {
         setIsGenerateDialogOpen(false);
       },
     });
+  };
+
+  const handleRentSelectedAssignments = () => {
+    if (isInvalidCourseOfferingId) {
+      toast.warning("잘못된 강의 운영 ID입니다.");
+      return;
+    }
+
+    if (selectedAssignments.length === 0) {
+      toast.warning("대여 처리할 학생을 선택해주세요.");
+      return;
+    }
+
+    if (
+      selectedAssignments.some(
+        (assignment) => !isRentableAssignment(assignment),
+      )
+    ) {
+      toast.warning("대여 처리는 배정됨 상태의 KIT만 가능합니다.");
+      return;
+    }
+
+    rentKitAssignments(
+      {
+        kitCourseOfferingId: courseOfferingId,
+        kitAssignmentIds: selectedAssignments.map(
+          (assignment) => assignment.kitAssignmentId,
+        ),
+      },
+      {
+        onSuccess: () => {
+          setSelectedAssignmentIds([]);
+          setIsRentDialogOpen(false);
+        },
+      },
+    );
+  };
+
+  const handleReturnSelectedAssignments = () => {
+    if (isInvalidCourseOfferingId) {
+      toast.warning("잘못된 강의 운영 ID입니다.");
+      return;
+    }
+
+    if (selectedAssignments.length === 0) {
+      toast.warning("반납 처리할 학생을 선택해주세요.");
+      return;
+    }
+
+    if (
+      selectedAssignments.some(
+        (assignment) => !isReturnableAssignment(assignment),
+      )
+    ) {
+      toast.warning("반납 처리는 대여중 상태의 KIT만 가능합니다.");
+      return;
+    }
+
+    returnKitAssignments(
+      {
+        kitCourseOfferingId: courseOfferingId,
+        kitAssignmentIds: selectedAssignments.map(
+          (assignment) => assignment.kitAssignmentId,
+        ),
+      },
+      {
+        onSuccess: () => {
+          setSelectedAssignmentIds([]);
+          setIsReturnDialogOpen(false);
+        },
+      },
+    );
   };
 
   return (
@@ -144,67 +279,187 @@ const KitOffering = () => {
             </p>
           </div>
 
-          <AlertDialog
-            open={isGenerateDialogOpen}
-            onOpenChange={(open) => {
-              if (isGenerating) return;
-              setIsGenerateDialogOpen(open);
-            }}
-          >
-            <AlertDialogTrigger asChild>
-              <button
-                type="button"
-                disabled={isInvalidCourseOfferingId}
-                className="border cursor-pointer px-3 py-1 rounded-sm hover:bg-neutral-400 hover:text-black border-neutral-400 text-sm disabled:cursor-not-allowed disabled:border-neutral-600 disabled:text-neutral-600 disabled:hover:bg-transparent"
-              >
-                자동 배정
-              </button>
-            </AlertDialogTrigger>
-
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>KIT 자동 배정</AlertDialogTitle>
-                <AlertDialogDescription>
-                  수강생과 사용 가능한 KIT를 기준으로 자동 배정을
-                  실행하시겠습니까?
-                  <br />
-                  이미 배정된 학생은 기존 배정이 유지됩니다.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-
-              <AlertDialogFooter>
-                <AlertDialogCancel
-                  className="cursor-pointer"
-                  disabled={isGenerating}
+          <div className="flex items-center gap-2">
+            <AlertDialog
+              open={isGenerateDialogOpen}
+              onOpenChange={(open) => {
+                if (isGenerating) return;
+                setIsGenerateDialogOpen(open);
+              }}
+            >
+              <AlertDialogTrigger asChild>
+                <button
+                  type="button"
+                  disabled={isInvalidCourseOfferingId || isProcessing}
+                  className="border cursor-pointer px-3 py-1 rounded-sm hover:bg-neutral-400 hover:text-black border-neutral-400 text-sm disabled:cursor-not-allowed disabled:border-neutral-600 disabled:text-neutral-600 disabled:hover:bg-transparent"
                 >
-                  취소
-                </AlertDialogCancel>
-                <AlertDialogAction
-                  className="cursor-pointer"
-                  disabled={isGenerating}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    handleGenerateKitAssignments();
-                  }}
+                  자동 배정
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>KIT 자동 배정</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    수강생과 사용 가능한 KIT를 기준으로 자동 배정을
+                    실행하시겠습니까?
+                    <br />
+                    이미 배정된 학생은 기존 배정이 유지됩니다.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel
+                    className="cursor-pointer"
+                    disabled={isGenerating}
+                  >
+                    취소
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    className="cursor-pointer"
+                    disabled={isGenerating}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      handleGenerateKitAssignments();
+                    }}
+                  >
+                    {isGenerating ? "배정 중..." : "자동 배정"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog
+              open={isRentDialogOpen}
+              onOpenChange={(open) => {
+                if (isRenting) return;
+                setIsRentDialogOpen(open);
+              }}
+            >
+              <AlertDialogTrigger asChild>
+                <button
+                  type="button"
+                  disabled={
+                    isInvalidCourseOfferingId ||
+                    isProcessing ||
+                    selectedCount === 0
+                  }
+                  className="border cursor-pointer px-3 py-1 rounded-sm hover:bg-neutral-400 hover:text-black border-neutral-400 text-sm disabled:cursor-not-allowed disabled:border-neutral-600 disabled:text-neutral-600 disabled:hover:bg-transparent"
                 >
-                  {isGenerating ? "배정 중..." : "자동 배정"}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+                  대여
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>KIT 대여 처리</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    선택한 {selectedCount}명의 KIT 배정을 실제 대여
+                    처리하시겠습니까?
+                    <br />
+                    배정됨 상태의 KIT만 대여 처리할 수 있습니다.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel
+                    className="cursor-pointer"
+                    disabled={isRenting}
+                  >
+                    취소
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    className="cursor-pointer"
+                    disabled={isRenting}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      handleRentSelectedAssignments();
+                    }}
+                  >
+                    {isRenting ? "대여 처리 중..." : "대여 처리"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog
+              open={isReturnDialogOpen}
+              onOpenChange={(open) => {
+                if (isReturning) return;
+                setIsReturnDialogOpen(open);
+              }}
+            >
+              <AlertDialogTrigger asChild>
+                <button
+                  type="button"
+                  disabled={
+                    isInvalidCourseOfferingId ||
+                    isProcessing ||
+                    selectedCount === 0
+                  }
+                  className="border cursor-pointer px-3 py-1 rounded-sm hover:bg-neutral-400 hover:text-black border-neutral-400 text-sm disabled:cursor-not-allowed disabled:border-neutral-600 disabled:text-neutral-600 disabled:hover:bg-transparent"
+                >
+                  반납
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>KIT 반납 처리</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    선택한 {selectedCount}명의 KIT를 반납 처리하시겠습니까?
+                    <br />
+                    대여중 상태의 KIT만 반납 처리할 수 있습니다.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel
+                    className="cursor-pointer"
+                    disabled={isReturning}
+                  >
+                    취소
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    className="cursor-pointer"
+                    disabled={isReturning}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      handleReturnSelectedAssignments();
+                    }}
+                  >
+                    {isReturning ? "반납 처리 중..." : "반납 처리"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
 
         <div className="mt-8">
           <Table className="text-white text-center border border-neutral-700">
             <TableHeader className="text-center border-b bg-[#11141b] hover:bg-[#11141b] border-neutral-700">
               <TableRow>
+                <TableHead className="text-white text-center w-12">
+                  <TableHead className="text-white text-center w-12">
+                    <Checkbox
+                      checked={
+                        isAllSelected
+                          ? true
+                          : isSomeSelected
+                            ? "indeterminate"
+                            : false
+                      }
+                      disabled={
+                        isInvalidCourseOfferingId ||
+                        isProcessing ||
+                        assignments.length === 0
+                      }
+                      onCheckedChange={(checked) =>
+                        handleSelectAll(checked === true)
+                      }
+                      aria-label="전체 수강생 선택"
+                    />
+                  </TableHead>
+                </TableHead>
                 <TableHead className="text-white text-center">이름</TableHead>
                 <TableHead className="text-white text-center">학번</TableHead>
                 <TableHead className="text-white text-center">
                   KIT 시리얼
-                </TableHead>
-                <TableHead className="text-white text-center">
-                  아이템 ID
                 </TableHead>
                 <TableHead className="text-white text-center">
                   배정 상태
@@ -217,7 +472,7 @@ const KitOffering = () => {
               {isInvalidCourseOfferingId ? (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={7}
                     className="text-center py-8 text-red-400"
                   >
                     잘못된 강의 운영 ID입니다.
@@ -226,7 +481,7 @@ const KitOffering = () => {
               ) : isLoading ? (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={7}
                     className="text-center py-8 text-gray-300"
                   >
                     KIT 배정 목록을 불러오는 중입니다.
@@ -235,7 +490,7 @@ const KitOffering = () => {
               ) : isError ? (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={7}
                     className="text-center py-8 text-red-400"
                   >
                     {error instanceof Error
@@ -246,7 +501,7 @@ const KitOffering = () => {
               ) : assignments.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={7}
                     className="text-center py-8 text-gray-400"
                   >
                     조회된 KIT 배정 정보가 없습니다.
@@ -255,10 +510,24 @@ const KitOffering = () => {
               ) : (
                 assignments.map((assignment) => (
                   <TableRow key={assignment.kitAssignmentId}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedAssignmentIdSet.has(
+                          assignment.kitAssignmentId,
+                        )}
+                        disabled={isProcessing}
+                        onCheckedChange={(checked) =>
+                          handleSelectAssignment(
+                            assignment.kitAssignmentId,
+                            checked === true,
+                          )
+                        }
+                        aria-label={`${assignment.username} 선택`}
+                      />
+                    </TableCell>
                     <TableCell>{assignment.username}</TableCell>
                     <TableCell>{assignment.studentId}</TableCell>
                     <TableCell>{assignment.serial}</TableCell>
-                    <TableCell>{assignment.itemId}</TableCell>
                     <TableCell>
                       <span className={getStatusClassName(assignment.status)}>
                         {getStatusName(assignment.status)}
