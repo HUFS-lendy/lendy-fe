@@ -114,3 +114,127 @@ export const useCreateGuestEnrollment = () => {
     },
   });
 };
+
+// 수강 상태 DROPPED 변경
+const dropEnrollment = async ({
+  kitCourseOfferingId,
+  kitEnrollmentId,
+}: {
+  kitCourseOfferingId: number;
+  kitEnrollmentId: number;
+}): Promise<ApiResponse<unknown>> => {
+  const res = await apiClient.patch<ApiResponse<unknown>>(
+    `/api/ta/kit-course-offerings/${kitCourseOfferingId}/enrollments/${kitEnrollmentId}/drop`,
+  );
+  if (!res.data.success)
+    throw new Error(res.data.message || "수강 상태 변경에 실패했습니다.");
+  return res.data;
+};
+
+const dropEnrollments = async ({
+  kitCourseOfferingId,
+  kitEnrollmentIds,
+}: {
+  kitCourseOfferingId: number;
+  kitEnrollmentIds: number[];
+}): Promise<ApiResponse<unknown>[]> => {
+  if (kitEnrollmentIds.length === 0)
+    throw new Error("Drop 처리할 수강생을 선택해주세요.");
+
+  const responses: ApiResponse<unknown>[] = [];
+
+  for (const kitEnrollmentId of kitEnrollmentIds) {
+    const response = await dropEnrollment({
+      kitCourseOfferingId,
+      kitEnrollmentId,
+    });
+    responses.push(response);
+  }
+
+  return responses;
+};
+
+export const useDropEnrollments = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: dropEnrollments,
+    onSuccess: async (responses, variables) => {
+      const serverMessage = responses.length === 1 ? responses[0].message : "";
+      toast.success(
+        serverMessage ||
+          `${responses.length}명의 수강 상태가 DROPPED로 변경되었습니다.`,
+      );
+      await queryClient.invalidateQueries({
+        queryKey: getCourseEnrollmentsQueryKey(variables.kitCourseOfferingId),
+      });
+    },
+    onError: (error) => {
+      toast.error(
+        getErrorMessage(error, "수강 상태 Drop 처리에 실패했습니다."),
+      );
+    },
+  });
+};
+
+// 수강 상태 ENROLLED 변경
+const enrollEnrollment = async ({
+  kitCourseOfferingId,
+  kitEnrollmentId,
+}: {
+  kitCourseOfferingId: number;
+  kitEnrollmentId: number;
+}): Promise<ApiResponse<unknown>> => {
+  const res = await apiClient.patch<ApiResponse<unknown>>(
+    `/api/ta/kit-course-offerings/${kitCourseOfferingId}/enrollments/${kitEnrollmentId}/enroll`,
+  );
+  if (!res.data.success)
+    throw new Error(res.data.message || "수강 상태 변경에 실패했습니다.");
+  return res.data;
+};
+
+const enrollEnrollments = async ({
+  kitCourseOfferingId,
+  kitEnrollmentIds,
+}: {
+  kitCourseOfferingId: number;
+  kitEnrollmentIds: number[];
+}): Promise<ApiResponse<unknown>[]> => {
+  if (kitEnrollmentIds.length === 0)
+    throw new Error("Enroll 처리할 수강생을 선택해주세요.");
+
+  const responses: ApiResponse<unknown>[] = [];
+
+  for (const kitEnrollmentId of kitEnrollmentIds) {
+    const response = await enrollEnrollment({
+      kitCourseOfferingId,
+      kitEnrollmentId,
+    });
+    responses.push(response);
+  }
+
+  return responses;
+};
+
+export const useEnrollEnrollments = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: enrollEnrollments,
+    onSuccess: async (responses, variables) => {
+      const serverMessage = responses.length === 1 ? responses[0].message : "";
+      toast.success(
+        serverMessage ||
+          `${responses.length}명의 수강 상태가 ENROLLED로 변경되었습니다.`,
+      );
+      await queryClient.invalidateQueries({
+        queryKey: getCourseEnrollmentsQueryKey(variables.kitCourseOfferingId),
+      });
+    },
+    onError: (error) => {
+      toast.error(
+        getErrorMessage(error, "수강 상태 Enroll 처리에 실패했습니다."),
+      );
+    },
+  });
+};

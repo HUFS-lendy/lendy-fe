@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { School, BookUser, ChevronRight } from "lucide-react";
+import { School, ChevronRight } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -44,11 +44,11 @@ const items: NavItem[] = [
     defaultOpen: true,
     children: [{ title: "내 강의 운영 정보", url: "/ta/kit-course-offering" }],
   },
-  {
-    title: "수강생",
-    icon: BookUser,
-    children: [{ title: "수강생 관리", url: "/ta/students" }],
-  },
+  // {
+  //   title: "수강생",
+  //   icon: BookUser,
+  //   children: [{ title: "수강생 관리", url: "/ta/students" }],
+  // },
 ];
 
 export function TaSidebar() {
