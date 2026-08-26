@@ -8,7 +8,6 @@ import {
 import ProtectedRoute from "./routes/ProtectedRoute";
 import Main from "./pages/Main";
 import Layout from "./layout/Layout";
-import Lend from "./pages/Lend";
 import Login from "./pages/Login";
 import MyPage from "./pages/MyPage";
 import LendState from "./pages/LendState";
@@ -46,19 +45,13 @@ const router = createBrowserRouter([
       {
         element: (
           <ProtectedRoute>
-            <Lend />
-          </ProtectedRoute>
-        ),
-        path: "/lend",
-      },
-      {
-        element: (
-          <ProtectedRoute>
             <ReservationWaiting />
           </ProtectedRoute>
         ),
-        path: "/reservation-waiting",
+        path: "/reservation",
       },
+      { element: <Navigate to="/reservation" replace />, path: "/lend" },
+      { element: <Navigate to="/reservation" replace />, path: "/reservation-waiting" },
       {
         element: (
           <ProtectedRoute>

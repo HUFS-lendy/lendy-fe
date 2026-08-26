@@ -22,7 +22,7 @@ const Main = () => {
             컴퓨터공학부 기자재 대여 서비스
           </div>
           <div
-            onClick={() => navigate("/lend")}
+            onClick={() => navigate("/reservation")}
             className="bg-[#060a0c] hover:bg-neutral-700 border border-white rounded-full text-white inline-block px-5 py-2 mt-6 cursor-pointer"
           >
             대여하러 가기
