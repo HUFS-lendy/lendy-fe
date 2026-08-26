@@ -48,3 +48,17 @@ export type ApiResponse<T> = {
   message: string;
   data: T;
 };
+
+export type ReservationQueueStatus =
+  | "DISABLED"
+  | "NOT_JOINED"
+  | "WAITING"
+  | "READY";
+
+export interface ReservationQueueData {
+  status: ReservationQueueStatus;
+  position: number | null;
+  estimatedWaitSeconds: number | null;
+  admissionToken: string | null;
+  admissionExpiresInSeconds: number;
+}

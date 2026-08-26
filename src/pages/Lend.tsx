@@ -40,7 +40,6 @@ import {
 import { toast } from "sonner";
 import { useModels } from "../api/model.api";
 import type { ModelItem } from "../type/model.type";
-import { useDoReserve } from "../api/reservationUser.api";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -53,8 +52,6 @@ const Lend = () => {
   const [currentPage, setCurrentPage] = useState(0);
 
   const { data: models = [], isLoading, isError } = useModels();
-  const { mutate: createReservation, isPending: isCreatingReservation } =
-    useDoReserve();
 
   const equipmentList = useMemo(() => {
     return models.filter(
@@ -99,22 +96,7 @@ const Lend = () => {
       return;
     }
 
-    createReservation(
-      { modelId: selectedModelId },
-      {
-        onSuccess: () => {
-          toast("대여 신청이 완료되었습니다.");
-          navigate("/lending-state");
-        },
-        onError: (error) => {
-          toast(
-            error instanceof Error
-              ? error.message
-              : "대여 신청에 실패했습니다.",
-          );
-        },
-      },
-    );
+    navigate(`/reservation-waiting?modelId=${selectedModelId}`);
   };
 
   return (
@@ -149,7 +131,7 @@ const Lend = () => {
               <div className="flex justify-end mb-4">
                 <button
                   type="button"
-                  disabled={!selectedModelId || isCreatingReservation}
+                  disabled={!selectedModelId}
                   className="bg-[#060a0c] hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-sm text-white border border-neutral-400 rounded-md px-3 py-1"
                 >
                   대여
@@ -216,9 +198,9 @@ const Lend = () => {
                     e.preventDefault();
                     handleReserveEquipment();
                   }}
-                  disabled={!isPledgeAgreed || isCreatingReservation}
+                  disabled={!isPledgeAgreed}
                 >
-                  {isCreatingReservation ? "처리 중..." : "대여"}
+                  대여
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
