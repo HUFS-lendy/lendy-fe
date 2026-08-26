@@ -3,6 +3,7 @@ import { apiClient } from "./client";
 import type {
   MyReservationsResponse,
   ApiResponse,
+  ReservationQueueData,
 } from "../type/reservationUser.type";
 import { isAxiosError } from "axios";
 
@@ -45,11 +46,20 @@ export const useDoReserve = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ modelId }: { modelId: number }) => {
+    mutationFn: async ({
+      modelId,
+      admissionToken,
+    }: {
+      modelId: number;
+      admissionToken?: string | null;
+    }) => {
       try {
         const doReserveRes = await apiClient.post<ApiResponse<unknown>>(
           "/api/reservations",
           { modelId },
+          admissionToken
+            ? { headers: { "X-Reservation-Admission": admissionToken } }
+            : undefined,
         );
 
         if (!doReserveRes.data.success) {
@@ -67,6 +77,20 @@ export const useDoReserve = () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
   });
+};
+
+export const joinReservationQueue = async (): Promise<ReservationQueueData> => {
+  const response = await apiClient.post<ApiResponse<ReservationQueueData>>(
+    "/api/reservation-queue",
+  );
+  return response.data.data;
+};
+
+export const getReservationQueueStatus = async (): Promise<ReservationQueueData> => {
+  const response = await apiClient.get<ApiResponse<ReservationQueueData>>(
+    "/api/reservation-queue",
+  );
+  return response.data.data;
 };
 
 // 예약 취소

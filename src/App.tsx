@@ -35,6 +35,7 @@ import Students from "./pages/ta/students/Students";
 import KitCourseOffering from "./pages/ta/students/kitCourseOffering";
 import Courses from "./pages/admin/kit/Courses";
 import KitOffering from "./pages/ta/students/kitOffering";
+import ReservationWaiting from "./pages/ReservationWaiting";
 
 const router = createBrowserRouter([
   {
@@ -49,6 +50,14 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ),
         path: "/lend",
+      },
+      {
+        element: (
+          <ProtectedRoute>
+            <ReservationWaiting />
+          </ProtectedRoute>
+        ),
+        path: "/reservation-waiting",
       },
       {
         element: (
