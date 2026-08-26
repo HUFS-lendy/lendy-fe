@@ -51,6 +51,8 @@ export type ApiResponse<T> = {
 
 export type ReservationQueueStatus =
   | "DISABLED"
+  | "BEFORE_OPEN"
+  | "CLOSED"
   | "NOT_JOINED"
   | "WAITING"
   | "READY";
@@ -61,4 +63,6 @@ export interface ReservationQueueData {
   estimatedWaitSeconds: number | null;
   admissionToken: string | null;
   admissionExpiresInSeconds: number;
+  serverTime: string;
+  reservationOpenAt: string;
 }

@@ -1,7 +1,7 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { useAuthStore } from "../store/authStore";
 
-const baseUrl = "https://lendy.hufs.ac.kr";
+const baseUrl = import.meta.env.VITE_API_BASE_URL ?? "";
 
 export const apiClient = axios.create({
   baseURL: baseUrl,

@@ -40,10 +40,12 @@ import {
 import { toast } from "sonner";
 import { useModels } from "../api/model.api";
 import type { ModelItem } from "../type/model.type";
+import { useDoReserve } from "../api/reservationUser.api";
+import { clearReservationAdmission, getReservationAdmission } from "../lib/reservationAdmission";
 
 const ITEMS_PER_PAGE = 10;
 
-const Lend = () => {
+const Lend = ({ embedded = false }: { embedded?: boolean }) => {
   const navigate = useNavigate();
 
   const [pledgeDialogOpen, setPledgeDialogOpen] = useState(false);
@@ -52,6 +54,7 @@ const Lend = () => {
   const [currentPage, setCurrentPage] = useState(0);
 
   const { data: models = [], isLoading, isError } = useModels();
+  const { mutate: createReservation, isPending: isCreatingReservation } = useDoReserve();
 
   const equipmentList = useMemo(() => {
     return models.filter(
@@ -96,12 +99,29 @@ const Lend = () => {
       return;
     }
 
-    navigate(`/reservation-waiting?modelId=${selectedModelId}`);
+    createReservation(
+      { modelId: selectedModelId, admissionToken: getReservationAdmission() },
+      {
+        onSuccess: () => {
+          clearReservationAdmission();
+          toast("대여 신청이 완료되었습니다.");
+          navigate("/lending-state");
+        },
+        onError: (error) => {
+          const message = error instanceof Error ? error.message : "대여 신청에 실패했습니다.";
+          if (message.includes("입장권")) {
+            clearReservationAdmission();
+            navigate("/reservation", { replace: true });
+          }
+          toast(message);
+        },
+      },
+    );
   };
 
   return (
-    <div className="bg-[#060a0c] w-screen min-h-screen px-8">
-      <div className="pt-20">
+    <div className={embedded ? "w-full" : "bg-[#060a0c] w-screen min-h-screen px-8"}>
+      {!embedded && <div className="pt-20">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -118,9 +138,9 @@ const Lend = () => {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-      </div>
+      </div>}
 
-      <div className="pt-8">
+      <div className={embedded ? "" : "pt-8"}>
         <div className="font-bold text-white text-3xl pb-8">
           기자재 대여 신청
         </div>
@@ -131,7 +151,7 @@ const Lend = () => {
               <div className="flex justify-end mb-4">
                 <button
                   type="button"
-                  disabled={!selectedModelId}
+                  disabled={!selectedModelId || isCreatingReservation}
                   className="bg-[#060a0c] hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-sm text-white border border-neutral-400 rounded-md px-3 py-1"
                 >
                   대여
@@ -198,9 +218,9 @@ const Lend = () => {
                     e.preventDefault();
                     handleReserveEquipment();
                   }}
-                  disabled={!isPledgeAgreed}
+                  disabled={!isPledgeAgreed || isCreatingReservation}
                 >
-                  대여
+                  {isCreatingReservation ? "처리 중..." : "대여"}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
