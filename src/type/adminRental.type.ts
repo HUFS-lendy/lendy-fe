@@ -44,6 +44,7 @@ export interface AdminReturnItem {
   semester: string;
   rentedAt: string;
   dueAt: string | null;
+  overdueDays: number;
   specialRental: boolean;
   specialReason?: string | null;
   specialApprovedBy?: string | null;

@@ -373,8 +373,15 @@ const Returns = () => {
                       }
                     >
                       {rental.dueAt
-                        ? format(new Date(rental.dueAt), "yyyy년 MM월 dd일 HH:mm")
-                        : "-"}
+                        ? (
+                          <>
+                            <div>{format(new Date(rental.dueAt), "yyyy년 MM월 dd일 HH:mm")}</div>
+                            {rental.overdueDays > 0 && (
+                              <div className="mt-1 text-xs">{rental.overdueDays}일 연체</div>
+                            )}
+                          </>
+                        )
+                        : "별도 기한 없음"}
                     </TableCell>
                   </TableRow>
                 ))

@@ -80,3 +80,35 @@ export interface AdminItemOccupancy {
   startedAt: string;
   dueAt: string;
 }
+
+export interface ItemRentalHistoryEntry {
+  rentalId: number;
+  userId: number;
+  username: string;
+  studentId: string;
+  email: string;
+  semester: string;
+  rentedAt: string;
+  returnedAt: string | null;
+  currentlyRenting: boolean;
+  occupiedMinutes: number;
+  occupiedDays: number;
+  specialRental: boolean;
+}
+
+export interface PagedData<T> {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+export interface ItemRentalHistory {
+  itemId: number;
+  serial: string;
+  modelName: string;
+  currentState: ItemState;
+  currentRental: ItemRentalHistoryEntry | null;
+  histories: PagedData<ItemRentalHistoryEntry>;
+}

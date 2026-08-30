@@ -3,12 +3,39 @@ import { apiClient } from "./client";
 import type {
   AdminItem,
   AdminItemOccupancy,
+  ItemRentalHistory,
   ApiResponse,
   CreateAdminItemRequest,
   RegisterItemsExcelRequest,
   RegisterItemsExcelResponse,
   UpdateAdminItemRequest,
 } from "../type/adminItem.type";
+
+const fetchAdminItemHistory = async (
+  itemId: number,
+  page: number,
+  size: number,
+): Promise<ItemRentalHistory> => {
+  const res = await apiClient.get<ApiResponse<ItemRentalHistory>>(
+    `/api/admin/items/${itemId}/history`,
+    { params: { page, size } },
+  );
+  return res.data.data;
+};
+
+export const useAdminItemHistory = (
+  itemId?: number,
+  page = 0,
+  size = 10,
+  enabled = true,
+) => {
+  return useQuery({
+    queryKey: ["admin_item_history", itemId, page, size],
+    queryFn: () => fetchAdminItemHistory(itemId as number, page, size),
+    enabled: !!itemId && enabled,
+    placeholderData: (previousData) => previousData,
+  });
+};
 
 // 현재 점유자조회(대여/예약)
 const fetchAdminItemOccupancy = async (
