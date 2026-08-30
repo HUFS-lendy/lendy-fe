@@ -5,6 +5,7 @@ export type AcademicTerm = {
   code: string;
   startDate: string;
   reservationOpenAt: string | null;
+  reservationQueueCloseAt: string | null;
   endDate: string;
   active: boolean;
 };
@@ -21,6 +22,7 @@ export type CreateAcademicTermRequest = {
   term: string;
   startDate: string;
   reservationOpenAt: string;
+  reservationQueueCloseAt: string;
   endDate: string;
   active: boolean;
 };

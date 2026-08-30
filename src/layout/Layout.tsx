@@ -12,7 +12,7 @@ const Layout = () => {
   const location = useLocation();
   const isHome = location.pathname === "/";
   const isLogin = location.pathname === "/login";
-  const isReservation = location.pathname === "/reservation" || location.pathname === "/lend" || location.pathname === "/reservation-waiting";
+  const isReservation = location.pathname === "/reservation" || location.pathname === "/reservation-preview" || location.pathname === "/lend" || location.pathname === "/reservation-waiting";
   const isAdmin = location.pathname.startsWith("/admin"); // /admin 하위 전부
   const isTA = location.pathname.startsWith("/ta"); //admin 하위 전부
 

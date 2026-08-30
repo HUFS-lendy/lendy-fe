@@ -49,6 +49,7 @@ const ViewLimit = () => {
   const [startDateOpen, setStartDateOpen] = useState(false);
   const [endDateOpen, setEndDateOpen] = useState(false);
   const [reservationOpenDateOpen, setReservationOpenDateOpen] = useState(false);
+  const [queueCloseDateOpen, setQueueCloseDateOpen] = useState(false);
 
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
@@ -56,6 +57,8 @@ const ViewLimit = () => {
     Date | undefined
   >(undefined);
   const [reservationOpenTime, setReservationOpenTime] = useState("09:00");
+  const [queueCloseDate, setQueueCloseDate] = useState<Date | undefined>(undefined);
+  const [queueCloseTime, setQueueCloseTime] = useState("18:00");
 
   const [year, setYear] = useState("");
   const [selectedTerm, setSelectedTerm] = useState("");
@@ -126,6 +129,8 @@ const ViewLimit = () => {
     setEndDate(undefined);
     setReservationOpenDate(undefined);
     setReservationOpenTime("09:00");
+    setQueueCloseDate(undefined);
+    setQueueCloseTime("18:00");
     setActive("false");
   };
 
@@ -149,6 +154,10 @@ const ViewLimit = () => {
       toast("기자재 신청 시작 날짜를 선택해주세요.");
       return;
     }
+    if (!queueCloseDate) {
+      toast("티켓팅 종료 날짜를 선택해주세요.");
+      return;
+    }
 
     if (!endDate) {
       toast("종강일을 선택해주세요.");
@@ -164,16 +173,20 @@ const ViewLimit = () => {
       toast("기자재 신청 시작 일시는 종강일보다 늦을 수 없습니다.");
       return;
     }
+    const reservationOpenAt = formatDateTimeString(reservationOpenDate, reservationOpenTime);
+    const reservationQueueCloseAt = formatDateTimeString(queueCloseDate, queueCloseTime);
+    if (reservationQueueCloseAt <= reservationOpenAt) {
+      toast("티켓팅 종료 일시는 예약 시작 일시보다 늦어야 합니다.");
+      return;
+    }
 
     createAcademicTerm(
       {
         year: Number(year),
         term: selectedTerm,
         startDate: formatDateToKSTString(startDate),
-        reservationOpenAt: formatDateTimeString(
-          reservationOpenDate,
-          reservationOpenTime,
-        ),
+        reservationOpenAt,
+        reservationQueueCloseAt,
         endDate: formatDateToKSTString(endDate),
         active: active === "true",
       },
@@ -249,6 +262,15 @@ const ViewLimit = () => {
       setReservationOpenTime("09:00");
     }
 
+    if (selectedAcademicTerm.reservationQueueCloseAt) {
+      const queueClose = new Date(selectedAcademicTerm.reservationQueueCloseAt);
+      setQueueCloseDate(queueClose);
+      setQueueCloseTime(`${String(queueClose.getHours()).padStart(2, "0")}:${String(queueClose.getMinutes()).padStart(2, "0")}`);
+    } else {
+      setQueueCloseDate(undefined);
+      setQueueCloseTime("18:00");
+    }
+
     setActive(selectedAcademicTerm.active ? "true" : "false");
   };
 
@@ -277,6 +299,10 @@ const ViewLimit = () => {
       toast("기자재 신청 시작 날짜를 선택해주세요.");
       return;
     }
+    if (!queueCloseDate) {
+      toast("티켓팅 종료 날짜를 선택해주세요.");
+      return;
+    }
 
     if (!endDate) {
       toast("종강일을 선택해주세요.");
@@ -292,6 +318,12 @@ const ViewLimit = () => {
       toast("기자재 신청 시작 일시는 종강일보다 늦을 수 없습니다.");
       return;
     }
+    const reservationOpenAt = formatDateTimeString(reservationOpenDate, reservationOpenTime);
+    const reservationQueueCloseAt = formatDateTimeString(queueCloseDate, queueCloseTime);
+    if (reservationQueueCloseAt <= reservationOpenAt) {
+      toast("티켓팅 종료 일시는 예약 시작 일시보다 늦어야 합니다.");
+      return;
+    }
 
     updateAcademicTerm(
       {
@@ -299,10 +331,8 @@ const ViewLimit = () => {
         year: Number(year),
         term: selectedTerm,
         startDate: formatDateToKSTString(startDate),
-        reservationOpenAt: formatDateTimeString(
-          reservationOpenDate,
-          reservationOpenTime,
-        ),
+        reservationOpenAt,
+        reservationQueueCloseAt,
         endDate: formatDateToKSTString(endDate),
         active: active === "true",
       },
@@ -348,6 +378,13 @@ const ViewLimit = () => {
         <div className="font-bold text-white text-3xl pb-8">학기 설정</div>
 
         <div className="flex space-x-4 justify-end">
+          <button
+            type="button"
+            className="border cursor-pointer px-3 py-1 rounded-sm hover:bg-neutral-400 hover:text-black border-neutral-400 text-sm"
+            onClick={() => window.open("/reservation-preview", "_blank", "noopener,noreferrer")}
+          >
+            대기열 미리보기
+          </button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <div className="border cursor-pointer px-3 py-1 rounded-sm hover:bg-neutral-400 hover:text-black border-neutral-400 text-sm">
@@ -450,6 +487,24 @@ const ViewLimit = () => {
                       value={reservationOpenTime}
                       onChange={(e) => setReservationOpenTime(e.target.value)}
                     />
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="pb-2">티켓팅 대기열 종료 일시</Label>
+                  <p className="text-xs text-neutral-400 pb-2">이 시각 이후에는 대기열 없이 일반 예약으로 전환됩니다.</p>
+                  <div className="flex items-center gap-3">
+                    <Popover open={queueCloseDateOpen} onOpenChange={setQueueCloseDateOpen}>
+                      <PopoverTrigger asChild>
+                        <div className="inline-block w-fit border text-sm rounded-sm px-3 py-1 cursor-pointer">
+                          {queueCloseDate ? queueCloseDate.toLocaleDateString() : "날짜 선택"}
+                        </div>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto rounded-2xl overflow-hidden p-0 bg-white text-black border border-black/10" align="start">
+                        <Calendar mode="single" selected={queueCloseDate} captionLayout="dropdown" onSelect={(d) => { setQueueCloseDate(d); setQueueCloseDateOpen(false); }} />
+                      </PopoverContent>
+                    </Popover>
+                    <Input type="time" className="w-40" value={queueCloseTime} onChange={(e) => setQueueCloseTime(e.target.value)} />
                   </div>
                 </div>
 
@@ -619,6 +674,24 @@ const ViewLimit = () => {
                 </div>
 
                 <div>
+                  <Label className="pb-2">티켓팅 대기열 종료 일시</Label>
+                  <p className="text-xs text-neutral-400 pb-2">이 시각 이후에는 대기열 없이 일반 예약으로 전환됩니다.</p>
+                  <div className="flex items-center gap-3">
+                    <Popover open={queueCloseDateOpen} onOpenChange={setQueueCloseDateOpen}>
+                      <PopoverTrigger asChild>
+                        <div className="inline-block w-fit border text-sm rounded-sm px-3 py-1 cursor-pointer">
+                          {queueCloseDate ? queueCloseDate.toLocaleDateString() : "날짜 선택"}
+                        </div>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto rounded-2xl overflow-hidden p-0 bg-white text-black border border-black/10" align="start">
+                        <Calendar mode="single" selected={queueCloseDate} captionLayout="dropdown" onSelect={(d) => { setQueueCloseDate(d); setQueueCloseDateOpen(false); }} />
+                      </PopoverContent>
+                    </Popover>
+                    <Input type="time" className="w-40" value={queueCloseTime} onChange={(e) => setQueueCloseTime(e.target.value)} />
+                  </div>
+                </div>
+
+                <div>
                   <Label className="pb-2">종강일</Label>
                   <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
                     <PopoverTrigger asChild>
@@ -726,6 +799,9 @@ const ViewLimit = () => {
                 <TableHead className="text-white text-center">
                   기자재 신청 시작 일시
                 </TableHead>
+                <TableHead className="text-white text-center">
+                  티켓팅 종료 일시
+                </TableHead>
                 <TableHead className="text-white text-center">종강일</TableHead>
                 <TableHead className="text-white text-center">
                   현재 학기
@@ -736,14 +812,14 @@ const ViewLimit = () => {
             <TableBody className="cursor-pointer">
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-6">
+                  <TableCell colSpan={8} className="text-center py-6">
                     불러오는 중...
                   </TableCell>
                 </TableRow>
               ) : isError ? (
                 <TableRow>
                   <TableCell
-                    colSpan={7}
+                    colSpan={8}
                     className="text-center py-6 text-red-300"
                   >
                     학기 목록을 불러오지 못했습니다.
@@ -751,7 +827,7 @@ const ViewLimit = () => {
                 </TableRow>
               ) : academicTerms.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-6">
+                  <TableCell colSpan={8} className="text-center py-6">
                     등록된 학기 정보가 없습니다.
                   </TableCell>
                 </TableRow>
@@ -777,6 +853,9 @@ const ViewLimit = () => {
                     <TableCell>{formatDateLabel(term.startDate)}</TableCell>
                     <TableCell>
                       {formatReservationOpenAtLabel(term.reservationOpenAt)}
+                    </TableCell>
+                    <TableCell>
+                      {formatReservationOpenAtLabel(term.reservationQueueCloseAt)}
                     </TableCell>
                     <TableCell>{formatDateLabel(term.endDate)}</TableCell>
                     <TableCell>{term.active ? "O" : ""}</TableCell>

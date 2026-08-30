@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Navigate } from "react-router-dom";
 import { CalendarClock, Clock3, Laptop, LogOut, UserRound } from "lucide-react";
 import Logo from "../assets/cse-logo.png";
 import { getReservationQueueStatus, joinReservationQueue } from "../api/reservationUser.api";
@@ -13,7 +14,7 @@ const pad = (value: number) => String(value).padStart(2, "0");
 const dateText = (date: Date) => `${date.getFullYear()}. ${pad(date.getMonth() + 1)}. ${pad(date.getDate())}.`;
 const timeText = (date: Date) => `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 
-const ReservationWaiting = () => {
+const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
   const { logout } = useAuth();
   const { data: me } = useMe();
   const [view, setView] = useState<View>("TIME");
@@ -45,22 +46,52 @@ const ReservationWaiting = () => {
   }, []);
 
   useEffect(() => {
+    if (preview) {
+      const now = new Date();
+      const openAt = new Date(now.getTime() + 15 * 60 * 1000);
+      applyStatus({
+        status: "BEFORE_OPEN",
+        position: null,
+        estimatedWaitSeconds: Math.ceil(37 / 5),
+        admissionToken: null,
+        admissionExpiresInSeconds: 0,
+        serverTime: now.toISOString(),
+        reservationOpenAt: openAt.toISOString(),
+      });
+      return;
+    }
     let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const check = async () => {
+      let nextDelay = 5000 + Math.floor(Math.random() * 1000);
       try {
         const data = await getReservationQueueStatus();
-        if (!cancelled) applyStatus(data);
+        if (!cancelled) {
+          applyStatus(data);
+          if (data.status === "WAITING") {
+            nextDelay = 1250 + Math.floor(Math.random() * 1000);
+          } else if (data.status === "BEFORE_OPEN") {
+            const secondsLeft = Math.max(
+              0,
+              (new Date(data.reservationOpenAt).getTime() - new Date(data.serverTime).getTime()) / 1000,
+            );
+            nextDelay = secondsLeft <= 30
+              ? 900 + Math.floor(Math.random() * 400)
+              : 4000 + Math.floor(Math.random() * 2000);
+          }
+        }
       } catch (cause) {
         if (!cancelled) setError(cause instanceof Error ? cause.message : "서버에 연결할 수 없습니다.");
+        nextDelay = 5000;
       }
+      if (!cancelled) timer = setTimeout(() => void check(), nextDelay);
     };
     void check();
-    const timer = setInterval(() => void check(), 1000);
     return () => {
       cancelled = true;
-      clearInterval(timer);
+      if (timer) clearTimeout(timer);
     };
-  }, [applyStatus]);
+  }, [applyStatus, preview]);
 
   const openAt = queue?.reservationOpenAt ? new Date(queue.reservationOpenAt) : null;
   const canEnter = queue?.status !== "BEFORE_OPEN" && queue?.status !== "CLOSED" && queue !== null;
@@ -75,6 +106,15 @@ const ReservationWaiting = () => {
 
   const enterReservation = async () => {
     setView("RESERVATION");
+    if (preview) {
+      setQueue((current) => current ? {
+        ...current,
+        status: "WAITING",
+        position: 37,
+        estimatedWaitSeconds: 8,
+      } : current);
+      return;
+    }
     if (!canEnter || joining) return;
     setJoining(true);
     setError(null);
@@ -92,6 +132,10 @@ const ReservationWaiting = () => {
     active ? "border-white bg-white/10 text-white" : "border-transparent text-neutral-400 hover:bg-white/5 hover:text-white",
     "cursor-pointer",
   ].join(" ");
+
+  if (preview && me && me.role !== "ADMIN") {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="flex min-h-screen bg-[#060a0c] text-white">
@@ -133,6 +177,12 @@ const ReservationWaiting = () => {
       </aside>
 
       <main className="ml-64 min-h-screen w-[calc(100%-16rem)] px-12 py-12">
+        {preview && (
+          <div className="mx-auto mb-6 flex max-w-6xl items-center justify-between border border-white/10 bg-white/[0.04] px-5 py-3 text-xs text-neutral-400">
+            <span>관리자 미리보기 · 실제 대기열과 연결되지 않습니다.</span>
+            <button type="button" className="text-white hover:underline" onClick={() => window.close()}>미리보기 닫기</button>
+          </div>
+        )}
         {view === "TIME" && (
           <section className="mx-auto max-w-5xl">
             <p className="text-xs tracking-[0.14em] text-neutral-500">RESERVATION SERVICE</p>
