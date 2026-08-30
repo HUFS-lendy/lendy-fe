@@ -50,6 +50,14 @@ const router = createBrowserRouter([
         ),
         path: "/reservation",
       },
+      {
+        element: (
+          <ProtectedRoute>
+            <ReservationWaiting preview />
+          </ProtectedRoute>
+        ),
+        path: "/reservation-preview",
+      },
       { element: <Navigate to="/reservation" replace />, path: "/lend" },
       { element: <Navigate to="/reservation" replace />, path: "/reservation-waiting" },
       {

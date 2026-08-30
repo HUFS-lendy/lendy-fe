@@ -44,6 +44,7 @@ export const useCreateAcademicTerm = () => {
       term,
       startDate,
       reservationOpenAt,
+      reservationQueueCloseAt,
       endDate,
       active,
     }: CreateAcademicTermRequest) => {
@@ -55,6 +56,7 @@ export const useCreateAcademicTerm = () => {
             term,
             startDate,
             reservationOpenAt,
+            reservationQueueCloseAt,
             endDate,
             active,
           },
@@ -112,6 +114,7 @@ export const useUpdateAcademicTerm = () => {
       term,
       startDate,
       reservationOpenAt,
+      reservationQueueCloseAt,
       endDate,
       active,
     }: {
@@ -120,6 +123,7 @@ export const useUpdateAcademicTerm = () => {
       term: string;
       startDate: string;
       reservationOpenAt: string;
+      reservationQueueCloseAt: string;
       endDate: string;
       active: boolean;
     }) => {
@@ -131,6 +135,7 @@ export const useUpdateAcademicTerm = () => {
             term,
             startDate,
             reservationOpenAt,
+            reservationQueueCloseAt,
             endDate,
             active,
           },
