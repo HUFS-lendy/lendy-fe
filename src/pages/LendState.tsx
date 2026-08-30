@@ -427,7 +427,8 @@ const LendState = () => {
                   <TableHead className="text-white text-center">
                     시리얼 번호
                   </TableHead>
-                  <TableHead className="text-white text-center">학기</TableHead>
+                  <TableHead className="text-white text-center">대여일</TableHead>
+                  <TableHead className="text-white text-center">반납 정보</TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -435,7 +436,7 @@ const LendState = () => {
                 {isRentalLoading && (
                   <TableRow>
                     <TableCell
-                      colSpan={5}
+                      colSpan={6}
                       className="text-center text-gray-300 py-8"
                     >
                       불러오는 중...
@@ -446,7 +447,7 @@ const LendState = () => {
                 {isRentalError && (
                   <TableRow>
                     <TableCell
-                      colSpan={5}
+                      colSpan={6}
                       className="text-center text-red-400 py-8"
                     >
                       조회 중 오류가 발생했습니다.
@@ -462,7 +463,7 @@ const LendState = () => {
                   rentalList.length === 0 && (
                     <TableRow>
                       <TableCell
-                        colSpan={5}
+                        colSpan={6}
                         className="text-center text-gray-300 py-8"
                       >
                         대여 내역이 없습니다.
@@ -474,11 +475,42 @@ const LendState = () => {
                   !isRentalError &&
                   rentalList.map((item) => (
                     <TableRow key={item.rentalId}>
-                      <TableCell>{getRentalStatusText(item.status)}</TableCell>
+                      <TableCell
+                        className={item.status === "OVERDUE" ? "font-bold text-red-300" : ""}
+                      >
+                        {getRentalStatusText(item.status)}
+                        {item.overdueDays > 0 && (
+                          <div className="mt-1 text-xs">{item.overdueDays}일 연체</div>
+                        )}
+                      </TableCell>
                       <TableCell>{item.category}</TableCell>
-                      <TableCell>{item.modelName}</TableCell>
+                      <TableCell>
+                        <div>{item.modelName}</div>
+                        <div className="mt-1 text-xs text-neutral-500">
+                          {item.specialRental ? "특별 대여" : item.semester}
+                        </div>
+                      </TableCell>
                       <TableCell>{item.itemSerial}</TableCell>
-                      <TableCell>{item.semester}</TableCell>
+                      <TableCell>{formatDate(item.rentedAt)}</TableCell>
+                      <TableCell>
+                        {item.status === "RETURNED" ? (
+                          <>
+                            <div>반납 완료</div>
+                            <div className="mt-1 text-xs text-neutral-400">
+                              {formatDate(item.returnedAt ?? undefined)}
+                            </div>
+                          </>
+                        ) : item.specialRental ? (
+                          <span className="text-neutral-300">별도 반납기한 없음</span>
+                        ) : (
+                          <>
+                            <div className={item.status === "OVERDUE" ? "font-bold text-red-300" : ""}>
+                              {formatDate(item.dueAt ?? undefined)}
+                            </div>
+                            <div className="mt-1 text-xs text-neutral-400">반납기한</div>
+                          </>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
               </TableBody>

@@ -24,6 +24,11 @@ export interface MyRental {
   itemSerial: string;
   semester: string;
   status: RentalStatus;
+  rentedAt: string;
+  dueAt: string | null;
+  returnedAt: string | null;
+  overdueDays: number;
+  specialRental: boolean;
 }
 
 export interface PageSort {
