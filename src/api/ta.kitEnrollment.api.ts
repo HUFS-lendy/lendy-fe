@@ -7,6 +7,7 @@ import type {
   CourseEnrollment,
   CreateGuestEnrollmentRequest,
   CreateInternalEnrollmentRequest,
+  BatchEnrollmentResult,
 } from "../type/ta.kitEnrollment.type";
 
 const getCourseEnrollmentsQueryKey = (kitCourseOfferingId: number) => [
@@ -77,6 +78,28 @@ export const useCreateInternalEnrollment = () => {
   });
 };
 
+export const useCreateInternalEnrollmentsBatch = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ kitCourseOfferingId, studentIds }: { kitCourseOfferingId: number; studentIds: string[] }) => {
+      const res = await apiClient.post<ApiResponse<BatchEnrollmentResult>>(
+        `/api/ta/kit-course-offerings/${kitCourseOfferingId}/enrollments/internal/batch`,
+        { studentIds },
+      );
+      if (!res.data.success) throw new Error(res.data.message || "수강생 일괄 등록에 실패했습니다.");
+      return res.data;
+    },
+    onSuccess: async (response, variables) => {
+      const result = response.data;
+      toast.success(`신규 ${result.registeredCount}명 등록 완료`, {
+        description: `중복 ${result.duplicatedCount}명 · 미가입/등록불가 ${result.notFoundCount}명`,
+      });
+      await queryClient.invalidateQueries({ queryKey: getCourseEnrollmentsQueryKey(variables.kitCourseOfferingId) });
+    },
+    onError: (error) => toast.error(getErrorMessage(error, "수강생 일괄 등록에 실패했습니다.")),
+  });
+};
+
 // 게스트 학생 수강 등록
 const createGuestEnrollment = async ({
   kitCourseOfferingId,
@@ -115,22 +138,6 @@ export const useCreateGuestEnrollment = () => {
   });
 };
 
-// 수강 상태 DROPPED 변경
-const dropEnrollment = async ({
-  kitCourseOfferingId,
-  kitEnrollmentId,
-}: {
-  kitCourseOfferingId: number;
-  kitEnrollmentId: number;
-}): Promise<ApiResponse<unknown>> => {
-  const res = await apiClient.patch<ApiResponse<unknown>>(
-    `/api/ta/kit-course-offerings/${kitCourseOfferingId}/enrollments/${kitEnrollmentId}/drop`,
-  );
-  if (!res.data.success)
-    throw new Error(res.data.message || "수강 상태 변경에 실패했습니다.");
-  return res.data;
-};
-
 const dropEnrollments = async ({
   kitCourseOfferingId,
   kitEnrollmentIds,
@@ -141,17 +148,12 @@ const dropEnrollments = async ({
   if (kitEnrollmentIds.length === 0)
     throw new Error("Drop 처리할 수강생을 선택해주세요.");
 
-  const responses: ApiResponse<unknown>[] = [];
-
-  for (const kitEnrollmentId of kitEnrollmentIds) {
-    const response = await dropEnrollment({
-      kitCourseOfferingId,
-      kitEnrollmentId,
-    });
-    responses.push(response);
-  }
-
-  return responses;
+  const res = await apiClient.patch<ApiResponse<unknown>>(
+    `/api/ta/kit-course-offerings/${kitCourseOfferingId}/enrollments/drop-batch`,
+    { kitEnrollmentIds },
+  );
+  if (!res.data.success) throw new Error(res.data.message || "수강 취소 처리에 실패했습니다.");
+  return [res.data];
 };
 
 export const useDropEnrollments = () => {
@@ -177,22 +179,6 @@ export const useDropEnrollments = () => {
   });
 };
 
-// 수강 상태 ENROLLED 변경
-const enrollEnrollment = async ({
-  kitCourseOfferingId,
-  kitEnrollmentId,
-}: {
-  kitCourseOfferingId: number;
-  kitEnrollmentId: number;
-}): Promise<ApiResponse<unknown>> => {
-  const res = await apiClient.patch<ApiResponse<unknown>>(
-    `/api/ta/kit-course-offerings/${kitCourseOfferingId}/enrollments/${kitEnrollmentId}/enroll`,
-  );
-  if (!res.data.success)
-    throw new Error(res.data.message || "수강 상태 변경에 실패했습니다.");
-  return res.data;
-};
-
 const enrollEnrollments = async ({
   kitCourseOfferingId,
   kitEnrollmentIds,
@@ -203,17 +189,12 @@ const enrollEnrollments = async ({
   if (kitEnrollmentIds.length === 0)
     throw new Error("Enroll 처리할 수강생을 선택해주세요.");
 
-  const responses: ApiResponse<unknown>[] = [];
-
-  for (const kitEnrollmentId of kitEnrollmentIds) {
-    const response = await enrollEnrollment({
-      kitCourseOfferingId,
-      kitEnrollmentId,
-    });
-    responses.push(response);
-  }
-
-  return responses;
+  const res = await apiClient.patch<ApiResponse<unknown>>(
+    `/api/ta/kit-course-offerings/${kitCourseOfferingId}/enrollments/enroll-batch`,
+    { kitEnrollmentIds },
+  );
+  if (!res.data.success) throw new Error(res.data.message || "수강 등록 처리에 실패했습니다.");
+  return [res.data];
 };
 
 export const useEnrollEnrollments = () => {

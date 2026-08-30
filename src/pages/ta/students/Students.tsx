@@ -5,6 +5,7 @@ import {
   useCourseEnrollments,
   useCreateGuestEnrollment,
   useCreateInternalEnrollment,
+  useCreateInternalEnrollmentsBatch,
   useDropEnrollments,
   useEnrollEnrollments,
 } from "../../../api/ta.kitEnrollment.api";
@@ -38,18 +39,25 @@ import {
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Checkbox } from "../../../components/ui/checkbox";
+import { Textarea } from "../../../components/ui/textarea";
+import { useMe } from "../../../api/user.api";
 
 const Students = () => {
   const { kitCourseOfferingId } = useParams();
   const courseOfferingId = Number(kitCourseOfferingId);
+  const { data: me } = useMe();
+  const operationListPath = me?.role === "ADMIN" ? "/admin/course-operations" : "/ta/kit-course-offering";
 
   const [isSelectTypeDialogOpen, setIsSelectTypeDialogOpen] = useState(false);
   const [isInternalDialogOpen, setIsInternalDialogOpen] = useState(false);
   const [isGuestDialogOpen, setIsGuestDialogOpen] = useState(false);
+  const [isBatchDialogOpen, setIsBatchDialogOpen] = useState(false);
   const [isDropDialogOpen, setIsDropDialogOpen] = useState(false);
   const [isEnrollDialogOpen, setIsEnrollDialogOpen] = useState(false);
 
   const [studentId, setStudentId] = useState("");
+  const [batchStudentIds, setBatchStudentIds] = useState("");
+  const [batchResult, setBatchResult] = useState<{ duplicatedStudentIds: string[]; notFoundStudentIds: string[] } | null>(null);
   const [guestUsername, setGuestUsername] = useState("");
   const [guestStudentId, setGuestStudentId] = useState("");
   const [guestDepartmentName, setGuestDepartmentName] = useState("");
@@ -67,6 +75,8 @@ const Students = () => {
     useCreateInternalEnrollment();
   const { mutate: createGuestEnrollment, isPending: isCreatingGuest } =
     useCreateGuestEnrollment();
+  const { mutate: createInternalEnrollmentsBatch, isPending: isCreatingBatch } =
+    useCreateInternalEnrollmentsBatch();
   const { mutate: dropEnrollments, isPending: isDropping } =
     useDropEnrollments();
   const { mutate: enrollEnrollments, isPending: isEnrolling } =
@@ -116,6 +126,26 @@ const Students = () => {
   const handleOpenGuestDialog = () => {
     setIsSelectTypeDialogOpen(false);
     setIsGuestDialogOpen(true);
+  };
+
+  const handleOpenBatchDialog = () => {
+    setIsSelectTypeDialogOpen(false);
+    setBatchStudentIds("");
+    setBatchResult(null);
+    setIsBatchDialogOpen(true);
+  };
+
+  const parsedBatchStudentIds = Array.from(new Set(batchStudentIds.split(/[\s,;]+/).map((value) => value.trim()).filter(Boolean)));
+
+  const handleCreateBatch = () => {
+    if (parsedBatchStudentIds.length === 0) {
+      toast.warning("등록할 학번을 입력해주세요.");
+      return;
+    }
+    createInternalEnrollmentsBatch(
+      { kitCourseOfferingId: courseOfferingId, studentIds: parsedBatchStudentIds },
+      { onSuccess: (response) => setBatchResult(response.data) },
+    );
   };
 
   const handleSelectAll = (checked: boolean) => {
@@ -276,7 +306,7 @@ const Students = () => {
             <BreadcrumbItem>
               <BreadcrumbLink
                 className="text-white hover:text-gray-100"
-                href="/ta/kit-course-offering"
+                href={operationListPath}
               >
                 조교
               </BreadcrumbLink>
@@ -323,7 +353,7 @@ const Students = () => {
                   </AlertDialogDescription>
                 </AlertDialogHeader>
 
-                <div className="grid grid-cols-2 gap-3 pt-4">
+                <div className="grid grid-cols-3 gap-3 pt-4">
                   <button
                     type="button"
                     className="border rounded-md px-4 py-6 text-left hover:bg-neutral-100 hover:text-black"
@@ -332,6 +362,17 @@ const Students = () => {
                     <div className="text-lg font-semibold">내부 학생</div>
                     <div className="mt-2 text-sm text-muted-foreground">
                       학번으로 기존 사용자 계정을 찾아 등록합니다.
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="border rounded-md px-4 py-6 text-left hover:bg-neutral-100 hover:text-black"
+                    onClick={handleOpenBatchDialog}
+                  >
+                    <div className="text-lg font-semibold">명단 일괄 등록</div>
+                    <div className="mt-2 text-sm text-muted-foreground">
+                      엑셀의 학번 열을 그대로 붙여넣습니다.
                     </div>
                   </button>
 
@@ -351,6 +392,45 @@ const Students = () => {
                   <AlertDialogCancel className="cursor-pointer">
                     취소
                   </AlertDialogCancel>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog open={isBatchDialogOpen} onOpenChange={(open) => {
+              if (isCreatingBatch) return;
+              setIsBatchDialogOpen(open);
+              if (!open) { setBatchStudentIds(""); setBatchResult(null); }
+            }}>
+              <AlertDialogContent className="max-w-2xl">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>수강생 명단 일괄 등록</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    엑셀에서 학번 열을 복사해 붙여넣으세요. 줄바꿈, 쉼표, 공백을 자동으로 구분하고 중복은 한 번만 처리합니다.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <Textarea
+                  className="min-h-52 font-mono"
+                  value={batchStudentIds}
+                  onChange={(event) => { setBatchStudentIds(event.target.value); setBatchResult(null); }}
+                  placeholder={"202600001\n202600002\n202600003"}
+                  disabled={isCreatingBatch}
+                />
+                <p className="text-sm text-muted-foreground">인식된 학번 {parsedBatchStudentIds.length}개 · 최대 500개</p>
+                {batchResult && (
+                  <div className="space-y-2 rounded-md border p-4 text-sm">
+                    <p className="font-semibold">처리 결과</p>
+                    <p>중복: {batchResult.duplicatedStudentIds.length ? batchResult.duplicatedStudentIds.join(", ") : "없음"}</p>
+                    <p className={batchResult.notFoundStudentIds.length ? "text-red-600" : ""}>미가입/등록 불가: {batchResult.notFoundStudentIds.length ? batchResult.notFoundStudentIds.join(", ") : "없음"}</p>
+                  </div>
+                )}
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={isCreatingBatch}>닫기</AlertDialogCancel>
+                  <AlertDialogAction
+                    disabled={isCreatingBatch || parsedBatchStudentIds.length === 0 || parsedBatchStudentIds.length > 500}
+                    onClick={(event) => { event.preventDefault(); handleCreateBatch(); }}
+                  >
+                    {isCreatingBatch ? "등록 중..." : `${parsedBatchStudentIds.length}명 등록`}
+                  </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>

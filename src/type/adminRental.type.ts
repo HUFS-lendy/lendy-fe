@@ -16,6 +16,9 @@ export interface Rental {
   semester: string;
   createdAt: string;
   dueAt: string;
+  specialRental: boolean;
+  specialReason?: string | null;
+  specialApprovedBy?: string | null;
 }
 
 // 수기 대여 등록 승인 요청 타입
@@ -23,6 +26,8 @@ export interface CreateManualRentalRequest {
   studentId: string;
   itemId: number;
   sendMail: boolean;
+  specialRental?: boolean;
+  reason?: string;
 }
 
 // 반납 조회 타입
@@ -38,7 +43,10 @@ export interface AdminReturnItem {
   email: string;
   semester: string;
   rentedAt: string;
-  dueAt: string;
+  dueAt: string | null;
+  specialRental: boolean;
+  specialReason?: string | null;
+  specialApprovedBy?: string | null;
 }
 
 export interface AdminReturnsPage {

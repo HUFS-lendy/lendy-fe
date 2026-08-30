@@ -36,10 +36,13 @@ import {
   AlertDialogTrigger,
 } from "../../../components/ui/alert-dialog";
 import { Checkbox } from "../../../components/ui/checkbox";
+import { useMe } from "../../../api/user.api";
 
 const KitOffering = () => {
   const { kitCourseOfferingId } = useParams();
   const courseOfferingId = Number(kitCourseOfferingId);
+  const { data: me } = useMe();
+  const operationListPath = me?.role === "ADMIN" ? "/admin/course-operations" : "/ta/kit-course-offering";
 
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
   const [isRentDialogOpen, setIsRentDialogOpen] = useState(false);
@@ -92,6 +95,11 @@ const KitOffering = () => {
     normalizeStatus(assignment.status) === "ASSIGNED";
   const isReturnableAssignment = (assignment: KitAssignment) =>
     normalizeStatus(assignment.status) === "RENTED";
+  const assignedCount = assignments.filter(isRentableAssignment).length;
+  const rentedCount = assignments.filter(isReturnableAssignment).length;
+  const returnedCount = assignments.filter(
+    (assignment) => normalizeStatus(assignment.status) === "RETURNED",
+  ).length;
 
   const formatDateTime = (date?: string) => {
     if (!date) return "-";
@@ -147,12 +155,20 @@ const KitOffering = () => {
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       setSelectedAssignmentIds(
-        assignments.map((assignment) => assignment.kitAssignmentId),
+        assignments
+          .filter((assignment) => isRentableAssignment(assignment) || isReturnableAssignment(assignment))
+          .map((assignment) => assignment.kitAssignmentId),
       );
       return;
     }
 
     setSelectedAssignmentIds([]);
+  };
+
+  const selectByStatus = (predicate: (assignment: KitAssignment) => boolean) => {
+    setSelectedAssignmentIds(
+      assignments.filter(predicate).map((assignment) => assignment.kitAssignmentId),
+    );
   };
 
   const handleGenerateKitAssignments = () => {
@@ -257,7 +273,7 @@ const KitOffering = () => {
             <BreadcrumbItem>
               <BreadcrumbLink
                 className="text-white hover:text-gray-100"
-                href="/ta/kit-course-offering"
+                href={operationListPath}
               >
                 조교
               </BreadcrumbLink>
@@ -280,6 +296,22 @@ const KitOffering = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={isProcessing || assignedCount === 0}
+              onClick={() => selectByStatus(isRentableAssignment)}
+              className="border cursor-pointer px-3 py-1 rounded-sm border-neutral-600 text-sm disabled:cursor-not-allowed disabled:text-neutral-600"
+            >
+              배정됨 전체 선택
+            </button>
+            <button
+              type="button"
+              disabled={isProcessing || rentedCount === 0}
+              onClick={() => selectByStatus(isReturnableAssignment)}
+              className="border cursor-pointer px-3 py-1 rounded-sm border-neutral-600 text-sm disabled:cursor-not-allowed disabled:text-neutral-600"
+            >
+              대여중 전체 선택
+            </button>
             <AlertDialog
               open={isGenerateDialogOpen}
               onOpenChange={(open) => {
@@ -430,12 +462,25 @@ const KitOffering = () => {
           </div>
         </div>
 
-        <div className="mt-8">
+        <div className="mt-8 grid grid-cols-4 gap-3">
+          {[
+            ["전체 배정", assignments.length],
+            ["배부 대기", assignedCount],
+            ["대여 중", rentedCount],
+            ["반납 완료", returnedCount],
+          ].map(([label, count]) => (
+            <div key={label} className="border border-neutral-700 bg-[#0d1117] px-5 py-4">
+              <p className="text-xs text-neutral-500">{label}</p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums">{count}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4">
           <Table className="text-white text-center border border-neutral-700">
             <TableHeader className="text-center border-b bg-[#11141b] hover:bg-[#11141b] border-neutral-700">
               <TableRow>
                 <TableHead className="text-white text-center w-12">
-                  <TableHead className="text-white text-center w-12">
                     <Checkbox
                       checked={
                         isAllSelected
@@ -454,7 +499,6 @@ const KitOffering = () => {
                       }
                       aria-label="전체 수강생 선택"
                     />
-                  </TableHead>
                 </TableHead>
                 <TableHead className="text-white text-center">이름</TableHead>
                 <TableHead className="text-white text-center">학번</TableHead>

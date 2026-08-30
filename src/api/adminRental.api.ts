@@ -65,11 +65,11 @@ export const useManualRental = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ studentId, itemId, sendMail }: CreateManualRentalRequest) => {
+    mutationFn: async ({ studentId, itemId, sendMail, specialRental, reason }: CreateManualRentalRequest) => {
       try {
         const res = await apiClient.post<ApiResponse<Rental>>(
-          "/api/admin/manual-rentals",
-          { studentId, itemId, sendMail },
+          specialRental ? "/api/admin/manual-rentals/special" : "/api/admin/manual-rentals",
+          specialRental ? { studentId, itemId, reason } : { studentId, itemId, sendMail },
         );
 
         if (!res.data.success) {

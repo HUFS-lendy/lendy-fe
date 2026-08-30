@@ -128,7 +128,7 @@ const Returns = () => {
     );
   };
 
-  const isOverdue = (dueAt?: string) => {
+  const isOverdue = (dueAt?: string | null) => {
     if (!dueAt) return false;
     return new Date(dueAt).getTime() < Date.now();
   };
@@ -253,6 +253,19 @@ const Returns = () => {
                           : "-"}
                       </TableCell>
                     </TableRow>
+                    {selectedRental?.specialRental && (
+                      <TableRow className="border-neutral-200 hover:bg-white">
+                        <TableCell className="w-1/6 bg-neutral-300">
+                          특별 대여 사유
+                        </TableCell>
+                        <TableCell className="text-left px-6 text-black">
+                          {selectedRental.specialReason || "-"}
+                          <span className="ml-2 text-neutral-500">
+                            · 승인 {selectedRental.specialApprovedBy || "관리자"}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </div>
@@ -287,6 +300,7 @@ const Returns = () => {
               <TableHead className="text-white text-center">기자재명</TableHead>
               <TableHead className="text-white text-center">대여자</TableHead>
               <TableHead className="text-white text-center">학번</TableHead>
+              <TableHead className="text-white text-center">구분</TableHead>
               <TableHead className="text-white text-center">대여일</TableHead>
               <TableHead className="text-white text-center">반납기한</TableHead>
             </TableRow>
@@ -295,14 +309,14 @@ const Returns = () => {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-6 text-center">
+                <TableCell colSpan={9} className="py-6 text-center">
                   불러오는 중...
                 </TableCell>
               </TableRow>
             ) : isError ? (
               <TableRow>
                 <TableCell
-                  colSpan={8}
+                  colSpan={9}
                   className="py-6 text-center text-red-300"
                 >
                   반납 대상을 불러오지 못했습니다.
@@ -310,24 +324,12 @@ const Returns = () => {
               </TableRow>
             ) : rentals.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-6 text-center">
+                <TableCell colSpan={9} className="py-6 text-center">
                   조회된 대여 중 항목이 없습니다.
                 </TableCell>
               </TableRow>
             ) : (
-              rentals.map(
-                (
-                  rental: {
-                    rentalId: number;
-                    serial: string;
-                    modelName: string;
-                    username: string;
-                    studentId: string;
-                    rentedAt: string;
-                    dueAt: string;
-                  },
-                  index: number,
-                ) => (
+              rentals.map((rental, index) => (
                   <TableRow
                     key={rental.rentalId}
                     className="cursor-pointer"
@@ -353,6 +355,11 @@ const Returns = () => {
                     <TableCell>{rental.username}</TableCell>
                     <TableCell>{rental.studentId}</TableCell>
                     <TableCell>
+                      {rental.specialRental ? (
+                        <span className="rounded border border-white/30 px-2 py-1 text-xs">특별 대여</span>
+                      ) : "일반"}
+                    </TableCell>
+                    <TableCell>
                       {rental.rentedAt
                         ? format(
                             new Date(rental.rentedAt),
@@ -370,8 +377,7 @@ const Returns = () => {
                         : "-"}
                     </TableCell>
                   </TableRow>
-                ),
-              )
+                ))
             )}
           </TableBody>
         </Table>
