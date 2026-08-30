@@ -58,6 +58,7 @@ const items: NavItem[] = [
     children: [
       { title: "키트 현황", url: "/admin/kits" },
       { title: "강의 관리", url: "/admin/courses" },
+      { title: "강의 운영 작업", url: "/admin/course-operations" },
     ],
   },
   {

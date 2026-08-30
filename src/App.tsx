@@ -94,6 +94,9 @@ const router = createBrowserRouter([
           { path: "manual-rental", element: <ManualRental /> },
           { path: "returns", element: <Returns /> },
           { path: "courses", element: <Courses /> },
+          { path: "course-operations", element: <KitCourseOffering /> },
+          { path: "course-operations/:kitCourseOfferingId", element: <Students /> },
+          { path: "course-operations/:kitCourseOfferingId/kits", element: <KitOffering /> },
         ],
       },
       {

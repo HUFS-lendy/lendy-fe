@@ -33,8 +33,12 @@ const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
       saveReservationAdmission(data.admissionToken, data.admissionExpiresInSeconds);
       setAdmitted(true);
     }
-    if (data.status === "DISABLED") setAdmitted(true);
-    if (data.status === "BEFORE_OPEN" || data.status === "CLOSED") {
+    if (data.status === "DISABLED" || data.status === "CLOSED") {
+      if (data.status === "CLOSED") clearReservationAdmission();
+      setAdmitted(true);
+      if (data.status === "CLOSED") setView("RESERVATION");
+    }
+    if (data.status === "BEFORE_OPEN") {
       clearReservationAdmission();
       setAdmitted(false);
     }
@@ -70,7 +74,7 @@ const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
           applyStatus(data);
           if (data.status === "WAITING") {
             nextDelay = 1250 + Math.floor(Math.random() * 1000);
-          } else if (data.status === "BEFORE_OPEN") {
+          } else if (data.status === "BEFORE_OPEN" && data.reservationOpenAt) {
             const secondsLeft = Math.max(
               0,
               (new Date(data.reservationOpenAt).getTime() - new Date(data.serverTime).getTime()) / 1000,
@@ -94,7 +98,7 @@ const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
   }, [applyStatus, preview]);
 
   const openAt = queue?.reservationOpenAt ? new Date(queue.reservationOpenAt) : null;
-  const canEnter = queue?.status !== "BEFORE_OPEN" && queue?.status !== "CLOSED" && queue !== null;
+  const canEnter = queue?.status !== "BEFORE_OPEN" && queue !== null;
   const secondsUntilOpen = openAt && serverNow
     ? Math.max(0, Math.ceil((openAt.getTime() - serverNow.getTime()) / 1000))
     : null;
@@ -233,15 +237,7 @@ const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
                 </div>
               </>
             )}
-            {!admitted && queue?.status === "CLOSED" && (
-              <>
-                <h1 className="text-xl font-semibold">기자재 예약</h1>
-                <div className="mt-8 border border-white/10 bg-[#0b1015] px-8 py-20 text-center">
-                  <p className="text-xl font-semibold">기자재 예약 기간이 종료되었습니다.</p>
-                </div>
-              </>
-            )}
-            {!admitted && queue && queue.status !== "BEFORE_OPEN" && queue.status !== "CLOSED" && (
+            {!admitted && queue && queue.status !== "BEFORE_OPEN" && (
               <>
                 <h1 className="text-xl font-semibold">기자재 예약</h1>
                 <div className="mt-8 border border-white/10 bg-[#0b1015] px-8 py-20 text-center">

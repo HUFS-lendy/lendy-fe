@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Package, Users } from "lucide-react";
 import { useMyCourse } from "../../../api/ta.kitCourseOffering.api";
+import { useMe } from "../../../api/user.api";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -29,6 +30,9 @@ import {
 const KitCourseOffering = () => {
   const navigate = useNavigate();
   const { data: courses = [], isLoading, isError } = useMyCourse();
+  const { data: me } = useMe();
+  const isAdmin = me?.role === "ADMIN";
+  const operationBasePath = isAdmin ? "/admin/course-operations" : "/ta/kit-course-offering";
 
   const formatDate = (date?: string) => {
     if (!date) return "-";
@@ -63,9 +67,9 @@ const KitCourseOffering = () => {
       </div>
 
       <div className="mt-10">
-        <h1 className="text-3xl font-bold">내 KIT 강의 운영 목록</h1>
+        <h1 className="text-3xl font-bold">{isAdmin ? "전체 KIT 강의 운영" : "내 KIT 강의 운영 목록"}</h1>
         <p className="mt-2 text-sm text-gray-400">
-          현재 로그인한 조교가 담당하는 KIT 강의 목록입니다.
+          {isAdmin ? "관리자는 모든 KIT 강의에서 조교와 동일한 작업을 수행할 수 있습니다." : "현재 로그인한 조교가 담당하는 KIT 강의 목록입니다."}
         </p>
         <p className="mt-1 text-xs text-gray-500">
           강의 행을 마우스 오른쪽 버튼으로 클릭하여 관리 메뉴를 열 수 있습니다.
@@ -154,7 +158,7 @@ const KitCourseOffering = () => {
                         className="cursor-pointer"
                         onSelect={() =>
                           navigate(
-                            `/ta/kit-course-offering/${course.kitCourseOfferingId}`,
+                            `${operationBasePath}/${course.kitCourseOfferingId}`,
                           )
                         }
                       >
@@ -166,7 +170,7 @@ const KitCourseOffering = () => {
                         className="cursor-pointer"
                         onSelect={() =>
                           navigate(
-                            `/ta/kit-course-offering/${course.kitCourseOfferingId}/kits`,
+                            `${operationBasePath}/${course.kitCourseOfferingId}/kits`,
                           )
                         }
                       >

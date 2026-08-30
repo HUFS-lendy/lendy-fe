@@ -41,6 +41,7 @@ import { Checkbox } from "../../../components/ui/checkbox";
 import { Search } from "lucide-react";
 import { ItemCombobox } from "../../../components/ui/ItemCombobox";
 import { Label } from "../../../components/ui/label";
+import { Textarea } from "../../../components/ui/textarea";
 import { useAdminUsers } from "../../../api/admin.api";
 import { useModels } from "../../../api/adminModel.api";
 import { useItemAvailable } from "../../../api/adminItem.api";
@@ -58,6 +59,8 @@ const ManualRental = () => {
   const [selectedItemId, setSelectedItemId] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const [sendMail, setSendMail] = useState(false);
+  const [specialRental, setSpecialRental] = useState(false);
+  const [specialReason, setSpecialReason] = useState("");
 
   const [checkedRoles, setCheckedRoles] = useState({
     ADMIN: true,
@@ -146,10 +149,12 @@ const ManualRental = () => {
   const selectedUser =
     users.find((user) => user.userId === selectedUserId) ?? null;
 
-  const handleOpenManualRentalDialog = () => {
+  const handleOpenManualRentalDialog = (special = false) => {
     setSelectedModelId(null);
     setSelectedItemId("");
     setSendMail(false);
+    setSpecialRental(special);
+    setSpecialReason("");
   };
 
   const handleSubmitManualRental = () => {
@@ -167,12 +172,18 @@ const ManualRental = () => {
       toast("기기 번호를 선택해주세요.");
       return;
     }
+    if (specialRental && !specialReason.trim()) {
+      toast("특별 대여 사유를 입력해주세요.");
+      return;
+    }
 
     manualRental(
       {
         studentId: selectedUser.studentId,
         itemId: Number(selectedItemId),
         sendMail,
+        specialRental,
+        reason: specialReason.trim(),
       },
       {
         onSuccess: (res) => {
@@ -182,6 +193,8 @@ const ManualRental = () => {
           setSelectedModelId(null);
           setSelectedItemId("");
           setSendMail(false);
+          setSpecialRental(false);
+          setSpecialReason("");
           navigate(`/admin/users/${selectedUserId}`);
         },
         onError: (error) => {
@@ -243,26 +256,37 @@ const ManualRental = () => {
             onOpenChange={setIsEditDialogOpen}
           >
             <AlertDialogTrigger asChild>
-              <button
-                type="button"
-                disabled={!selectedUser}
-                onClick={handleOpenManualRentalDialog}
-                className={`border text-sm px-3 py-1 rounded-sm ${selectedUser ? "hover:bg-neutral-800 cursor-pointer border-neutral-400 text-neutral-200" : "cursor-not-allowed border-neutral-700 text-neutral-600"}`}
-              >
-                대여 등록
-              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={!selectedUser}
+                  onClick={() => handleOpenManualRentalDialog(false)}
+                  className={`border text-sm px-3 py-1 rounded-sm ${selectedUser ? "hover:bg-neutral-800 cursor-pointer border-neutral-400 text-neutral-200" : "cursor-not-allowed border-neutral-700 text-neutral-600"}`}
+                >
+                  일반 대여
+                </button>
+                <button
+                  type="button"
+                  disabled={!selectedUser}
+                  onClick={() => handleOpenManualRentalDialog(true)}
+                  className={`border text-sm px-3 py-1 rounded-sm ${selectedUser ? "bg-white text-black hover:bg-neutral-200 cursor-pointer border-white" : "cursor-not-allowed border-neutral-700 text-neutral-600"}`}
+                >
+                  특별 대여
+                </button>
+              </div>
             </AlertDialogTrigger>
 
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>
                   {selectedUser
-                    ? `#${selectedUser.userId} ${selectedUser.username}`
+                    ? `${specialRental ? "특별 대여" : "일반 대여"} · ${selectedUser.username}`
                     : "대여 등록"}
                 </AlertDialogTitle>
                 <AlertDialogDescription>
-                  사용자에게 기기 대여가 수동으로 부여됩니다.
-                  필요 시 대여 안내 메일 발송 여부를 선택할 수 있습니다.
+                  {specialRental
+                    ? "학기, 연체, 동일 유형 제한과 관계없이 우선 대여합니다. 반납기한과 자동 메일은 적용되지 않습니다."
+                    : "일반 학기 규칙에 따라 관리자가 대여를 등록합니다."}
                 </AlertDialogDescription>
               </AlertDialogHeader>
 
@@ -318,6 +342,7 @@ const ManualRental = () => {
                           triggerClassName="w-[300px]"
                           contentClassName="w-[360px]"
                           listClassName="max-h-[280px]"
+                          modal
                         />
                       </TableCell>
                     </TableRow>
@@ -346,13 +371,14 @@ const ManualRental = () => {
                           }
                           searchPlaceholder="기기 번호 검색"
                           emptyText="대여 가능한 기기 번호가 없습니다."
+                          modal
                         />
                       </TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
               </div>
-              <div className="flex items-center space-x-2 pt-4">
+              {!specialRental && <div className="flex items-center space-x-2 pt-4">
                 <Checkbox
                   id="manual-rental-send-mail"
                   checked={sendMail}
@@ -361,7 +387,20 @@ const ManualRental = () => {
                 <Label htmlFor="manual-rental-send-mail" className="text-sm">
                   대여 안내 메일 발송
                 </Label>
-              </div>
+              </div>}
+              {specialRental && (
+                <div className="space-y-2 pt-4">
+                  <Label htmlFor="special-rental-reason">특별 대여 사유</Label>
+                  <Textarea
+                    id="special-rental-reason"
+                    value={specialReason}
+                    onChange={(event) => setSpecialReason(event.target.value)}
+                    maxLength={500}
+                    placeholder="예: ○○교수 연구·수업용 우선 대여"
+                  />
+                  <p className="text-xs text-muted-foreground">사유는 대여 기록에 보관되며 자동 이메일은 발송되지 않습니다.</p>
+                </div>
+              )}
 
               <AlertDialogFooter className="mt-4">
                 <AlertDialogCancel className="cursor-pointer">
@@ -373,11 +412,12 @@ const ManualRental = () => {
                     !selectedUser ||
                     !selectedModelId ||
                     !selectedItemId ||
+                    (specialRental && !specialReason.trim()) ||
                     isManualRentalPending
                   }
                   onClick={handleSubmitManualRental}
                 >
-                  {isManualRentalPending ? "등록 중..." : "등록"}
+                  {isManualRentalPending ? "등록 중..." : specialRental ? "특별 대여 등록" : "일반 대여 등록"}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

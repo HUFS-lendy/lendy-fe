@@ -64,5 +64,5 @@ export interface ReservationQueueData {
   admissionToken: string | null;
   admissionExpiresInSeconds: number;
   serverTime: string;
-  reservationOpenAt: string;
+  reservationOpenAt: string | null;
 }

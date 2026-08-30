@@ -78,11 +78,12 @@ export const useGenerateKitAssignments = () => {
   });
 };
 
-const rentKitAssignment = async (
-  kitAssignmentId: number,
+const rentKitAssignments = async (
+  kitAssignmentIds: number[],
 ): Promise<ApiResponse<unknown>> => {
   const res = await apiClient.post<ApiResponse<unknown>>(
-    `/api/ta/kit-assignments/${kitAssignmentId}/rent`,
+    "/api/ta/kit-assignments/rent-batch",
+    { kitAssignmentIds },
   );
 
   if (!res.data.success)
@@ -91,11 +92,12 @@ const rentKitAssignment = async (
   return res.data;
 };
 
-const returnKitAssignment = async (
-  kitAssignmentId: number,
+const returnKitAssignments = async (
+  kitAssignmentIds: number[],
 ): Promise<ApiResponse<unknown>> => {
   const res = await apiClient.post<ApiResponse<unknown>>(
-    `/api/ta/kit-assignments/${kitAssignmentId}/return`,
+    "/api/ta/kit-assignments/return-batch",
+    { kitAssignmentIds },
   );
 
   if (!res.data.success)
@@ -114,10 +116,7 @@ export const useRentKitAssignments = () => {
 
   return useMutation({
     mutationFn: async ({ kitAssignmentIds }: KitAssignmentActionParams) => {
-      for (const kitAssignmentId of kitAssignmentIds) {
-        await rentKitAssignment(kitAssignmentId);
-      }
-
+      await rentKitAssignments(kitAssignmentIds);
       return kitAssignmentIds.length;
     },
     onSuccess: async (count, variables) => {
@@ -139,10 +138,7 @@ export const useReturnKitAssignments = () => {
 
   return useMutation({
     mutationFn: async ({ kitAssignmentIds }: KitAssignmentActionParams) => {
-      for (const kitAssignmentId of kitAssignmentIds) {
-        await returnKitAssignment(kitAssignmentId);
-      }
-
+      await returnKitAssignments(kitAssignmentIds);
       return kitAssignmentIds.length;
     },
     onSuccess: async (count, variables) => {

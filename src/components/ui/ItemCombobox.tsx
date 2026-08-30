@@ -24,6 +24,7 @@ type ItemComboboxProps = {
   triggerClassName?: string;
   contentClassName?: string;
   listClassName?: string;
+  modal?: boolean;
 };
 
 export function ItemCombobox({
@@ -37,6 +38,7 @@ export function ItemCombobox({
   triggerClassName,
   contentClassName,
   listClassName,
+  modal = false,
 }: ItemComboboxProps) {
   const [open, setOpen] = useState(false);
 
@@ -57,7 +59,7 @@ export function ItemCombobox({
   };
 
   return (
-    <Popover open={open && !disabled} onOpenChange={setOpen}>
+    <Popover modal={modal} open={open && !disabled} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
