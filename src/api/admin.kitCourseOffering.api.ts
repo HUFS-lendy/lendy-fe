@@ -7,6 +7,7 @@ import type {
   CreateKitCourseOfferingRequest,
   UpdateKitCourseOfferingRequest,
   KitCourseOffering,
+  KitInventoryItem,
 } from "../type/admin.kitCourseOffering.type";
 
 const KIT_COURSE_OFFERINGS_QUERY_KEY = ["kit-course-offerings"];
@@ -36,6 +37,38 @@ export const useKitCourseOfferings = () => {
     queryFn: fetchKitCourseOfferings,
   });
 };
+
+const fetchKitCourseOffering = async (id: number): Promise<KitCourseOffering> => {
+  const res = await apiClient.get<ApiResponse<KitCourseOffering>>(
+    `/api/admin/kit-course-offerings/${id}`,
+  );
+  if (!res.data.success)
+    throw new Error(res.data.message || "KIT 강의 운영 조회에 실패했습니다.");
+  return res.data.data;
+};
+
+export const useKitCourseOffering = (id?: number) =>
+  useQuery({
+    queryKey: [...KIT_COURSE_OFFERINGS_QUERY_KEY, id],
+    queryFn: () => fetchKitCourseOffering(id as number),
+    enabled: !!id,
+  });
+
+const fetchKitInventory = async (id: number): Promise<KitInventoryItem[]> => {
+  const res = await apiClient.get<ApiResponse<KitInventoryItem[]>>(
+    `/api/admin/kit-course-offerings/${id}/inventory`,
+  );
+  if (!res.data.success)
+    throw new Error(res.data.message || "KIT 운영 현황 조회에 실패했습니다.");
+  return res.data.data ?? [];
+};
+
+export const useKitInventory = (id?: number) =>
+  useQuery({
+    queryKey: [...KIT_COURSE_OFFERINGS_QUERY_KEY, id, "inventory"],
+    queryFn: () => fetchKitInventory(id as number),
+    enabled: !!id,
+  });
 
 // KIT 강의 운영 생성
 const createKitCourseOffering = async (

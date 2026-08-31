@@ -36,7 +36,6 @@ import { Calendar } from "../../../components/ui/calendar";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { RadioGroup, RadioGroupItem } from "../../../components/ui/radio-group";
-import { SemesterCombobox } from "../../../components/ui/SemesterCombobox";
 import { toast } from "sonner";
 import {
   useAcademicTerms,
@@ -44,6 +43,7 @@ import {
   useDeleteAcademicTerm,
   useUpdateAcademicTerm,
 } from "../../../api/academicTerm.api";
+import type { AcademicTermSeason } from "../../../type/academicTerm.type";
 
 const HOURS = Array.from({ length: 12 }, (_, index) => index + 1);
 const MINUTES = Array.from({ length: 12 }, (_, index) => index * 5);
@@ -109,6 +109,39 @@ const TimeSelect = ({
   );
 };
 
+const TermSelect = ({
+  value,
+  onChange,
+}: {
+  value: AcademicTermSeason | "";
+  onChange: (value: AcademicTermSeason) => void;
+}) => (
+  <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="학기 선택">
+    {([
+      { value: "SPRING", label: "1학기" },
+      { value: "FALL", label: "2학기" },
+    ] as const).map((option) => {
+      const selected = value === option.value;
+      return (
+        <button
+          key={option.value}
+          type="button"
+          role="radio"
+          aria-checked={selected}
+          onClick={() => onChange(option.value)}
+          className={`h-10 rounded-md border text-sm font-medium transition-colors ${
+            selected
+              ? "border-neutral-900 bg-neutral-900 text-white"
+              : "border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-100"
+          }`}
+        >
+          {option.label}
+        </button>
+      );
+    })}
+  </div>
+);
+
 const ViewLimit = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
@@ -127,7 +160,7 @@ const ViewLimit = () => {
   const [queueCloseTime, setQueueCloseTime] = useState("18:00");
 
   const [year, setYear] = useState("");
-  const [selectedTerm, setSelectedTerm] = useState("");
+  const [selectedTerm, setSelectedTerm] = useState<AcademicTermSeason | "">("");
   const [active, setActive] = useState("false");
   const [selectedTermId, setSelectedTermId] = useState<number | null>(null);
 
@@ -502,7 +535,7 @@ const ViewLimit = () => {
 
                 <div>
                   <Label className="pb-2">학기</Label>
-                  <SemesterCombobox
+                  <TermSelect
                     value={selectedTerm}
                     onChange={setSelectedTerm}
                   />
@@ -696,7 +729,7 @@ const ViewLimit = () => {
 
                 <div>
                   <Label className="pb-2">학기</Label>
-                  <SemesterCombobox
+                  <TermSelect
                     value={selectedTerm}
                     onChange={setSelectedTerm}
                   />

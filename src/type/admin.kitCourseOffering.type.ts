@@ -32,3 +32,18 @@ export type UpdateKitCourseOfferingRequest = {
   assistantUserId: number;
   active: boolean;
 };
+
+export type KitInventoryItem = {
+  itemId: number;
+  serial: string;
+  itemState: "AVAILABLE" | "RESERVED" | "RENTED" | "BREAKDOWN" | "LOST";
+  kitAssignmentId: number | null;
+  assignmentStatus: "ASSIGNED" | "RENTED" | "RETURNED" | "CANCELLED" | null;
+  userId: number | null;
+  username: string | null;
+  studentId: string | null;
+  email: string | null;
+  assignedAt: string | null;
+  rentedAt: string | null;
+  returnedAt: string | null;
+};
