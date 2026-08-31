@@ -58,6 +58,21 @@ export interface AdminReturnsPage {
   number: number;
 }
 
+export interface AdminRentalHistoryItem extends AdminReturnItem {
+  returnedAt: string | null;
+  status: "RENTING" | "OVERDUE" | "RETURNED";
+  occupiedMinutes: number;
+  occupiedDays: number;
+}
+
+export interface AdminRentalHistoryPage {
+  content: AdminRentalHistoryItem[];
+  totalPages: number;
+  totalElements: number;
+  size: number;
+  number: number;
+}
+
 export type ApiResponse<T> = {
   success: boolean;
   code: string;

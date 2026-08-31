@@ -35,6 +35,7 @@ import KitCourseOffering from "./pages/ta/students/kitCourseOffering";
 import Courses from "./pages/admin/kit/Courses";
 import KitOffering from "./pages/ta/students/kitOffering";
 import ReservationWaiting from "./pages/ReservationWaiting";
+import RentalHistory from "./pages/admin/rental/RentalHistory";
 
 const router = createBrowserRouter([
   {
@@ -93,6 +94,7 @@ const router = createBrowserRouter([
           { path: "check-in", element: <CheckIn /> },
           { path: "manual-rental", element: <ManualRental /> },
           { path: "returns", element: <Returns /> },
+          { path: "rental-history", element: <RentalHistory /> },
           { path: "courses", element: <Courses /> },
           { path: "course-operations", element: <KitCourseOffering /> },
           { path: "course-operations/:kitCourseOfferingId", element: <Students /> },

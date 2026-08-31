@@ -141,6 +141,10 @@ const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
     return <Navigate to="/" replace />;
   }
 
+  if (!preview && admitted && view === "RESERVATION") {
+    return <Lend />;
+  }
+
   return (
     <div className="flex min-h-screen bg-[#060a0c] text-white">
       <aside className="fixed inset-y-0 left-0 z-10 flex w-64 flex-col border-r border-white/10 bg-[#080c10]">
