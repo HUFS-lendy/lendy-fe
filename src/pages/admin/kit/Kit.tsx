@@ -1,283 +1,88 @@
-import { useState } from "react";
-// import { useParams } from "react-router-dom";
+import { useMemo } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { ChevronRight } from "lucide-react";
+import { useModels } from "../../../api/adminModel.api";
+import { useKitCourseOfferings } from "../../../api/admin.kitCourseOffering.api";
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
+  Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList,
+  BreadcrumbPage, BreadcrumbSeparator,
 } from "../../../components/ui/breadcrumb";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "../../../components/ui/table";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "../../../components/ui/alert-dialog";
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "../../../components/ui/popover";
-import { Textarea } from "../../../components/ui/textarea";
-import { Input } from "../../../components/ui/input";
-import { Label } from "../../../components/ui/label";
-import { Checkbox } from "../../../components/ui/checkbox";
-import { toast } from "sonner";
-import { usePhoneCopy } from "../../../hooks/usePhoneCopy";
-import KitNumberTags from "../../../hooks/useCodeNumberTags";
+import type { ModelItem } from "../../../type/adminModel.type";
 
 const Kit = () => {
-  // const { itemId } = useParams();
-  const copyPhone = usePhoneCopy();
-  const [kitNumbers, setKitNumbers] = useState<string[]>([]);
+  const navigate = useNavigate();
+  const { modelId } = useParams();
+  const parsedModelId = Number(modelId);
+  const modelsQuery = useModels();
+  const offeringsQuery = useKitCourseOfferings();
+  const model = ((modelsQuery.data ?? []) as ModelItem[])
+    .find((item) => item.modelId === parsedModelId);
+  const offerings = useMemo(
+    () => (offeringsQuery.data ?? [])
+      .filter((offering) => offering.modelId === parsedModelId)
+      .sort((a, b) => b.academicTermCode.localeCompare(a.academicTermCode)),
+    [offeringsQuery.data, parsedModelId],
+  );
+
+  const openOffering = (id: number) =>
+    navigate(`/admin/kits/${parsedModelId}/offerings/${id}`);
 
   return (
-    <div className="bg-[#060a0c] w-screen px-8 text-white">
-      {/* 브래드크럼 */}
+    <div className="min-h-full w-full bg-[#060a0c] px-8 pb-16 text-white">
       <div className="pt-14">
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink
-                className="text-white hover:text-gray-100"
-                href="/admin"
-              >
-                홈
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink
-                className="text-white hover:text-gray-100"
-                href="/admin/kits"
-              >
-                실습키트 현황
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage className="text-white">상세 현황</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+        <Breadcrumb><BreadcrumbList>
+          <BreadcrumbItem><BreadcrumbLink className="text-white" href="/admin">홈</BreadcrumbLink></BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem><BreadcrumbLink className="text-white" href="/admin/kits">실습키트 현황</BreadcrumbLink></BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem><BreadcrumbPage className="text-white">{model?.displayName || model?.name || "운영 현황"}</BreadcrumbPage></BreadcrumbItem>
+        </BreadcrumbList></Breadcrumb>
       </div>
       <div className="pt-8">
-        <div className="font-bold text-white text-3xl pb-4">
-          Cortex-M3 상세 현황
+        <h1 className="text-3xl font-bold">{model?.displayName || model?.name || "실습키트 운영 현황"}</h1>
+        <p className="mt-2 text-sm text-neutral-400">
+          학기별 운영을 선택해 전체 키트의 최종 대여자와 반납 여부를 확인합니다.
+        </p>
+        <div className="mt-8 grid grid-cols-3 gap-3 sm:max-w-xl">
+          <Summary label="전체 키트" value={model?.totalQty ?? 0} />
+          <Summary label="대여 가능" value={model?.availableQty ?? 0} color="text-green-300" />
+          <Summary label="대여 중" value={model?.rentedQty ?? 0} color="text-blue-300" />
         </div>
-        <div className="pb-6 text-sm text-neutral-400">
-          사용 수업 : 마이크로프로세서 및 실습
-        </div>
-        <div className="flex space-x-4 justify-end">
-          {/* 키트 추가 버튼 */}
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <div className="border cursor-pointer px-3 py-1 rounded-sm hover:bg-neutral-400 hover:text-black border-neutral-400 text-sm">
-                추가
-              </div>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Cortex-M3 키트 추가</AlertDialogTitle>
-              </AlertDialogHeader>
-              <div className="space-y-4">
-                {/* todo: 여러개 엔터로 입력되게 */}
-                <div>
-                  <KitNumberTags value={kitNumbers} onChange={setKitNumbers} />
-                </div>
-              </div>
-              {/* todo: 추가에서 수정으로 */}
-              <AlertDialogFooter className="pt-8">
-                <AlertDialogCancel>취소</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => toast("실습키트가 추가되었습니다.")}
-                >
-                  추가
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-          {/* 키트 삭제 버튼 */}
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <div className="border cursor-pointer px-3 py-1 rounded-sm hover:bg-red-400 hover:text-black border-red-400 text-sm text-red-300">
-                삭제
-              </div>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  Cortex-M3 키트를 삭제하시겠습니까?
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  키트를 삭제하면 다시 되돌릴 수 없습니다.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>취소</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => toast("해당 실습키트가 삭제되었습니다.")}
-                  className="bg-red-600 hover:bg-red-500 font-bold"
-                >
-                  삭제
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-        <div className="mt-4">
-          <Table className="text-white text-center border border-neutral-700">
-            <TableHeader className="text-center border-b bg-[#11141b] hover:bg-[#11141b] border-neutral-700">
-              <TableRow>
-                <TableHead></TableHead>
-                <TableHead className="text-white text-center">
-                  코드 번호
-                </TableHead>
-                <TableHead className="text-white text-center">
-                  대여 상태
-                </TableHead>
-                <TableHead className="text-white text-center">
-                  반납 상태
-                </TableHead>
-                <TableHead className="text-white text-center">대여일</TableHead>
-                <TableHead className="text-white text-center">반납일</TableHead>
-                <TableHead className="text-white text-center">대여자</TableHead>
-                <TableHead className="text-white text-center">학번</TableHead>
-                <TableHead className="text-white text-center">연락처</TableHead>
-                <TableHead className="text-white text-center">메일</TableHead>
+        <div className="mt-6 overflow-hidden border border-neutral-700">
+          <Table className="text-center">
+            <TableHeader className="bg-[#11141b]">
+              <TableRow className="border-neutral-700 hover:bg-[#11141b]">
+                <Head>운영 학기</Head><Head>수업명</Head><Head>담당 조교</Head>
+                <Head>운영 상태</Head><Head>등록일</Head><TableHead className="w-14" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow>
-                <TableCell>
-                  <Checkbox />
-                </TableCell>
-                <TableCell>P20342</TableCell>
-                <TableCell>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <div className="hover:underline cursor-pointer">불량</div>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-80">
-                      <div className="grid gap-4">
-                        <div className="space-y-2">
-                          <h4 className="leading-none font-medium">
-                            불량 상세 설명
-                          </h4>
-                        </div>
-                        <div className="grid gap-2">
-                          <div className="grid grid-cols-3 items-center gap-4">
-                            <Label>불량 종류</Label>
-                            <Input
-                              id="type"
-                              defaultValue="고장"
-                              readOnly
-                              className="col-span-2 h-8"
-                            />
-                          </div>
-                          <div className="grid grid-cols-3 gap-4">
-                            <Label>설명</Label>
-                            <Textarea
-                              id="maxWidth"
-                              defaultValue="홈 버튼이 눌리지 않습니다."
-                              readOnly
-                              className="col-span-2 h-8"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </TableCell>
-                <TableCell>대여중</TableCell>
-                <TableCell>2025-03-15</TableCell>
-                <TableCell>-</TableCell>
-                <TableCell>이서연</TableCell>
-                <TableCell>202202465</TableCell>
-                <TableCell
-                  className="cursor-pointer hover:underline"
-                  onClick={() => copyPhone("010-1234-5678")}
-                >
-                  010-1234-5678
-                </TableCell>
-                <TableCell>
-                  <a
-                    href="mailto:lsy@hufs.ac.kr"
-                    className="hover:underline cursor-pointer"
-                    title="메일 작성하기"
-                  >
-                    lsy@hufs.ac.kr
-                  </a>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>
-                  <Checkbox />
-                </TableCell>
-                <TableCell>P20343</TableCell>
-                <TableCell>-</TableCell>
-                <TableCell>반납 완료</TableCell>
-                <TableCell>2025-03-15</TableCell>
-                <TableCell>2025-06-20</TableCell>
-                <TableCell>정병주</TableCell>
-                <TableCell>202212345</TableCell>
-                <TableCell
-                  className="cursor-pointer hover:underline"
-                  onClick={() => copyPhone("010-1234-5678")}
-                >
-                  010-1234-5678
-                </TableCell>
-                <TableCell>
-                  <a
-                    href="mailto:lsy@hufs.ac.kr"
-                    className="hover:underline cursor-pointer"
-                    title="메일 작성하기"
-                  >
-                    jbj@hufs.ac.kr
-                  </a>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>
-                  <Checkbox />
-                </TableCell>
-                <TableCell>P20344</TableCell>
-                <TableCell>-</TableCell>
-                <TableCell>미반납</TableCell>
-                <TableCell>2025-03-15</TableCell>
-                <TableCell>-</TableCell>
-                <TableCell>남하원</TableCell>
-                <TableCell>202412345</TableCell>
-                <TableCell
-                  className="cursor-pointer hover:underline"
-                  onClick={() => copyPhone("010-1234-5678")}
-                >
-                  010-1234-5678
-                </TableCell>
-                <TableCell>
-                  <a
-                    href="mailto:lsy@hufs.ac.kr"
-                    className="hover:underline cursor-pointer"
-                    title="메일 작성하기"
-                  >
-                    nhw@hufs.ac.kr
-                  </a>
-                </TableCell>
-              </TableRow>
+              {offeringsQuery.isLoading || modelsQuery.isLoading
+                ? <Empty text="학기별 운영 정보를 불러오는 중입니다." />
+                : offeringsQuery.isError || modelsQuery.isError
+                  ? <Empty text="운영 정보를 불러오지 못했습니다." error />
+                  : offerings.length === 0
+                    ? <Empty text="등록된 학기별 운영 정보가 없습니다. 먼저 강의 운영 작업을 생성해주세요." />
+                    : offerings.map((offering) => (
+                      <TableRow key={offering.kitCourseOfferingId} role="button" tabIndex={0}
+                        onClick={() => openOffering(offering.kitCourseOfferingId)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") openOffering(offering.kitCourseOfferingId);
+                        }}
+                        className="cursor-pointer border-neutral-800 hover:bg-white/[0.04]">
+                        <TableCell className="font-semibold">{offering.academicTermCode}</TableCell>
+                        <TableCell>{offering.courseName}</TableCell>
+                        <TableCell>{offering.assistantUsername}</TableCell>
+                        <TableCell className={offering.active ? "text-green-300" : "text-neutral-500"}>
+                          {offering.active ? "운영 중" : "운영 종료"}
+                        </TableCell>
+                        <TableCell className="text-neutral-400">{new Date(offering.createdAt).toLocaleDateString("ko-KR")}</TableCell>
+                        <TableCell><ChevronRight className="h-4 w-4 text-neutral-500" /></TableCell>
+                      </TableRow>
+                    ))}
             </TableBody>
           </Table>
         </div>
@@ -285,5 +90,16 @@ const Kit = () => {
     </div>
   );
 };
+
+const Head = ({ children }: { children: React.ReactNode }) => <TableHead className="text-center text-white">{children}</TableHead>;
+const Empty = ({ text, error = false }: { text: string; error?: boolean }) => (
+  <TableRow><TableCell colSpan={6} className={`py-16 text-center ${error ? "text-red-300" : "text-neutral-400"}`}>{text}</TableCell></TableRow>
+);
+const Summary = ({ label, value, color = "" }: { label: string; value: number; color?: string }) => (
+  <div className="border border-neutral-700 bg-[#0d1117] p-4 text-center">
+    <p className={`text-2xl font-semibold tabular-nums ${color}`}>{value}</p>
+    <p className="mt-1 text-xs text-neutral-500">{label}</p>
+  </div>
+);
 
 export default Kit;

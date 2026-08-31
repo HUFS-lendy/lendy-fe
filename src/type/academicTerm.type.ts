@@ -1,7 +1,9 @@
+export type AcademicTermSeason = "SPRING" | "FALL";
+
 export type AcademicTerm = {
   id: number;
   year: number;
-  term: string;
+  term: AcademicTermSeason;
   code: string;
   startDate: string;
   reservationOpenAt: string | null;
@@ -19,7 +21,7 @@ export type ApiResponse<T> = {
 
 export type CreateAcademicTermRequest = {
   year: number;
-  term: string;
+  term: AcademicTermSeason;
   startDate: string;
   reservationOpenAt: string;
   reservationQueueCloseAt: string;

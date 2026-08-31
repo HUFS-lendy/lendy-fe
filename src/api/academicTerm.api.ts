@@ -3,6 +3,7 @@ import { isAxiosError } from "axios";
 import { apiClient } from "./client";
 import type {
   AcademicTerm,
+  AcademicTermSeason,
   ApiResponse,
   CreateAcademicTermRequest,
 } from "../type/academicTerm.type";
@@ -120,7 +121,7 @@ export const useUpdateAcademicTerm = () => {
     }: {
       termId: number;
       year: number;
-      term: string;
+      term: AcademicTermSeason;
       startDate: string;
       reservationOpenAt: string;
       reservationQueueCloseAt: string;
