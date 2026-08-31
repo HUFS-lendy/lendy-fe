@@ -46,7 +46,7 @@ import {
 } from "../../../api/academicTerm.api";
 
 const HOURS = Array.from({ length: 12 }, (_, index) => index + 1);
-const MINUTES = Array.from({ length: 60 }, (_, index) => index);
+const MINUTES = Array.from({ length: 12 }, (_, index) => index * 5);
 
 const TimeSelect = ({
   value,
@@ -58,6 +58,9 @@ const TimeSelect = ({
   const [hourText = "09", minuteText = "00"] = value.split(":");
   const hour24 = Number(hourText);
   const minute = Number(minuteText);
+  const minuteOptions = MINUTES.includes(minute)
+    ? MINUTES
+    : [...MINUTES, minute].sort((a, b) => a - b);
   const period = hour24 < 12 ? "AM" : "PM";
   const hour12 = hour24 % 12 || 12;
 
@@ -98,7 +101,7 @@ const TimeSelect = ({
         value={minute}
         onChange={(event) => updateTime(period, hour12, Number(event.target.value))}
       >
-        {MINUTES.map((item) => (
+        {minuteOptions.map((item) => (
           <option key={item} value={item}>{String(item).padStart(2, "0")}분</option>
         ))}
       </select>
@@ -107,6 +110,8 @@ const TimeSelect = ({
 };
 
 const ViewLimit = () => {
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
   const [startDateOpen, setStartDateOpen] = useState(false);
   const [endDateOpen, setEndDateOpen] = useState(false);
   const [reservationOpenDateOpen, setReservationOpenDateOpen] = useState(false);
@@ -195,6 +200,19 @@ const ViewLimit = () => {
     setActive("false");
   };
 
+  const closeDatePopovers = () => {
+    setStartDateOpen(false);
+    setEndDateOpen(false);
+    setReservationOpenDateOpen(false);
+    setQueueCloseDateOpen(false);
+  };
+
+  const handleCreateDialogChange = (open: boolean) => {
+    closeDatePopovers();
+    if (open) resetForm();
+    setCreateDialogOpen(open);
+  };
+
   const handleCreateAcademicTerm = () => {
     if (!year.trim()) {
       toast("년도를 입력해주세요.");
@@ -254,6 +272,8 @@ const ViewLimit = () => {
       {
         onSuccess: (res) => {
           toast(res.message ?? "학기 정보가 추가되었습니다.");
+          setCreateDialogOpen(false);
+          closeDatePopovers();
           resetForm();
         },
         onError: (error) => {
@@ -333,6 +353,8 @@ const ViewLimit = () => {
     }
 
     setActive(selectedAcademicTerm.active ? "true" : "false");
+    closeDatePopovers();
+    setUpdateDialogOpen(true);
   };
 
   const handleUpdateAcademicTerm = () => {
@@ -400,6 +422,8 @@ const ViewLimit = () => {
       {
         onSuccess: (res) => {
           toast(res.message ?? "학기 정보가 수정되었습니다.");
+          setUpdateDialogOpen(false);
+          closeDatePopovers();
           resetForm();
           setSelectedTermId(null);
         },
@@ -446,11 +470,17 @@ const ViewLimit = () => {
           >
             대기열 페이지 미리보기
           </button>
-          <AlertDialog>
+          <AlertDialog
+            open={createDialogOpen}
+            onOpenChange={handleCreateDialogChange}
+          >
             <AlertDialogTrigger asChild>
-              <div className="border cursor-pointer px-3 py-1 rounded-sm hover:bg-neutral-400 hover:text-black border-neutral-400 text-sm">
+              <button
+                type="button"
+                className="border cursor-pointer px-3 py-1 rounded-sm hover:bg-neutral-400 hover:text-black border-neutral-400 text-sm"
+              >
                 추가
-              </div>
+              </button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
@@ -611,7 +641,10 @@ const ViewLimit = () => {
               <AlertDialogFooter className="pt-8">
                 <AlertDialogCancel>취소</AlertDialogCancel>
                 <AlertDialogAction
-                  onClick={handleCreateAcademicTerm}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    handleCreateAcademicTerm();
+                  }}
                   disabled={isCreating}
                 >
                   {isCreating ? "추가 중..." : "추가"}
@@ -620,10 +653,20 @@ const ViewLimit = () => {
             </AlertDialogContent>
           </AlertDialog>
 
-          <AlertDialog>
+          <AlertDialog
+            open={updateDialogOpen}
+            onOpenChange={(open) => {
+              if (open) handleOpenUpdateDialog();
+              else {
+                setUpdateDialogOpen(false);
+                closeDatePopovers();
+              }
+            }}
+          >
             <AlertDialogTrigger asChild>
-              <div
-                onClick={handleOpenUpdateDialog}
+              <button
+                type="button"
+                disabled={!selectedTermId}
                 className={`border px-3 py-1 rounded-sm text-sm ${
                   selectedTermId
                     ? "cursor-pointer hover:bg-neutral-400 hover:text-black border-neutral-400"
@@ -631,7 +674,7 @@ const ViewLimit = () => {
                 }`}
               >
                 수정
-              </div>
+              </button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
@@ -792,7 +835,10 @@ const ViewLimit = () => {
               <AlertDialogFooter className="pt-8">
                 <AlertDialogCancel>취소</AlertDialogCancel>
                 <AlertDialogAction
-                  onClick={handleUpdateAcademicTerm}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    handleUpdateAcademicTerm();
+                  }}
                   disabled={!selectedAcademicTerm || isUpdating}
                 >
                   {isUpdating ? "수정 중..." : "수정"}
