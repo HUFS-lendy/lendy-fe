@@ -22,6 +22,14 @@ const frameworks = [
     value: "USER",
     label: "사용자",
   },
+  {
+    value: "TA",
+    label: "조교",
+  },
+  {
+    value: "GUEST",
+    label: "게스트",
+  },
 ];
 
 type RoleComboboxProps = {

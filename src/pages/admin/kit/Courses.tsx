@@ -1,9 +1,5 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { KitCombobox } from "../../../components/ui/KitCombobox";
-import { FullSemesterCombobox } from "../../../components/ui/FullSemesterCombobox";
-import { CourseCombobox } from "../../../components/ui/CourseCombobox";
-import { TACombobox } from "../../../components/ui/TACombobox";
 import { Checkbox } from "../../../components/ui/checkbox";
 import { Label } from "../../../components/ui/label";
 import {
@@ -39,6 +35,45 @@ import {
   useKitCourseOfferings,
   useUpdateKitCourseOffering,
 } from "../../../api/admin.kitCourseOffering.api";
+import { useAcademicTerms } from "../../../api/academicTerm.api";
+import { useCourses } from "../../../api/admin.courseController.api";
+import { useModels } from "../../../api/adminModel.api";
+import { useAdminUsers } from "../../../api/admin.api";
+import type { ModelItem } from "../../../type/adminModel.type";
+import type { AdminUser } from "../../../type/admin.type";
+
+type SelectOption = {
+  value: string;
+  label: string;
+};
+
+const DirectSelect = ({
+  value,
+  onChange,
+  options,
+  placeholder,
+  disabled = false,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  options: SelectOption[];
+  placeholder: string;
+  disabled?: boolean;
+}) => (
+  <select
+    value={value}
+    onChange={(event) => onChange(event.target.value)}
+    disabled={disabled}
+    className="h-10 w-full rounded-md border border-neutral-300 bg-white px-3 text-sm text-black outline-none focus:border-neutral-500 focus:ring-2 focus:ring-neutral-300 disabled:cursor-not-allowed disabled:opacity-50"
+  >
+    <option value="">{placeholder}</option>
+    {options.map((option) => (
+      <option key={option.value} value={option.value}>
+        {option.label}
+      </option>
+    ))}
+  </select>
+);
 
 const Courses = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -69,6 +104,18 @@ const Courses = () => {
     useUpdateKitCourseOffering();
   const { mutate: deleteKitCourseOffering, isPending: isDeleting } =
     useDeleteKitCourseOffering();
+  const { data: academicTerms = [], isLoading: isTermsLoading } = useAcademicTerms();
+  const { data: courses = [], isLoading: isCoursesLoading } = useCourses();
+  const { data: models = [], isLoading: isModelsLoading } = useModels();
+  const { data: usersData, isLoading: isUsersLoading } = useAdminUsers({
+    page: 0,
+    size: 100,
+  });
+
+  const kitModels = (models as ModelItem[]).filter((model) => model.type === "KIT");
+  const assistants = (usersData?.content ?? []).filter(
+    (user: AdminUser) => user.role === "TA" || user.role === "ADMIN",
+  );
 
   const selectedCourseOffering = courseOfferings.find(
     (course) => course.kitCourseOfferingId === selectedCourseOfferingId,
@@ -217,6 +264,7 @@ const Courses = () => {
             open={isCreateDialogOpen}
             onOpenChange={(open) => {
               if (isCreating) return;
+              if (open) resetCreateForm();
               setIsCreateDialogOpen(open);
               if (!open) resetCreateForm();
             }}
@@ -241,33 +289,57 @@ const Courses = () => {
               <div className="space-y-4">
                 <div>
                   <Label className="pb-2">해당 학기</Label>
-                  <FullSemesterCombobox
+                  <DirectSelect
                     value={selectedAcademicTermId}
                     onChange={setSelectedAcademicTermId}
+                    placeholder={isTermsLoading ? "학기 불러오는 중..." : "학기 선택"}
+                    disabled={isTermsLoading}
+                    options={academicTerms.map((term) => ({
+                      value: String(term.id),
+                      label: `${term.code}${term.active ? " (현재 학기)" : ""}`,
+                    }))}
                   />
                 </div>
 
                 <div>
                   <Label className="pb-2">강의</Label>
-                  <CourseCombobox
+                  <DirectSelect
                     value={selectedCourseId}
                     onChange={setSelectedCourseId}
+                    placeholder={isCoursesLoading ? "강의 불러오는 중..." : "강의 선택"}
+                    disabled={isCoursesLoading}
+                    options={courses.filter((course) => course.active).map((course) => ({
+                      value: String(course.courseId),
+                      label: `${course.name} (${course.code || "코드 없음"})`,
+                    }))}
                   />
                 </div>
 
                 <div>
                   <Label className="pb-2">키트</Label>
-                  <KitCombobox
+                  <DirectSelect
                     value={selectedKitModelId}
                     onChange={setSelectedKitModelId}
+                    placeholder={isModelsLoading ? "키트 불러오는 중..." : "키트 선택"}
+                    disabled={isModelsLoading}
+                    options={kitModels.map((model) => ({
+                      value: String(model.modelId),
+                      label: model.displayName || model.name,
+                    }))}
                   />
                 </div>
 
                 <div>
                   <Label className="pb-2">조교</Label>
-                  <TACombobox
+                  <DirectSelect
                     value={selectedAssistantUserId}
                     onChange={setSelectedAssistantUserId}
+                    placeholder={isUsersLoading ? "담당자 불러오는 중..." : "담당 조교 또는 관리자 선택"}
+                    disabled={isUsersLoading}
+                    options={assistants.map((user) => ({
+                      value: String(user.userId),
+                      label: `${user.username} (${user.role === "ADMIN" ? "관리자" : "조교"})`,
+                    }))}
                   />
                 </div>
               </div>
@@ -338,17 +410,29 @@ const Courses = () => {
 
                 <div>
                   <Label className="pb-2">키트</Label>
-                  <KitCombobox
+                  <DirectSelect
                     value={updateKitModelId}
                     onChange={setUpdateKitModelId}
+                    placeholder="키트 선택"
+                    disabled={isModelsLoading}
+                    options={kitModels.map((model) => ({
+                      value: String(model.modelId),
+                      label: model.displayName || model.name,
+                    }))}
                   />
                 </div>
 
                 <div>
                   <Label className="pb-2">조교</Label>
-                  <TACombobox
+                  <DirectSelect
                     value={updateAssistantUserId}
                     onChange={setUpdateAssistantUserId}
+                    placeholder="담당 조교 또는 관리자 선택"
+                    disabled={isUsersLoading}
+                    options={assistants.map((user) => ({
+                      value: String(user.userId),
+                      label: `${user.username} (${user.role === "ADMIN" ? "관리자" : "조교"})`,
+                    }))}
                   />
                 </div>
 
@@ -412,7 +496,9 @@ const Courses = () => {
                     ? `${selectedCourseOffering.courseName} 강의 운영 정보를 삭제하시겠습니까?`
                     : "선택한 강의 운영 정보를 삭제하시겠습니까?"}
                   <br />
-                  삭제한 정보는 복구할 수 없습니다.
+                  실제 대여 중인 KIT가 없다면 수강생 및 배정 데이터도 함께
+                  정리됩니다. 대여 중인 KIT가 있으면 먼저 반납 처리해야 합니다.
+                  삭제한 운영 정보는 복구할 수 없습니다.
                 </AlertDialogDescription>
               </AlertDialogHeader>
 
