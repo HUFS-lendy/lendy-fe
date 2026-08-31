@@ -58,10 +58,8 @@ export function SemesterCombobox({ value, onChange }: SemesterComboboxProps) {
                 <CommandItem
                   key={framework.value}
                   value={framework.value}
-                  onSelect={(currentValue) => {
-                    const nextValue =
-                      currentValue === value ? "" : currentValue;
-                    onChange(nextValue);
+                  onSelect={() => {
+                    onChange(framework.value);
                     setOpen(false);
                   }}
                 >
