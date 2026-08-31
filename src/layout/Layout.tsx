@@ -22,7 +22,7 @@ const Layout = () => {
       <SidebarProvider>
         <div className="flex bg-[#060a0c] text-white h-screen w-screen overflow-hidden py-1">
           <AdminSidebar />
-          <main className="h-full overflow-y-auto">
+          <main className="h-full min-w-0 flex-1 overflow-y-auto">
             <SidebarTrigger />
             <Outlet />
           </main>
@@ -38,7 +38,7 @@ const Layout = () => {
       <SidebarProvider>
         <div className="flex bg-[#060a0c] text-white h-screen w-screen overflow-hidden py-1">
           <TaSidebar />
-          <main className="h-full overflow-y-auto">
+          <main className="h-full min-w-0 flex-1 overflow-y-auto">
             <SidebarTrigger />
             <Outlet />
           </main>
