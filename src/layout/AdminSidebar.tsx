@@ -44,6 +44,7 @@ const items: NavItem[] = [
       { title: "체크인", url: "/admin/check-in" },
       { title: "수기 대여 등록", url: "/admin/manual-rental" },
       { title: "반납 처리", url: "/admin/returns" },
+      { title: "대여 기록 관리", url: "/admin/rental-history" },
     ],
   },
   {

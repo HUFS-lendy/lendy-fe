@@ -33,18 +33,13 @@ import {
 import { toast } from "sonner";
 import {
   useAdminItemOccupancy,
-  useAdminItemHistory,
   useAdminItemsByModel,
   useCreateAdminItem,
   useDeleteAdminItem,
   useUpdateAdminItem,
 } from "../../../api/adminItem.api";
 import { useModels } from "../../../api/adminModel.api";
-import type {
-  AdminItem,
-  ItemRentalHistoryEntry,
-  ItemState,
-} from "../../../type/adminItem.type";
+import type { AdminItem, ItemState } from "../../../type/adminItem.type";
 import type { ModelItem } from "../../../type/adminModel.type";
 
 const Device = () => {
@@ -78,11 +73,6 @@ const Device = () => {
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
   const [isOccupancyDialogOpen, setIsOccupancyDialogOpen] = useState(false);
   const [occupancyItemId, setOccupancyItemId] = useState<number | null>(null);
-  const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
-  const [historyItemId, setHistoryItemId] = useState<number | null>(null);
-  const [historyPage, setHistoryPage] = useState(0);
-  const [selectedHistory, setSelectedHistory] =
-    useState<ItemRentalHistoryEntry | null>(null);
 
   const selectedItem =
     items.find((item: AdminItem) => item.itemId === selectedItemId) ?? null;
@@ -96,13 +86,6 @@ const Device = () => {
   const { data: occupancyData, isLoading: isOccupancyLoading } =
   useAdminItemOccupancy(occupancyItemId ?? undefined, isOccupancyDialogOpen);
 
-  const { data: historyData, isLoading: isHistoryLoading } =
-    useAdminItemHistory(
-      historyItemId ?? undefined,
-      historyPage,
-      10,
-      isHistoryDialogOpen,
-    );
 
   const getStateLabel = (state: ItemState) => {
     switch (state) {
@@ -169,22 +152,6 @@ const Device = () => {
     setIsOccupancyDialogOpen(true);
   };
 
-  const handleOpenHistoryDialog = (itemId: number) => {
-    setHistoryItemId(itemId);
-    setHistoryPage(0);
-    setSelectedHistory(null);
-    setIsHistoryDialogOpen(true);
-  };
-
-  const formatDateTime = (value?: string | null) =>
-    value ? new Date(value).toLocaleString("ko-KR") : "-";
-
-  const formatOccupiedTime = (minutes: number) => {
-    const days = Math.floor(minutes / 1440);
-    const hours = Math.floor((minutes % 1440) / 60);
-    const remainingMinutes = minutes % 60;
-    return `${days}일 ${hours}시간 ${remainingMinutes}분`;
-  };
 
   useEffect(() => {
     if (!selectedItem) return;
@@ -602,7 +569,6 @@ const Device = () => {
                 </TableHead>
                 <TableHead className="text-white text-center">상태</TableHead>
                 <TableHead className="text-white text-center">현재 이용자</TableHead>
-                <TableHead className="text-white text-center">대여 이력</TableHead>
                 <TableHead className="text-white text-center">취득일</TableHead>
               </TableRow>
             </TableHeader>
@@ -610,14 +576,14 @@ const Device = () => {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-6 text-center">
+                  <TableCell colSpan={5} className="py-6 text-center">
                     불러오는 중...
                   </TableCell>
                 </TableRow>
               ) : isError ? (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={5}
                     className="py-6 text-center text-red-300"
                   >
                     기자재 상세 목록을 불러오지 못했습니다.
@@ -625,7 +591,7 @@ const Device = () => {
                 </TableRow>
               ) : items.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-6 text-center">
+                  <TableCell colSpan={5} className="py-6 text-center">
                     등록된 item이 없습니다.
                   </TableCell>
                 </TableRow>
@@ -667,16 +633,6 @@ const Device = () => {
                       ) : (
                         <span className="text-neutral-500 text-sm">-</span>
                       )}
-                    </TableCell>
-
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-                      <button
-                        type="button"
-                        onClick={() => handleOpenHistoryDialog(item.itemId)}
-                        className="rounded-sm border border-neutral-500 px-2 py-1 text-xs text-neutral-200 hover:bg-neutral-800"
-                      >
-                        이력 보기
-                      </button>
                     </TableCell>
 
                     <TableCell>{item.acquiredAt || "-"}</TableCell>
@@ -782,122 +738,6 @@ const Device = () => {
             </AlertDialogContent>
           </AlertDialog>
 
-          <AlertDialog
-            open={isHistoryDialogOpen}
-            onOpenChange={(open) => {
-              setIsHistoryDialogOpen(open);
-              if (!open) {
-                setHistoryItemId(null);
-                setHistoryPage(0);
-                setSelectedHistory(null);
-              }
-            }}
-          >
-            <AlertDialogContent className="max-w-4xl">
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  {historyData
-                    ? `${historyData.modelName} · ${historyData.serial} 대여 이력`
-                    : "기자재 대여 이력"}
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  총 {historyData?.histories.totalElements ?? 0}건의 대여 기록입니다.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-
-              {isHistoryLoading && !historyData ? (
-                <div className="py-10 text-center text-sm text-neutral-500">
-                  이력을 불러오는 중...
-                </div>
-              ) : !historyData || historyData.histories.content.length === 0 ? (
-                <div className="rounded-md border border-neutral-200 py-10 text-center text-sm text-neutral-500">
-                  대여 이력이 없습니다.
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="max-h-72 overflow-y-auto rounded-md border border-neutral-200">
-                    <Table className="text-center">
-                      <TableHeader className="bg-neutral-100">
-                        <TableRow>
-                          <TableHead className="text-center">학기</TableHead>
-                          <TableHead className="text-center">대여자</TableHead>
-                          <TableHead className="text-center">대여일</TableHead>
-                          <TableHead className="text-center">상태</TableHead>
-                          <TableHead className="text-center">상세</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {historyData.histories.content.map((history) => (
-                          <TableRow key={history.rentalId} className="hover:bg-neutral-50">
-                            <TableCell>{history.specialRental ? "특별 대여" : history.semester}</TableCell>
-                            <TableCell>
-                              {history.username} ({history.studentId})
-                            </TableCell>
-                            <TableCell>{formatDateTime(history.rentedAt).split(" ").slice(0, 3).join(" ")}</TableCell>
-                            <TableCell>
-                              <span className={history.currentlyRenting ? "text-blue-600" : "text-neutral-600"}>
-                                {history.currentlyRenting ? "대여 중" : "반납 완료"}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <button
-                                type="button"
-                                onClick={() => setSelectedHistory(history)}
-                                className="rounded border border-neutral-300 px-2 py-1 text-xs hover:bg-neutral-100"
-                              >
-                                상세 조회
-                              </button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-
-                  {selectedHistory && (
-                    <div className="rounded-md border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-800">
-                      <div className="mb-3 font-semibold">대여 상세</div>
-                      <div className="grid grid-cols-2 gap-x-8 gap-y-2">
-                        <div><span className="text-neutral-500">이름</span><div>{selectedHistory.username}</div></div>
-                        <div><span className="text-neutral-500">학번</span><div>{selectedHistory.studentId}</div></div>
-                        <div><span className="text-neutral-500">이메일</span><div>{selectedHistory.email}</div></div>
-                        <div><span className="text-neutral-500">학기</span><div>{selectedHistory.specialRental ? "특별 대여" : selectedHistory.semester}</div></div>
-                        <div><span className="text-neutral-500">대여 시각</span><div>{formatDateTime(selectedHistory.rentedAt)}</div></div>
-                        <div><span className="text-neutral-500">반납 시각</span><div>{selectedHistory.currentlyRenting ? "대여 중" : formatDateTime(selectedHistory.returnedAt)}</div></div>
-                        <div className="col-span-2"><span className="text-neutral-500">점유 기간</span><div className="font-semibold">{formatOccupiedTime(selectedHistory.occupiedMinutes)} · {selectedHistory.occupiedDays}일 점유(24시간 기준 올림)</div></div>
-                      </div>
-                    </div>
-                  )}
-
-                  {historyData.histories.totalPages > 1 && (
-                    <div className="flex items-center justify-center gap-3 text-sm">
-                      <button
-                        type="button"
-                        disabled={historyPage === 0}
-                        onClick={() => { setHistoryPage((page) => page - 1); setSelectedHistory(null); }}
-                        className="rounded border border-neutral-300 px-3 py-1 disabled:opacity-40"
-                      >
-                        이전
-                      </button>
-                      <span>{historyPage + 1} / {historyData.histories.totalPages}</span>
-                      <button
-                        type="button"
-                        disabled={historyPage + 1 >= historyData.histories.totalPages}
-                        onClick={() => { setHistoryPage((page) => page + 1); setSelectedHistory(null); }}
-                        className="rounded border border-neutral-300 px-3 py-1 disabled:opacity-40"
-                      >
-                        다음
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <AlertDialogFooter>
-                <AlertDialogCancel>닫기</AlertDialogCancel>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </div>
       </div>
     </div>

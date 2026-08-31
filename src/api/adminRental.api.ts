@@ -5,8 +5,27 @@ import type {
   CreateManualRentalRequest,
   Rental,
   AdminReturnsPage,
+  AdminRentalHistoryPage,
   ApiResponse,
 } from "../type/adminRental.type";
+
+export const useAdminRentalHistory = ({
+  keyword = "", semester = "", status = "", specialRental,
+  page = 0, size = 20,
+}: {
+  keyword?: string; semester?: string; status?: string;
+  specialRental?: boolean; page?: number; size?: number;
+}) => useQuery({
+  queryKey: ["admin_rental_history", keyword, semester, status, specialRental, page, size],
+  queryFn: async (): Promise<AdminRentalHistoryPage> => {
+    const res = await apiClient.get<ApiResponse<AdminRentalHistoryPage>>(
+      "/api/admin/rentals/history",
+      { params: { keyword, semester, status, specialRental, page, size } },
+    );
+    return res.data.data;
+  },
+  placeholderData: (previousData) => previousData,
+});
 import { isAxiosError } from "axios";
 import { toast } from "sonner";
 
