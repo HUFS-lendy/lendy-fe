@@ -45,6 +45,67 @@ import {
   useUpdateAcademicTerm,
 } from "../../../api/academicTerm.api";
 
+const HOURS = Array.from({ length: 12 }, (_, index) => index + 1);
+const MINUTES = Array.from({ length: 60 }, (_, index) => index);
+
+const TimeSelect = ({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) => {
+  const [hourText = "09", minuteText = "00"] = value.split(":");
+  const hour24 = Number(hourText);
+  const minute = Number(minuteText);
+  const period = hour24 < 12 ? "AM" : "PM";
+  const hour12 = hour24 % 12 || 12;
+
+  const updateTime = (nextPeriod: string, nextHour: number, nextMinute: number) => {
+    const nextHour24 = nextPeriod === "AM"
+      ? nextHour === 12 ? 0 : nextHour
+      : nextHour === 12 ? 12 : nextHour + 12;
+    onChange(
+      `${String(nextHour24).padStart(2, "0")}:${String(nextMinute).padStart(2, "0")}`,
+    );
+  };
+
+  const selectClassName =
+    "h-9 rounded-md border border-neutral-300 bg-transparent px-3 text-sm outline-none focus:border-neutral-500 focus:ring-2 focus:ring-neutral-300";
+
+  return (
+    <div className="flex items-center gap-2" aria-label="시간 선택">
+      <select
+        aria-label="오전 또는 오후"
+        className={selectClassName}
+        value={period}
+        onChange={(event) => updateTime(event.target.value, hour12, minute)}
+      >
+        <option value="AM">오전</option>
+        <option value="PM">오후</option>
+      </select>
+      <select
+        aria-label="시"
+        className={selectClassName}
+        value={hour12}
+        onChange={(event) => updateTime(period, Number(event.target.value), minute)}
+      >
+        {HOURS.map((hour) => <option key={hour} value={hour}>{hour}시</option>)}
+      </select>
+      <select
+        aria-label="분"
+        className={selectClassName}
+        value={minute}
+        onChange={(event) => updateTime(period, hour12, Number(event.target.value))}
+      >
+        {MINUTES.map((item) => (
+          <option key={item} value={item}>{String(item).padStart(2, "0")}분</option>
+        ))}
+      </select>
+    </div>
+  );
+};
+
 const ViewLimit = () => {
   const [startDateOpen, setStartDateOpen] = useState(false);
   const [endDateOpen, setEndDateOpen] = useState(false);
@@ -155,7 +216,7 @@ const ViewLimit = () => {
       return;
     }
     if (!queueCloseDate) {
-      toast("티켓팅 종료 날짜를 선택해주세요.");
+      toast("대기열 페이지 사용 종료 날짜를 선택해주세요.");
       return;
     }
 
@@ -176,7 +237,7 @@ const ViewLimit = () => {
     const reservationOpenAt = formatDateTimeString(reservationOpenDate, reservationOpenTime);
     const reservationQueueCloseAt = formatDateTimeString(queueCloseDate, queueCloseTime);
     if (reservationQueueCloseAt <= reservationOpenAt) {
-      toast("티켓팅 종료 일시는 예약 시작 일시보다 늦어야 합니다.");
+      toast("대기열 페이지 사용 종료 일시는 기자재 신청 시작 일시보다 늦어야 합니다.");
       return;
     }
 
@@ -300,7 +361,7 @@ const ViewLimit = () => {
       return;
     }
     if (!queueCloseDate) {
-      toast("티켓팅 종료 날짜를 선택해주세요.");
+      toast("대기열 페이지 사용 종료 날짜를 선택해주세요.");
       return;
     }
 
@@ -321,7 +382,7 @@ const ViewLimit = () => {
     const reservationOpenAt = formatDateTimeString(reservationOpenDate, reservationOpenTime);
     const reservationQueueCloseAt = formatDateTimeString(queueCloseDate, queueCloseTime);
     if (reservationQueueCloseAt <= reservationOpenAt) {
-      toast("티켓팅 종료 일시는 예약 시작 일시보다 늦어야 합니다.");
+      toast("대기열 페이지 사용 종료 일시는 기자재 신청 시작 일시보다 늦어야 합니다.");
       return;
     }
 
@@ -383,7 +444,7 @@ const ViewLimit = () => {
             className="border cursor-pointer px-3 py-1 rounded-sm hover:bg-neutral-400 hover:text-black border-neutral-400 text-sm"
             onClick={() => window.open("/reservation-preview", "_blank", "noopener,noreferrer")}
           >
-            대기열 미리보기
+            대기열 페이지 미리보기
           </button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -481,18 +542,16 @@ const ViewLimit = () => {
                       </PopoverContent>
                     </Popover>
 
-                    <Input
-                      type="time"
-                      className="w-40"
+                    <TimeSelect
                       value={reservationOpenTime}
-                      onChange={(e) => setReservationOpenTime(e.target.value)}
+                      onChange={setReservationOpenTime}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <Label className="pb-2">티켓팅 대기열 종료 일시</Label>
-                  <p className="text-xs text-neutral-400 pb-2">이 시각 이후에는 대기열 없이 일반 예약으로 전환됩니다.</p>
+                  <Label className="pb-2">대기열 페이지 사용 종료 일시</Label>
+                  <p className="text-xs text-neutral-400 pb-2">이 시각부터 대기열 페이지를 종료하고 일반 예약 페이지를 사용합니다.</p>
                   <div className="flex items-center gap-3">
                     <Popover open={queueCloseDateOpen} onOpenChange={setQueueCloseDateOpen}>
                       <PopoverTrigger asChild>
@@ -504,7 +563,7 @@ const ViewLimit = () => {
                         <Calendar mode="single" selected={queueCloseDate} captionLayout="dropdown" onSelect={(d) => { setQueueCloseDate(d); setQueueCloseDateOpen(false); }} />
                       </PopoverContent>
                     </Popover>
-                    <Input type="time" className="w-40" value={queueCloseTime} onChange={(e) => setQueueCloseTime(e.target.value)} />
+                    <TimeSelect value={queueCloseTime} onChange={setQueueCloseTime} />
                   </div>
                 </div>
 
@@ -664,18 +723,16 @@ const ViewLimit = () => {
                       </PopoverContent>
                     </Popover>
 
-                    <Input
-                      type="time"
-                      className="w-40"
+                    <TimeSelect
                       value={reservationOpenTime}
-                      onChange={(e) => setReservationOpenTime(e.target.value)}
+                      onChange={setReservationOpenTime}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <Label className="pb-2">티켓팅 대기열 종료 일시</Label>
-                  <p className="text-xs text-neutral-400 pb-2">이 시각 이후에는 대기열 없이 일반 예약으로 전환됩니다.</p>
+                  <Label className="pb-2">대기열 페이지 사용 종료 일시</Label>
+                  <p className="text-xs text-neutral-400 pb-2">이 시각부터 대기열 페이지를 종료하고 일반 예약 페이지를 사용합니다.</p>
                   <div className="flex items-center gap-3">
                     <Popover open={queueCloseDateOpen} onOpenChange={setQueueCloseDateOpen}>
                       <PopoverTrigger asChild>
@@ -687,7 +744,7 @@ const ViewLimit = () => {
                         <Calendar mode="single" selected={queueCloseDate} captionLayout="dropdown" onSelect={(d) => { setQueueCloseDate(d); setQueueCloseDateOpen(false); }} />
                       </PopoverContent>
                     </Popover>
-                    <Input type="time" className="w-40" value={queueCloseTime} onChange={(e) => setQueueCloseTime(e.target.value)} />
+                    <TimeSelect value={queueCloseTime} onChange={setQueueCloseTime} />
                   </div>
                 </div>
 
@@ -800,7 +857,7 @@ const ViewLimit = () => {
                   기자재 신청 시작 일시
                 </TableHead>
                 <TableHead className="text-white text-center">
-                  티켓팅 종료 일시
+                  대기열 페이지 사용 종료 일시
                 </TableHead>
                 <TableHead className="text-white text-center">종강일</TableHead>
                 <TableHead className="text-white text-center">
