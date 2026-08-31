@@ -49,14 +49,15 @@ import {
 } from "../../../api/admin.api";
 import { useRegisterExcel } from "../../../api/adminUser.api";
 import { useAcademicTerms } from "../../../api/academicTerm.api";
+import type { UserRole, UserState } from "../../../type/admin.type";
 
 const Users = () => {
   const navigte = useNavigate();
   const [keyword, setKeyword] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editRole, setEditRole] = useState<"ADMIN" | "USER">("ADMIN");
-  const [editState, setEditState] = useState<"ACTIVE" | "BANNED">("ACTIVE");
+  const [editRole, setEditRole] = useState<UserRole>("ADMIN");
+  const [editState, setEditState] = useState<UserState>("ACTIVE");
   const [editEmail, setEditEmail] = useState("");
   const [excelDialogOpen, setExcelDialogOpen] = useState(false);
   const [excelTermId, setExcelTermId] = useState("");
@@ -452,7 +453,7 @@ const Users = () => {
                           <RoleCombobox
                             value={editRole}
                             onChange={(value) =>
-                              setEditRole(value as "ADMIN" | "USER")
+                              setEditRole(value as UserRole)
                             }
                           />
                         </TableCell>
@@ -465,7 +466,7 @@ const Users = () => {
                           <StateCombobox
                             value={editState}
                             onChange={(value) =>
-                              setEditState(value as "ACTIVE" | "BANNED")
+                              setEditState(value as UserState)
                             }
                           />
                         </TableCell>

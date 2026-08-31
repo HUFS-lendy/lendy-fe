@@ -19,7 +19,7 @@ const frameworks = [
     label: "정상",
   },
   {
-    value: "SUSPENDED",
+    value: "INACTIVE",
     label: "만료됨",
   },
   {

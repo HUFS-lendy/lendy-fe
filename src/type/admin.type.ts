@@ -1,5 +1,5 @@
-export type UserRole = "ADMIN" | "USER";
-export type UserState = "ACTIVE" | "BANNED";
+export type UserRole = "ADMIN" | "TA" | "USER" | "GUEST";
+export type UserState = "ACTIVE" | "INACTIVE" | "BANNED";
 
 export type AdminUser = {
   userId: number;
@@ -36,7 +36,7 @@ export type GetAdminUsersParams = {
 
 export type UpdateUserRequest = {
   userId: number;
-  role: "ADMIN" | "USER";
-  state: "ACTIVE" | "BANNED";
+  role: UserRole;
+  state: UserState;
   email: string;
 };
