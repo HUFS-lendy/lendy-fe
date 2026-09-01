@@ -11,6 +11,7 @@ const Header = () => {
     { label: "대여 신청", href: "/reservation" },
     { label: "마이페이지", href: "/mypage" },
     { label: "유의사항", href: "/notice" },
+    { label: "공지사항", href: "/announcements" },
     loggedIn
       ? {
           label: "로그아웃",

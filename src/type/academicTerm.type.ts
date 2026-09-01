@@ -6,6 +6,7 @@ export type AcademicTerm = {
   term: AcademicTermSeason;
   code: string;
   startDate: string;
+  reservationQueueVisibleAt: string | null;
   reservationOpenAt: string | null;
   reservationQueueCloseAt: string | null;
   endDate: string;
@@ -23,6 +24,7 @@ export type CreateAcademicTermRequest = {
   year: number;
   term: AcademicTermSeason;
   startDate: string;
+  reservationQueueVisibleAt: string;
   reservationOpenAt: string;
   reservationQueueCloseAt: string;
   endDate: string;

@@ -44,6 +44,7 @@ export const useCreateAcademicTerm = () => {
       year,
       term,
       startDate,
+      reservationQueueVisibleAt,
       reservationOpenAt,
       reservationQueueCloseAt,
       endDate,
@@ -56,6 +57,7 @@ export const useCreateAcademicTerm = () => {
             year,
             term,
             startDate,
+            reservationQueueVisibleAt,
             reservationOpenAt,
             reservationQueueCloseAt,
             endDate,
@@ -114,6 +116,7 @@ export const useUpdateAcademicTerm = () => {
       year,
       term,
       startDate,
+      reservationQueueVisibleAt,
       reservationOpenAt,
       reservationQueueCloseAt,
       endDate,
@@ -123,6 +126,7 @@ export const useUpdateAcademicTerm = () => {
       year: number;
       term: AcademicTermSeason;
       startDate: string;
+      reservationQueueVisibleAt: string;
       reservationOpenAt: string;
       reservationQueueCloseAt: string;
       endDate: string;
@@ -135,6 +139,7 @@ export const useUpdateAcademicTerm = () => {
             year,
             term,
             startDate,
+            reservationQueueVisibleAt,
             reservationOpenAt,
             reservationQueueCloseAt,
             endDate,

@@ -7,6 +7,7 @@ import {
   Archive,
   ClipboardCheck,
   CalendarClock,
+  Megaphone,
 } from "lucide-react";
 import {
   Sidebar,
@@ -76,6 +77,11 @@ const items: NavItem[] = [
       { title: "사용자 목록", url: "/admin/users" },
       { title: "회원가입", url: "/admin/sign-up" },
     ],
+  },
+  {
+    title: "공지사항",
+    icon: Megaphone,
+    children: [{ title: "공지사항 관리", url: "/admin/notices" }],
   },
   {
     title: "학기 설정",
