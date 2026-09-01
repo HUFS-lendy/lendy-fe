@@ -6,6 +6,7 @@ import type {
   ApiResponse,
   GenerateKitAssignmentsResult,
   KitAssignment,
+  KitAssignmentSortBy,
 } from "../type/ta.kitAssignmnet.type";
 
 const getKitAssignmentsQueryKey = (kitCourseOfferingId: number) => [
@@ -41,11 +42,18 @@ export const useKitAssignments = (kitCourseOfferingId: number) => {
   });
 };
 
+type GenerateKitAssignmentsParams = {
+  kitCourseOfferingId: number;
+  sortBy: KitAssignmentSortBy;
+};
+
 const generateKitAssignments = async (
-  kitCourseOfferingId: number,
+  params: GenerateKitAssignmentsParams,
 ): Promise<ApiResponse<GenerateKitAssignmentsResult>> => {
   const res = await apiClient.post<ApiResponse<GenerateKitAssignmentsResult>>(
-    `/api/ta/kit-course-offerings/${kitCourseOfferingId}/assignments/generate`,
+    `/api/ta/kit-course-offerings/${params.kitCourseOfferingId}/assignments/generate`,
+    undefined,
+    { params: { sortBy: params.sortBy } },
   );
 
   if (!res.data.success)
@@ -59,7 +67,7 @@ export const useGenerateKitAssignments = () => {
 
   return useMutation({
     mutationFn: generateKitAssignments,
-    onSuccess: async (response, kitCourseOfferingId) => {
+    onSuccess: async (response, variables) => {
       const result = response.data;
 
       toast.success(response.message || "KIT 자동 배정이 완료되었습니다.", {
@@ -69,12 +77,45 @@ export const useGenerateKitAssignments = () => {
       });
 
       await queryClient.invalidateQueries({
-        queryKey: getKitAssignmentsQueryKey(kitCourseOfferingId),
+        queryKey: getKitAssignmentsQueryKey(variables.kitCourseOfferingId),
       });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, "KIT 자동 배정에 실패했습니다."));
     },
+  });
+};
+
+const regenerateKitAssignments = async (
+  params: GenerateKitAssignmentsParams,
+): Promise<ApiResponse<GenerateKitAssignmentsResult>> => {
+  const res = await apiClient.post<ApiResponse<GenerateKitAssignmentsResult>>(
+    `/api/ta/kit-course-offerings/${params.kitCourseOfferingId}/assignments/regenerate`,
+    undefined,
+    { params: { sortBy: params.sortBy } },
+  );
+  if (!res.data.success)
+    throw new Error(res.data.message || "KIT 전체 재배정에 실패했습니다.");
+  return res.data;
+};
+
+export const useRegenerateKitAssignments = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: regenerateKitAssignments,
+    onSuccess: async (response, variables) => {
+      const result = response.data;
+      toast.success(response.message || "KIT 전체 재배정이 완료되었습니다.", {
+        description: result
+          ? `전체 ${result.totalEnrollmentCount}명 · 배정 ${result.newlyAssignedCount}명 · 미배정 ${result.notAssignedCount}명`
+          : undefined,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: getKitAssignmentsQueryKey(variables.kitCourseOfferingId),
+      });
+    },
+    onError: (error) =>
+      toast.error(getErrorMessage(error, "KIT 전체 재배정에 실패했습니다.")),
   });
 };
 
@@ -103,6 +144,18 @@ const returnKitAssignments = async (
   if (!res.data.success)
     throw new Error(res.data.message || "KIT 반납 처리에 실패했습니다.");
 
+  return res.data;
+};
+
+const cancelKitAssignments = async (
+  kitAssignmentIds: number[],
+): Promise<ApiResponse<unknown>> => {
+  const res = await apiClient.post<ApiResponse<unknown>>(
+    "/api/ta/kit-assignments/cancel-batch",
+    { kitAssignmentIds },
+  );
+  if (!res.data.success)
+    throw new Error(res.data.message || "KIT 배정 취소에 실패했습니다.");
   return res.data;
 };
 
@@ -152,5 +205,25 @@ export const useReturnKitAssignments = () => {
     onError: (error) => {
       toast.error(getErrorMessage(error, "KIT 반납 처리에 실패했습니다."));
     },
+  });
+};
+
+export const useCancelKitAssignments = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ kitAssignmentIds }: KitAssignmentActionParams) => {
+      await cancelKitAssignments(kitAssignmentIds);
+      return kitAssignmentIds.length;
+    },
+    onSuccess: async (count, variables) => {
+      toast.success("KIT 배정이 취소되었습니다.", {
+        description: `총 ${count}건의 키트가 다시 사용 가능해졌습니다.`,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: getKitAssignmentsQueryKey(variables.kitCourseOfferingId),
+      });
+    },
+    onError: (error) =>
+      toast.error(getErrorMessage(error, "KIT 배정 취소에 실패했습니다.")),
   });
 };
