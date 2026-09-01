@@ -60,6 +60,7 @@ const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
         admissionToken: null,
         admissionExpiresInSeconds: 0,
         serverTime: now.toISOString(),
+        reservationQueueVisibleAt: now.toISOString(),
         reservationOpenAt: openAt.toISOString(),
       });
       return;
@@ -74,6 +75,12 @@ const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
           applyStatus(data);
           if (data.status === "WAITING") {
             nextDelay = 1250 + Math.floor(Math.random() * 1000);
+          } else if (data.status === "NOT_VISIBLE" && data.reservationQueueVisibleAt) {
+            const secondsLeft = Math.max(
+              0,
+              (new Date(data.reservationQueueVisibleAt).getTime() - new Date(data.serverTime).getTime()) / 1000,
+            );
+            nextDelay = secondsLeft <= 30 ? 1000 : 30000;
           } else if (data.status === "BEFORE_OPEN" && data.reservationOpenAt) {
             const secondsLeft = Math.max(
               0,
@@ -139,6 +146,25 @@ const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
 
   if (preview && me && me.role !== "ADMIN") {
     return <Navigate to="/" replace />;
+  }
+
+  if (!preview && queue?.status === "NOT_VISIBLE") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#060a0c] px-6 text-white">
+        <div className="w-full max-w-xl border border-white/10 bg-[#0b1015] px-10 py-12 text-center shadow-[0_18px_60px_rgba(0,0,0,0.25)]">
+          <img src={Logo} alt="로고" className="mx-auto h-14 w-14" />
+          <p className="mt-6 text-xs tracking-[0.16em] text-neutral-500">HUFS CSE EQUIPMENT SERVICE</p>
+          <h1 className="mt-3 text-2xl font-semibold">기자재 예약 준비 중입니다</h1>
+          <p className="mt-4 text-sm leading-6 text-neutral-400">
+            아직 대기열 페이지 공개 시간이 아닙니다.<br />
+            공개 시각 이후 다시 접속해주세요.
+          </p>
+          <button type="button" className="mt-8 border border-white/20 px-5 py-2 text-sm text-neutral-300 hover:bg-white/10 hover:text-white" onClick={() => { window.location.href = "/"; }}>
+            홈으로 돌아가기
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (!preview && admitted && view === "RESERVATION") {
@@ -241,7 +267,7 @@ const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
                 </div>
               </>
             )}
-            {!admitted && queue && queue.status !== "BEFORE_OPEN" && (
+            {!admitted && queue && queue.status !== "BEFORE_OPEN" && queue.status !== "NOT_VISIBLE" && (
               <>
                 <h1 className="text-xl font-semibold">기자재 예약</h1>
                 <div className="mt-8 border border-white/10 bg-[#0b1015] px-8 py-20 text-center">

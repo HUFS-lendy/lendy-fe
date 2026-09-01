@@ -148,6 +148,7 @@ const ViewLimit = () => {
   const [startDateOpen, setStartDateOpen] = useState(false);
   const [endDateOpen, setEndDateOpen] = useState(false);
   const [reservationOpenDateOpen, setReservationOpenDateOpen] = useState(false);
+  const [queueVisibleDateOpen, setQueueVisibleDateOpen] = useState(false);
   const [queueCloseDateOpen, setQueueCloseDateOpen] = useState(false);
 
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
@@ -156,6 +157,8 @@ const ViewLimit = () => {
     Date | undefined
   >(undefined);
   const [reservationOpenTime, setReservationOpenTime] = useState("09:00");
+  const [queueVisibleDate, setQueueVisibleDate] = useState<Date | undefined>(undefined);
+  const [queueVisibleTime, setQueueVisibleTime] = useState("08:30");
   const [queueCloseDate, setQueueCloseDate] = useState<Date | undefined>(undefined);
   const [queueCloseTime, setQueueCloseTime] = useState("18:00");
 
@@ -228,6 +231,8 @@ const ViewLimit = () => {
     setEndDate(undefined);
     setReservationOpenDate(undefined);
     setReservationOpenTime("09:00");
+    setQueueVisibleDate(undefined);
+    setQueueVisibleTime("08:30");
     setQueueCloseDate(undefined);
     setQueueCloseTime("18:00");
     setActive("false");
@@ -237,6 +242,7 @@ const ViewLimit = () => {
     setStartDateOpen(false);
     setEndDateOpen(false);
     setReservationOpenDateOpen(false);
+    setQueueVisibleDateOpen(false);
     setQueueCloseDateOpen(false);
   };
 
@@ -266,6 +272,10 @@ const ViewLimit = () => {
       toast("기자재 신청 시작 날짜를 선택해주세요.");
       return;
     }
+    if (!queueVisibleDate) {
+      toast("대기열 화면 공개 날짜를 선택해주세요.");
+      return;
+    }
     if (!queueCloseDate) {
       toast("대기열 페이지 사용 종료 날짜를 선택해주세요.");
       return;
@@ -286,7 +296,12 @@ const ViewLimit = () => {
       return;
     }
     const reservationOpenAt = formatDateTimeString(reservationOpenDate, reservationOpenTime);
+    const reservationQueueVisibleAt = formatDateTimeString(queueVisibleDate, queueVisibleTime);
     const reservationQueueCloseAt = formatDateTimeString(queueCloseDate, queueCloseTime);
+    if (reservationQueueVisibleAt > reservationOpenAt) {
+      toast("대기열 화면 공개 일시는 기자재 신청 시작 일시보다 늦을 수 없습니다.");
+      return;
+    }
     if (reservationQueueCloseAt <= reservationOpenAt) {
       toast("대기열 페이지 사용 종료 일시는 기자재 신청 시작 일시보다 늦어야 합니다.");
       return;
@@ -297,6 +312,7 @@ const ViewLimit = () => {
         year: Number(year),
         term: selectedTerm,
         startDate: formatDateToKSTString(startDate),
+        reservationQueueVisibleAt,
         reservationOpenAt,
         reservationQueueCloseAt,
         endDate: formatDateToKSTString(endDate),
@@ -376,6 +392,16 @@ const ViewLimit = () => {
       setReservationOpenTime("09:00");
     }
 
+    if (selectedAcademicTerm.reservationQueueVisibleAt) {
+      const queueVisible = new Date(selectedAcademicTerm.reservationQueueVisibleAt);
+      setQueueVisibleDate(queueVisible);
+      setQueueVisibleTime(`${String(queueVisible.getHours()).padStart(2, "0")}:${String(queueVisible.getMinutes()).padStart(2, "0")}`);
+    } else if (selectedAcademicTerm.reservationOpenAt) {
+      const reservationDate = new Date(selectedAcademicTerm.reservationOpenAt);
+      setQueueVisibleDate(reservationDate);
+      setQueueVisibleTime(`${String(reservationDate.getHours()).padStart(2, "0")}:${String(reservationDate.getMinutes()).padStart(2, "0")}`);
+    }
+
     if (selectedAcademicTerm.reservationQueueCloseAt) {
       const queueClose = new Date(selectedAcademicTerm.reservationQueueCloseAt);
       setQueueCloseDate(queueClose);
@@ -415,6 +441,10 @@ const ViewLimit = () => {
       toast("기자재 신청 시작 날짜를 선택해주세요.");
       return;
     }
+    if (!queueVisibleDate) {
+      toast("대기열 화면 공개 날짜를 선택해주세요.");
+      return;
+    }
     if (!queueCloseDate) {
       toast("대기열 페이지 사용 종료 날짜를 선택해주세요.");
       return;
@@ -435,7 +465,12 @@ const ViewLimit = () => {
       return;
     }
     const reservationOpenAt = formatDateTimeString(reservationOpenDate, reservationOpenTime);
+    const reservationQueueVisibleAt = formatDateTimeString(queueVisibleDate, queueVisibleTime);
     const reservationQueueCloseAt = formatDateTimeString(queueCloseDate, queueCloseTime);
+    if (reservationQueueVisibleAt > reservationOpenAt) {
+      toast("대기열 화면 공개 일시는 기자재 신청 시작 일시보다 늦을 수 없습니다.");
+      return;
+    }
     if (reservationQueueCloseAt <= reservationOpenAt) {
       toast("대기열 페이지 사용 종료 일시는 기자재 신청 시작 일시보다 늦어야 합니다.");
       return;
@@ -447,6 +482,7 @@ const ViewLimit = () => {
         year: Number(year),
         term: selectedTerm,
         startDate: formatDateToKSTString(startDate),
+        reservationQueueVisibleAt,
         reservationOpenAt,
         reservationQueueCloseAt,
         endDate: formatDateToKSTString(endDate),
@@ -567,6 +603,26 @@ const ViewLimit = () => {
                       />
                     </PopoverContent>
                   </Popover>
+                </div>
+
+                <div>
+                  <Label className="pb-2">대기열 화면 공개 일시</Label>
+                  <p className="text-xs text-neutral-400 pb-2">
+                    이 시각 전에는 학생에게 서버시간과 카운트다운을 표시하지 않습니다.
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <Popover open={queueVisibleDateOpen} onOpenChange={setQueueVisibleDateOpen}>
+                      <PopoverTrigger asChild>
+                        <div className="inline-block w-fit border text-sm rounded-sm px-3 py-1 cursor-pointer">
+                          {queueVisibleDate ? queueVisibleDate.toLocaleDateString() : "날짜 선택"}
+                        </div>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto rounded-2xl overflow-hidden p-0 bg-white text-black border border-black/10" align="start">
+                        <Calendar mode="single" selected={queueVisibleDate} captionLayout="dropdown" onSelect={(d) => { setQueueVisibleDate(d); setQueueVisibleDateOpen(false); }} />
+                      </PopoverContent>
+                    </Popover>
+                    <TimeSelect value={queueVisibleTime} onChange={setQueueVisibleTime} />
+                  </div>
                 </div>
 
                 <div>
@@ -764,6 +820,26 @@ const ViewLimit = () => {
                 </div>
 
                 <div>
+                  <Label className="pb-2">대기열 화면 공개 일시</Label>
+                  <p className="text-xs text-neutral-400 pb-2">
+                    이 시각 전에는 학생에게 서버시간과 카운트다운을 표시하지 않습니다.
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <Popover open={queueVisibleDateOpen} onOpenChange={setQueueVisibleDateOpen}>
+                      <PopoverTrigger asChild>
+                        <div className="inline-block w-fit border text-sm rounded-sm px-3 py-1 cursor-pointer">
+                          {queueVisibleDate ? queueVisibleDate.toLocaleDateString() : "날짜 선택"}
+                        </div>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto rounded-2xl overflow-hidden p-0 bg-white text-black border border-black/10" align="start">
+                        <Calendar mode="single" selected={queueVisibleDate} captionLayout="dropdown" onSelect={(d) => { setQueueVisibleDate(d); setQueueVisibleDateOpen(false); }} />
+                      </PopoverContent>
+                    </Popover>
+                    <TimeSelect value={queueVisibleTime} onChange={setQueueVisibleTime} />
+                  </div>
+                </div>
+
+                <div>
                   <Label className="pb-2">기자재 신청 시작 일시</Label>
                   <p className="text-xs text-neutral-400 pb-2">
                     학생들이 온라인으로 기자재 예약 신청을 시작할 수 있는
@@ -933,6 +1009,9 @@ const ViewLimit = () => {
                 <TableHead className="text-white text-center">학기</TableHead>
                 <TableHead className="text-white text-center">개강일</TableHead>
                 <TableHead className="text-white text-center">
+                  대기열 화면 공개 일시
+                </TableHead>
+                <TableHead className="text-white text-center">
                   기자재 신청 시작 일시
                 </TableHead>
                 <TableHead className="text-white text-center">
@@ -948,14 +1027,14 @@ const ViewLimit = () => {
             <TableBody className="cursor-pointer">
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-6">
+                  <TableCell colSpan={9} className="text-center py-6">
                     불러오는 중...
                   </TableCell>
                 </TableRow>
               ) : isError ? (
                 <TableRow>
                   <TableCell
-                    colSpan={8}
+                    colSpan={9}
                     className="text-center py-6 text-red-300"
                   >
                     학기 목록을 불러오지 못했습니다.
@@ -963,7 +1042,7 @@ const ViewLimit = () => {
                 </TableRow>
               ) : academicTerms.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-6">
+                  <TableCell colSpan={9} className="text-center py-6">
                     등록된 학기 정보가 없습니다.
                   </TableCell>
                 </TableRow>
@@ -987,6 +1066,9 @@ const ViewLimit = () => {
                           : term.code}
                     </TableCell>
                     <TableCell>{formatDateLabel(term.startDate)}</TableCell>
+                    <TableCell>
+                      {formatReservationOpenAtLabel(term.reservationQueueVisibleAt)}
+                    </TableCell>
                     <TableCell>
                       {formatReservationOpenAtLabel(term.reservationOpenAt)}
                     </TableCell>
