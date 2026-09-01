@@ -27,3 +27,5 @@ export type GenerateKitAssignmentsResult = {
   newlyAssignedStudentIds: string[];
   notAssignedStudentIds: string[];
 };
+
+export type KitAssignmentSortBy = "STUDENT_ID" | "NAME";

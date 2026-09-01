@@ -8,6 +8,8 @@ import type {
   CreateGuestEnrollmentRequest,
   CreateInternalEnrollmentRequest,
   BatchEnrollmentResult,
+  ExcelEnrollmentResult,
+  EnrollmentSyncPreview,
 } from "../type/ta.kitEnrollment.type";
 
 const getCourseEnrollmentsQueryKey = (kitCourseOfferingId: number) => [
@@ -100,6 +102,83 @@ export const useCreateInternalEnrollmentsBatch = () => {
   });
 };
 
+export const useImportEnrollmentsExcel = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      kitCourseOfferingId,
+      file,
+    }: {
+      kitCourseOfferingId: number;
+      file: File;
+    }) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await apiClient.post<ApiResponse<ExcelEnrollmentResult>>(
+        `/api/ta/kit-course-offerings/${kitCourseOfferingId}/enrollments/import-excel`,
+        formData,
+      );
+      if (!res.data.success)
+        throw new Error(res.data.message || "수강생 엑셀 등록에 실패했습니다.");
+      return res.data;
+    },
+    onSuccess: async (response, variables) => {
+      toast.success(`${response.data.registeredCount}명 수강 등록 완료`);
+      await queryClient.invalidateQueries({
+        queryKey: getCourseEnrollmentsQueryKey(variables.kitCourseOfferingId),
+      });
+    },
+    onError: (error) =>
+      toast.error(getErrorMessage(error, "수강생 엑셀 등록에 실패했습니다.")),
+  });
+};
+
+const postEnrollmentExcel = async (
+  path: "compare-excel" | "sync-excel",
+  kitCourseOfferingId: number,
+  file: File,
+  checksum?: string,
+) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  if (checksum) formData.append("checksum", checksum);
+  const res = await apiClient.post<ApiResponse<EnrollmentSyncPreview>>(
+    `/api/ta/kit-course-offerings/${kitCourseOfferingId}/enrollments/${path}`,
+    formData,
+  );
+  if (!res.data.success) throw new Error(res.data.message || "엑셀 명단 처리에 실패했습니다.");
+  return res.data;
+};
+
+export const useCompareEnrollmentsExcel = () =>
+  useMutation({
+    mutationFn: ({ kitCourseOfferingId, file }: { kitCourseOfferingId: number; file: File }) =>
+      postEnrollmentExcel("compare-excel", kitCourseOfferingId, file),
+    onError: (error) => toast.error(getErrorMessage(error, "명단 비교에 실패했습니다.")),
+  });
+
+export const useSyncEnrollmentsExcel = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      kitCourseOfferingId,
+      file,
+      checksum,
+    }: {
+      kitCourseOfferingId: number;
+      file: File;
+      checksum: string;
+    }) => postEnrollmentExcel("sync-excel", kitCourseOfferingId, file, checksum),
+    onSuccess: async (response, variables) => {
+      toast.success(response.message || "최신 명단으로 동기화했습니다.");
+      await queryClient.invalidateQueries({
+        queryKey: getCourseEnrollmentsQueryKey(variables.kitCourseOfferingId),
+      });
+    },
+    onError: (error) => toast.error(getErrorMessage(error, "명단 동기화에 실패했습니다.")),
+  });
+};
+
 // 게스트 학생 수강 등록
 const createGuestEnrollment = async ({
   kitCourseOfferingId,
@@ -165,7 +244,7 @@ export const useDropEnrollments = () => {
       const serverMessage = responses.length === 1 ? responses[0].message : "";
       toast.success(
         serverMessage ||
-          `${responses.length}명의 수강 상태가 DROPPED로 변경되었습니다.`,
+          "선택한 수강생을 제외하고 대기 중인 KIT 배정을 취소했습니다.",
       );
       await queryClient.invalidateQueries({
         queryKey: getCourseEnrollmentsQueryKey(variables.kitCourseOfferingId),

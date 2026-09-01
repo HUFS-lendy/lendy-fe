@@ -3,11 +3,13 @@ import { useParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
   useGenerateKitAssignments,
+  useRegenerateKitAssignments,
+  useCancelKitAssignments,
   useKitAssignments,
   useRentKitAssignments,
   useReturnKitAssignments,
 } from "../../../api/ta.kitAssignment.api";
-import type { KitAssignment } from "../../../type/ta.kitAssignmnet.type";
+import type { KitAssignment, KitAssignmentSortBy } from "../../../type/ta.kitAssignmnet.type";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -45,6 +47,9 @@ const KitOffering = () => {
   const operationListPath = me?.role === "ADMIN" ? "/admin/course-operations" : "/ta/kit-course-offering";
 
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
+  const [isRegenerateDialogOpen, setIsRegenerateDialogOpen] = useState(false);
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [assignmentSortBy, setAssignmentSortBy] = useState<KitAssignmentSortBy>("STUDENT_ID");
   const [isRentDialogOpen, setIsRentDialogOpen] = useState(false);
   const [isReturnDialogOpen, setIsReturnDialogOpen] = useState(false);
   const [selectedAssignmentIds, setSelectedAssignmentIds] = useState<number[]>(
@@ -59,6 +64,10 @@ const KitOffering = () => {
   } = useKitAssignments(courseOfferingId);
   const { mutate: generateKitAssignments, isPending: isGenerating } =
     useGenerateKitAssignments();
+  const { mutate: regenerateKitAssignments, isPending: isRegenerating } =
+    useRegenerateKitAssignments();
+  const { mutate: cancelKitAssignments, isPending: isCancelling } =
+    useCancelKitAssignments();
   const { mutate: rentKitAssignments, isPending: isRenting } =
     useRentKitAssignments();
   const { mutate: returnKitAssignments, isPending: isReturning } =
@@ -66,7 +75,7 @@ const KitOffering = () => {
 
   const isInvalidCourseOfferingId =
     !Number.isFinite(courseOfferingId) || courseOfferingId <= 0;
-  const isProcessing = isGenerating || isRenting || isReturning;
+  const isProcessing = isGenerating || isRegenerating || isCancelling || isRenting || isReturning;
 
   const selectedAssignmentIdSet = useMemo(
     () => new Set(selectedAssignmentIds),
@@ -177,11 +186,28 @@ const KitOffering = () => {
       return;
     }
 
-    generateKitAssignments(courseOfferingId, {
+    generateKitAssignments({ kitCourseOfferingId: courseOfferingId, sortBy: assignmentSortBy }, {
       onSuccess: () => {
         setIsGenerateDialogOpen(false);
       },
     });
+  };
+
+  const handleRegenerateKitAssignments = () => {
+    regenerateKitAssignments(
+      { kitCourseOfferingId: courseOfferingId, sortBy: assignmentSortBy },
+      { onSuccess: () => { setSelectedAssignmentIds([]); setIsRegenerateDialogOpen(false); } },
+    );
+  };
+
+  const handleCancelSelectedAssignments = () => {
+    if (selectedAssignments.length === 0) return toast.warning("취소할 배정을 선택해주세요.");
+    if (selectedAssignments.some((assignment) => !isRentableAssignment(assignment)))
+      return toast.warning("대여 전 배정만 취소할 수 있습니다.");
+    cancelKitAssignments(
+      { kitCourseOfferingId: courseOfferingId, kitAssignmentIds: selectedAssignmentIds },
+      { onSuccess: () => { setSelectedAssignmentIds([]); setIsCancelDialogOpen(false); } },
+    );
   };
 
   const handleRentSelectedAssignments = () => {
@@ -295,7 +321,19 @@ const KitOffering = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex max-w-5xl flex-wrap items-center justify-end gap-2">
+            <label className="flex items-center gap-2 rounded-sm border border-neutral-600 px-3 py-1 text-sm">
+              <span className="text-neutral-400">배정 기준</span>
+              <select
+                value={assignmentSortBy}
+                disabled={isProcessing}
+                onChange={(event) => setAssignmentSortBy(event.target.value as KitAssignmentSortBy)}
+                className="bg-transparent text-white outline-none disabled:text-neutral-600"
+              >
+                <option value="STUDENT_ID" className="bg-neutral-900">학번순</option>
+                <option value="NAME" className="bg-neutral-900">이름순</option>
+              </select>
+            </label>
             <button
               type="button"
               disabled={isProcessing || assignedCount === 0}
@@ -332,8 +370,8 @@ const KitOffering = () => {
                 <AlertDialogHeader>
                   <AlertDialogTitle>KIT 자동 배정</AlertDialogTitle>
                   <AlertDialogDescription>
-                    수강생과 사용 가능한 KIT를 기준으로 자동 배정을
-                    실행하시겠습니까?
+                    미배정 학생에게 {assignmentSortBy === "STUDENT_ID" ? "학번순" : "이름순(동명이인은 학번순)"}으로
+                    사용 가능한 KIT를 배정합니다.
                     <br />
                     이미 배정된 학생은 기존 배정이 유지됩니다.
                   </AlertDialogDescription>
@@ -354,6 +392,67 @@ const KitOffering = () => {
                     }}
                   >
                     {isGenerating ? "배정 중..." : "자동 배정"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog open={isRegenerateDialogOpen} onOpenChange={(open) => !isRegenerating && setIsRegenerateDialogOpen(open)}>
+              <AlertDialogTrigger asChild>
+                <button
+                  type="button"
+                  disabled={isInvalidCourseOfferingId || isProcessing || assignments.length === 0}
+                  className="border cursor-pointer px-3 py-1 rounded-sm hover:bg-neutral-400 hover:text-black border-neutral-400 text-sm disabled:cursor-not-allowed disabled:border-neutral-600 disabled:text-neutral-600 disabled:hover:bg-transparent"
+                >
+                  전체 재배정
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>KIT 전체 재배정</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    모든 대여 전 배정을 회수하고 최종 명단을 {assignmentSortBy === "STUDENT_ID" ? "학번순" : "이름순(동명이인은 학번순)"}으로 정렬하여 MP-001부터 다시 배정합니다.
+                    <br />대여·반납 이력이 하나라도 있으면 안전을 위해 실행되지 않습니다.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={isRegenerating}>취소</AlertDialogCancel>
+                  <AlertDialogAction
+                    disabled={isRegenerating}
+                    onClick={(event) => { event.preventDefault(); handleRegenerateKitAssignments(); }}
+                  >
+                    {isRegenerating ? "재배정 중..." : "전체 재배정"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog open={isCancelDialogOpen} onOpenChange={(open) => !isCancelling && setIsCancelDialogOpen(open)}>
+              <AlertDialogTrigger asChild>
+                <button
+                  type="button"
+                  disabled={isProcessing || selectedCount === 0}
+                  className="border cursor-pointer px-3 py-1 rounded-sm border-red-500/70 text-red-300 hover:bg-red-500/15 disabled:cursor-not-allowed disabled:border-neutral-700 disabled:text-neutral-600"
+                >
+                  선택 배정 취소
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>선택한 배정 취소</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    선택한 {selectedCount}건의 대여 전 배정을 취소합니다. 해당 KIT는 즉시 사용 가능 상태로 돌아갑니다.
+                    <br />대여 중이거나 반납 완료된 항목이 포함되면 전체 요청이 취소됩니다.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={isCancelling}>닫기</AlertDialogCancel>
+                  <AlertDialogAction
+                    disabled={isCancelling}
+                    onClick={(event) => { event.preventDefault(); handleCancelSelectedAssignments(); }}
+                    className="bg-red-600 text-white hover:bg-red-700"
+                  >
+                    {isCancelling ? "취소 처리 중..." : "배정 취소"}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

@@ -108,6 +108,7 @@ const Courses = () => {
   const { data: courses = [], isLoading: isCoursesLoading } = useCourses();
   const { data: models = [], isLoading: isModelsLoading } = useModels();
   const { data: usersData, isLoading: isUsersLoading } = useAdminUsers({
+    roles: "TA,ADMIN",
     page: 0,
     size: 100,
   });
