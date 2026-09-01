@@ -15,6 +15,10 @@ import PwChange from "./pages/PwChange";
 import PwReset from "./pages/PwReset";
 import EmailChange from "./pages/EmailChange";
 import Notice from "./pages/Notice";
+import NoticeDetail from "./pages/NoticeDetail";
+import AnnouncementList from "./pages/AnnouncementList";
+import NoticeManage from "./pages/admin/notice/NoticeManage";
+import NoticeEditor from "./pages/admin/notice/NoticeEditor";
 import Devices from "./pages/admin/device/Devices";
 import Device from "./pages/admin/device/Device";
 import Kits from "./pages/admin/kit/Kits";
@@ -76,6 +80,8 @@ const router = createBrowserRouter([
       { element: <PwChange />, path: "/pw-change" },
       { element: <EmailChange />, path: "/email-change" },
       { element: <Notice />, path: "/notice" },
+      { element: <AnnouncementList />, path: "/announcements" },
+      { element: <NoticeDetail />, path: "/announcements/:noticeId" },
       { element: <Otp />, path: "/otp" },
       {
         path: "admin",
@@ -101,6 +107,9 @@ const router = createBrowserRouter([
           { path: "course-operations", element: <KitCourseOffering /> },
           { path: "course-operations/:kitCourseOfferingId", element: <Students /> },
           { path: "course-operations/:kitCourseOfferingId/kits", element: <KitOffering /> },
+          { path: "notices", element: <NoticeManage /> },
+          { path: "notices/new", element: <NoticeEditor /> },
+          { path: "notices/:noticeId/edit", element: <NoticeEditor /> },
         ],
       },
       {
