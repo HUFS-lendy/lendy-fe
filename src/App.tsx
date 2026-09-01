@@ -109,6 +109,7 @@ const router = createBrowserRouter([
           { path: "course-operations/:kitCourseOfferingId/kits", element: <KitOffering /> },
           { path: "notices", element: <NoticeManage /> },
           { path: "notices/new", element: <NoticeEditor /> },
+          { path: "notices/:noticeId", element: <NoticeDetail /> },
           { path: "notices/:noticeId/edit", element: <NoticeEditor /> },
         ],
       },
