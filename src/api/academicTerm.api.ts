@@ -28,10 +28,11 @@ const fetchAcademicTerms = async (): Promise<AcademicTerm[]> => {
   return res.data.data;
 };
 
-export const useAcademicTerms = () => {
+export const useAcademicTerms = (enabled = true) => {
   return useQuery<AcademicTerm[]>({
     queryKey: ["academic_terms"],
     queryFn: fetchAcademicTerms,
+    enabled,
   });
 };
 

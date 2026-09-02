@@ -41,6 +41,7 @@ import Courses from "./pages/admin/kit/Courses";
 import KitOffering from "./pages/ta/students/kitOffering";
 import ReservationWaiting from "./pages/ReservationWaiting";
 import RentalHistory from "./pages/admin/rental/RentalHistory";
+import ReservationPreviewManage from "./pages/admin/limit/ReservationPreviewManage";
 
 const router = createBrowserRouter([
   {
@@ -98,6 +99,7 @@ const router = createBrowserRouter([
           { path: "sign-up", element: <SignUp /> },
           { path: "set-limit", element: <SetLimit /> },
           { path: "view-limit", element: <ViewLimit /> },
+          { path: "reservation-preview", element: <ReservationPreviewManage /> },
           { path: "category", element: <Category /> },
           { path: "check-in", element: <CheckIn /> },
           { path: "manual-rental", element: <ManualRental /> },
