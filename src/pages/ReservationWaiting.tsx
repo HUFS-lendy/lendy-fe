@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { CalendarClock, Clock3, Laptop, LogOut, UserRound } from "lucide-react";
 import Logo from "../assets/cse-logo.png";
 import { getReservationQueueStatus, joinReservationQueue } from "../api/reservationUser.api";
 import { clearReservationAdmission, saveReservationAdmission } from "../lib/reservationAdmission";
 import type { ReservationQueueData } from "../type/reservationUser.type";
 import useAuth from "../hooks/useAuth";
-import Lend from "./Lend";
+import Lend, { type ReservationPreviewState } from "./Lend";
 import { useMe } from "../api/user.api";
+import { useAcademicTerms } from "../api/academicTerm.api";
 
 type View = "TIME" | "RESERVATION";
 const pad = (value: number) => String(value).padStart(2, "0");
@@ -15,14 +16,19 @@ const dateText = (date: Date) => `${date.getFullYear()}. ${pad(date.getMonth() +
 const timeText = (date: Date) => `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 
 const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
+  const [searchParams] = useSearchParams();
+  const requestedStage = searchParams.get("stage") ?? "countdown";
+  const previewStage = ["hidden", "countdown", "before-open", "waiting", "selection", "confirm", "pledge", "success", "limit", "failure"].includes(requestedStage) ? requestedStage : "countdown";
   const { logout } = useAuth();
   const { data: me } = useMe();
+  const { data: academicTerms = [] } = useAcademicTerms(preview);
   const [view, setView] = useState<View>("TIME");
   const [queue, setQueue] = useState<ReservationQueueData | null>(null);
   const [serverNow, setServerNow] = useState<Date | null>(null);
   const [admitted, setAdmitted] = useState(false);
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [previewWaitSeconds, setPreviewWaitSeconds] = useState(8);
   const serverOffset = useRef(0);
 
   const applyStatus = useCallback((data: ReservationQueueData) => {
@@ -30,7 +36,7 @@ const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
     setServerNow(new Date(data.serverTime));
     setQueue(data);
     if (data.status === "READY" && data.admissionToken) {
-      saveReservationAdmission(data.admissionToken, data.admissionExpiresInSeconds);
+      if (!preview) saveReservationAdmission(data.admissionToken, data.admissionExpiresInSeconds);
       setAdmitted(true);
     }
     if (data.status === "DISABLED" || data.status === "CLOSED") {
@@ -39,10 +45,10 @@ const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
       if (data.status === "CLOSED") setView("RESERVATION");
     }
     if (data.status === "BEFORE_OPEN") {
-      clearReservationAdmission();
+      if (!preview) clearReservationAdmission();
       setAdmitted(false);
     }
-  }, []);
+  }, [preview]);
 
   useEffect(() => {
     const clock = setInterval(() => setServerNow(new Date(Date.now() + serverOffset.current)), 250);
@@ -53,12 +59,15 @@ const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
     if (preview) {
       const now = new Date();
       const openAt = new Date(now.getTime() + 15 * 60 * 1000);
+      setError(null);
+      setAdmitted(false);
+      setView(previewStage === "countdown" || previewStage === "hidden" ? "TIME" : "RESERVATION");
       applyStatus({
-        status: "BEFORE_OPEN",
-        position: null,
+        status: previewStage === "hidden" ? "NOT_VISIBLE" : ["countdown", "before-open"].includes(previewStage) ? "BEFORE_OPEN" : previewStage === "waiting" ? "WAITING" : "READY",
+        position: previewStage === "waiting" ? 37 : null,
         estimatedWaitSeconds: Math.ceil(37 / 5),
-        admissionToken: null,
-        admissionExpiresInSeconds: 0,
+        admissionToken: ["selection", "confirm", "pledge", "success", "limit", "failure"].includes(previewStage) ? "preview-admission" : null,
+        admissionExpiresInSeconds: 300,
         serverTime: now.toISOString(),
         reservationQueueVisibleAt: now.toISOString(),
         reservationOpenAt: openAt.toISOString(),
@@ -102,22 +111,35 @@ const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [applyStatus, preview]);
+  }, [applyStatus, preview, previewStage]);
+
+  useEffect(() => {
+    if (!preview || queue?.status !== "WAITING") return;
+    if (previewWaitSeconds <= 0) {
+      applyStatus({ ...queue, status: "READY", position: null, estimatedWaitSeconds: 0, admissionToken: "preview-admission", admissionExpiresInSeconds: 300 });
+      return;
+    }
+    const timer = window.setTimeout(() => setPreviewWaitSeconds((seconds) => seconds - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [applyStatus, preview, previewWaitSeconds, queue]);
 
   const openAt = queue?.reservationOpenAt ? new Date(queue.reservationOpenAt) : null;
+  const configuredReservationOpenAt = academicTerms.find((term) => term.active)?.reservationOpenAt
+    ?? [...academicTerms].sort((a, b) => b.id - a.id).find((term) => term.reservationOpenAt)?.reservationOpenAt
+    ?? null;
+  const configuredQueueVisibleAt = academicTerms.find((term) => term.active)?.reservationQueueVisibleAt
+    ?? [...academicTerms].sort((a, b) => b.id - a.id).find((term) => term.reservationQueueVisibleAt)?.reservationQueueVisibleAt
+    ?? null;
+  const sidebarOpenAt = preview && configuredReservationOpenAt ? new Date(configuredReservationOpenAt) : openAt;
+  const queueVisibleAt = preview
+    ? configuredQueueVisibleAt ? new Date(configuredQueueVisibleAt) : null
+    : queue?.reservationQueueVisibleAt ? new Date(queue.reservationQueueVisibleAt) : null;
   const canEnter = queue?.status !== "BEFORE_OPEN" && queue !== null;
-  const secondsUntilOpen = openAt && serverNow
-    ? Math.max(0, Math.ceil((openAt.getTime() - serverNow.getTime()) / 1000))
-    : null;
-  const remainingText = secondsUntilOpen === null
-    ? "확인 중"
-    : secondsUntilOpen <= 0
-      ? "예약이 시작되었습니다"
-      : `${Math.floor(secondsUntilOpen / 3600) > 0 ? `${Math.floor(secondsUntilOpen / 3600)}시간 ` : ""}${Math.floor((secondsUntilOpen % 3600) / 60)}분 ${secondsUntilOpen % 60}초 남음`;
-
   const enterReservation = async () => {
     setView("RESERVATION");
     if (preview) {
+      if (queue?.status === "BEFORE_OPEN") return;
+      setPreviewWaitSeconds(8);
       setQueue((current) => current ? {
         ...current,
         status: "WAITING",
@@ -148,18 +170,44 @@ const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
     return <Navigate to="/" replace />;
   }
 
-  if (!preview && queue?.status === "NOT_VISIBLE") {
+  const previewToolbar = preview ? (
+    <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 border border-emerald-400/30 bg-[#10171c] px-4 py-3 shadow-2xl">
+      <span className="text-xs font-semibold text-emerald-400">관리자 시뮬레이션</span>
+      <select value={previewStage} onChange={(event) => { window.location.search = `?stage=${event.target.value}`; }} className="border border-white/20 bg-[#060a0c] px-3 py-1.5 text-sm text-white outline-none">
+        <option value="hidden">서비스 공개 전</option><option value="countdown">예약 시작 전 서버시간</option><option value="before-open">예약 시작 전 메뉴 선택</option><option value="waiting">대기열 입장</option><option value="selection">기자재 선택</option><option value="confirm">예약 확인</option><option value="pledge">서약 조항</option><option value="success">예약 완료</option><option value="limit">학기당 1대 제한</option><option value="failure">예약 실패</option>
+      </select>
+      <button type="button" className="text-xs text-neutral-400 hover:text-white" onClick={() => window.close()}>닫기</button>
+    </div>
+  ) : null;
+
+  if (!preview && queue === null && !error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#060a0c] text-white">
+        <div className="text-center">
+          <img src={Logo} alt="컴퓨터공학부 로고" className="mx-auto h-14 w-14 opacity-80" />
+          <p className="mt-5 text-sm text-neutral-500">예약 서비스 정보를 확인하고 있습니다.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (queue?.status === "NOT_VISIBLE") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#060a0c] px-6 text-white">
-        <div className="w-full max-w-xl border border-white/10 bg-[#0b1015] px-10 py-12 text-center shadow-[0_18px_60px_rgba(0,0,0,0.25)]">
-          <img src={Logo} alt="로고" className="mx-auto h-14 w-14" />
+        {previewToolbar}
+        <div className="relative w-full max-w-xl overflow-hidden border border-white/10 bg-[#0b1015] px-10 py-12 text-center shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+          <div className="absolute left-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+          <img src={Logo} alt="컴퓨터공학부 로고" className="mx-auto h-14 w-14" />
           <p className="mt-6 text-xs tracking-[0.16em] text-neutral-500">HUFS CSE EQUIPMENT SERVICE</p>
-          <h1 className="mt-3 text-2xl font-semibold">기자재 예약 준비 중입니다</h1>
-          <p className="mt-4 text-sm leading-6 text-neutral-400">
-            아직 대기열 페이지 공개 시간이 아닙니다.<br />
-            공개 시각 이후 다시 접속해주세요.
-          </p>
-          <button type="button" className="mt-8 border border-white/20 px-5 py-2 text-sm text-neutral-300 hover:bg-white/10 hover:text-white" onClick={() => { window.location.href = "/"; }}>
+          <h1 className="mt-3 text-2xl font-semibold">기자재 예약 서비스 이용 안내</h1>
+          <p className="mt-4 text-sm leading-6 text-neutral-400">기자재 예약 서비스는 아래 일시부터 이용할 수 있습니다.</p>
+          <div className="mx-auto mt-7 max-w-sm border-y border-white/10 bg-white/[0.025] px-6 py-5">
+            <p className="text-xs font-medium tracking-wide text-neutral-500">예약 서비스 이용 가능 일시</p>
+            <p className="mt-3 text-sm text-neutral-400 tabular-nums">{queueVisibleAt ? dateText(queueVisibleAt) : "확인 중"}</p>
+            <p className="mt-1 font-mono text-2xl font-semibold tracking-wide text-white tabular-nums">{queueVisibleAt ? timeText(queueVisibleAt) : "--:--:--"}</p>
+          </div>
+          <p className="mt-6 text-sm text-neutral-500">공개 시각 이후 다시 접속해 주시기 바랍니다.</p>
+          <button type="button" className="mt-8 border border-white/20 px-5 py-2.5 text-sm text-neutral-300 transition hover:bg-white/10 hover:text-white" onClick={() => { window.location.href = "/"; }}>
             홈으로 돌아가기
           </button>
         </div>
@@ -184,12 +232,25 @@ const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
 
         <div className="border-b border-white/10 px-6 py-5">
           <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center border border-white/10 bg-white/[0.05]">
+              <CalendarClock className="h-4 w-4 text-neutral-400" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] font-medium tracking-wide text-neutral-500">기자재 예약 시작 시간</p>
+              <p className="mt-1.5 text-[11px] text-neutral-500 tabular-nums">{sidebarOpenAt ? dateText(sidebarOpenAt) : "-"}</p>
+              <p className="mt-0.5 font-mono text-base font-semibold tracking-wide text-white tabular-nums">{sidebarOpenAt ? timeText(sidebarOpenAt) : "--:--:--"}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-b border-white/10 px-6 py-5">
+          <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/10">
               <UserRound className="h-4 w-4 text-neutral-300" />
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium">{me?.username ?? "사용자"}</p>
-              <p className="mt-0.5 truncate text-xs text-neutral-500">{me?.studentId ?? "-"}</p>
+              <p className="truncate text-sm font-medium">{preview ? "홍길동" : me?.username ?? "사용자"}</p>
+              <p className="mt-0.5 truncate text-xs text-neutral-500">{preview ? "202699999" : me?.studentId ?? "-"}</p>
             </div>
           </div>
         </div>
@@ -219,38 +280,22 @@ const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
         )}
         {view === "TIME" && (
           <section className="mx-auto max-w-5xl">
-            <p className="text-xs tracking-[0.14em] text-neutral-500">RESERVATION SERVICE</p>
-            <h1 className="mt-2 text-2xl font-semibold">서버시간</h1>
-            <div className="relative mt-8 overflow-hidden border border-white/15 bg-[#0d1319] shadow-[0_12px_40px_rgba(0,0,0,0.25)]">
-              <div className="absolute inset-y-0 left-0 w-1 bg-white" />
-              <div className="flex items-center justify-between gap-8 px-8 py-7">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center border border-white/10 bg-white/[0.06]">
-                    <CalendarClock className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold tracking-[0.16em] text-neutral-500">RESERVATION OPENS</p>
-                    <p className="mt-1.5 text-base font-semibold text-white">기자재 예약 시작 일시</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-6 text-right">
-                  <div>
-                    <p className="text-sm font-medium text-neutral-400 tabular-nums">{openAt ? dateText(openAt) : "-"}</p>
-                    <p className="mt-0.5 font-mono text-3xl font-semibold tracking-tight text-white tabular-nums">{openAt ? timeText(openAt) : "--:--:--"}</p>
-                  </div>
-                  <div className="min-w-32 bg-white px-4 py-3 text-center text-black">
-                    <p className="text-[10px] font-semibold tracking-wider text-neutral-500">COUNTDOWN</p>
-                    <p className="mt-1 text-sm font-bold tabular-nums">{remainingText}</p>
-                  </div>
-                </div>
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="text-xs tracking-[0.16em] text-neutral-600">RESERVATION SERVICE</p>
+                <h1 className="mt-2 text-2xl font-semibold">서버시간</h1>
               </div>
+              <div className="flex items-center gap-2 text-xs text-neutral-500"><span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />실시간 동기화</div>
             </div>
-            <div className="mt-6 border border-white/10 bg-[#0b1015] px-8 py-20 text-center shadow-[0_18px_60px_rgba(0,0,0,0.18)]">
-              <p className="mb-8 text-[11px] font-medium tracking-[0.18em] text-neutral-500">CURRENT SERVER TIME</p>
-              <p className="text-base text-neutral-400">{serverNow ? dateText(serverNow) : "-"}</p>
-              <p className="mt-3 font-mono text-7xl font-light tracking-tight tabular-nums xl:text-8xl">
-                {serverNow ? timeText(serverNow) : "--:--:--"}
-              </p>
+
+            <div className="relative mx-auto mt-8 max-w-4xl overflow-hidden border border-white/10 bg-[#0b1015] shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
+              <div className="absolute left-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+              <div className="flex min-h-[430px] flex-col items-center justify-center px-8 py-14 text-center">
+                <div className="flex items-center gap-3 text-xs tracking-[0.1em] text-neutral-500"><span className="h-px w-8 bg-white/20" />{serverNow ? dateText(serverNow) : "-"}<span className="h-px w-8 bg-white/20" /></div>
+                <p className="mt-7 font-mono text-7xl font-light tracking-[-0.045em] text-white tabular-nums sm:text-8xl xl:text-[104px]">
+                  {serverNow ? timeText(serverNow) : "--:--:--"}
+                </p>
+              </div>
             </div>
           </section>
         )}
@@ -258,31 +303,43 @@ const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
         {view === "RESERVATION" && (
           <section className="mx-auto max-w-6xl">
             {!admitted && queue?.status === "BEFORE_OPEN" && (
-              <>
-                <h1 className="text-xl font-semibold">기자재 예약</h1>
-                <div className="mt-8 border border-white/10 bg-[#0b1015] px-8 py-20 text-center">
-                  <p className="text-xl font-semibold">현재 기자재 예약 가능 시각이 아닙니다.</p>
-                  <p className="mt-5 text-sm text-neutral-400">예약 시작 일시</p>
-                  <p className="mt-2 text-lg font-medium tabular-nums">{openAt ? `${dateText(openAt)} ${timeText(openAt)}` : "-"}</p>
+              <div className="flex min-h-[70vh] items-center justify-center">
+                <div className="relative w-full max-w-xl overflow-hidden border border-white/10 bg-[#0b1015] px-10 py-12 text-center shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+                  <div className="absolute left-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center border border-white/10 bg-white/[0.04]"><CalendarClock className="h-6 w-6 text-neutral-300" /></div>
+                  <p className="mt-6 text-xs tracking-[0.16em] text-neutral-500">RESERVATION SCHEDULE</p>
+                  <h1 className="mt-3 text-2xl font-semibold">아직 예약 접수 시간이 아닙니다</h1>
+                  <p className="mt-3 text-sm leading-6 text-neutral-400">기자재 예약은 아래 시각부터 이용할 수 있습니다.</p>
+                  <div className="mx-auto mt-7 max-w-sm border-y border-white/10 bg-white/[0.025] px-6 py-5">
+                    <p className="text-xs font-medium tracking-wide text-neutral-500">기자재 예약 시작 시간</p>
+                    <p className="mt-3 text-sm text-neutral-400 tabular-nums">{sidebarOpenAt ? dateText(sidebarOpenAt) : "확인 중"}</p>
+                    <p className="mt-1 font-mono text-2xl font-semibold tracking-wide text-white tabular-nums">{sidebarOpenAt ? timeText(sidebarOpenAt) : "--:--:--"}</p>
+                  </div>
+                  <p className="mt-6 text-sm text-neutral-500">시작 시간 이후 다시 이용해 주시기 바랍니다.</p>
                 </div>
-              </>
+              </div>
             )}
-            {!admitted && queue && queue.status !== "BEFORE_OPEN" && queue.status !== "NOT_VISIBLE" && (
-              <>
-                <h1 className="text-xl font-semibold">기자재 예약</h1>
-                <div className="mt-8 border border-white/10 bg-[#0b1015] px-8 py-20 text-center">
-                  <p className="text-5xl font-semibold tabular-nums">{queue?.position?.toLocaleString() ?? "-"}</p>
-                  <p className="mt-4 text-sm text-neutral-400">대기 순번</p>
-                  <p className="mt-2 text-sm text-neutral-500">{joining ? "입장 요청 중" : `예상 대기 ${queue?.estimatedWaitSeconds ?? 0}초`}</p>
+            {!admitted && queue && queue.status !== "BEFORE_OPEN" && (
+              <div className="flex min-h-[70vh] items-center justify-center">
+                <div className="w-full max-w-lg border border-white/15 bg-[#0b1015] px-10 py-12 text-center shadow-[0_24px_80px_rgba(0,0,0,0.4)]">
+                  <img src={Logo} alt="컴퓨터공학부 로고" className="mx-auto h-16 w-16" />
+                  <p className="mt-6 text-xs tracking-[0.16em] text-neutral-500">RESERVATION QUEUE</p>
+                  <h1 className="mt-3 text-2xl font-semibold">잠시 후 예약 화면으로 이동합니다</h1>
+                  <div className="mx-auto mt-8 grid max-w-sm grid-cols-2 divide-x divide-white/10 border-y border-white/10 py-5">
+                    <div><p className="text-3xl font-semibold tabular-nums">{queue.position?.toLocaleString() ?? "-"}</p><p className="mt-2 text-xs text-neutral-500">현재 대기 순번</p></div>
+                    <div><p className="text-3xl font-semibold tabular-nums">{preview ? previewWaitSeconds : queue.estimatedWaitSeconds ?? 0}<span className="ml-1 text-base">초</span></p><p className="mt-2 text-xs text-neutral-500">예상 입장 시간</p></div>
+                  </div>
+                  <p className="mt-7 text-sm text-neutral-400">순서가 되면 자동으로 예약 화면에 입장합니다.</p>
                 </div>
-              </>
+              </div>
             )}
-            {admitted && <Lend embedded />}
+            {admitted && <Lend embedded preview={preview} previewState={previewStage as ReservationPreviewState} />}
           </section>
         )}
 
         {error && <p className="mt-6 text-sm text-red-400">{error}</p>}
       </main>
+      {previewToolbar}
     </div>
   );
 };

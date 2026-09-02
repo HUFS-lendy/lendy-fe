@@ -86,7 +86,10 @@ const items: NavItem[] = [
   {
     title: "학기 설정",
     icon: CalendarClock,
-    children: [{ title: "학기 정보 관리", url: "/admin/view-limit" }],
+    children: [
+      { title: "학기 정보 관리", url: "/admin/view-limit" },
+      { title: "예약 화면 시뮬레이션", url: "/admin/reservation-preview" },
+    ],
   },
 ];
 

@@ -44,17 +44,30 @@ import { useDoReserve } from "../api/reservationUser.api";
 import { clearReservationAdmission, getReservationAdmission } from "../lib/reservationAdmission";
 
 const ITEMS_PER_PAGE = 10;
+export type ReservationPreviewState = "selection" | "confirm" | "pledge" | "success" | "limit" | "failure";
+const RESERVATION_SUCCESS_MESSAGE = "예약하신 기자재는 영업일 기준 3일 이내에 컴퓨터공학부 과사무실(공학관 206호)에서 수령해 주시기 바랍니다.\n기한 내 수령하지 않을 경우 예약은 자동으로 취소됩니다.\n예약 내용은 이메일로 전송되었습니다.";
+const PREVIEW_MODELS: ModelItem[] = [
+  { modelId: 9001, categoryId: 1, categoryName: "노트북", type: "EQUIPMENT", name: "GRAM", displayName: "노트북", subName: "LG gram", description: "수업 및 프로젝트용 노트북", visibleToUsers: true, courseName: null, availableQty: 12 },
+  { modelId: 9002, categoryId: 2, categoryName: "태블릿", type: "EQUIPMENT", name: "IPAD", displayName: "태블릿 PC", subName: "iPad", description: "필기와 실습에 사용할 수 있는 태블릿", visibleToUsers: true, courseName: null, availableQty: 8 },
+  { modelId: 9003, categoryId: 3, categoryName: "카메라", type: "EQUIPMENT", name: "CAMERA", displayName: "카메라", subName: "Sony Alpha", description: "촬영 및 콘텐츠 제작용 카메라", visibleToUsers: true, courseName: null, availableQty: 3 },
+];
 
-const Lend = ({ embedded = false }: { embedded?: boolean }) => {
+const Lend = ({ embedded = false, preview = false, previewState = "selection" }: { embedded?: boolean; preview?: boolean; previewState?: ReservationPreviewState }) => {
   const navigate = useNavigate();
 
   const [pledgeDialogOpen, setPledgeDialogOpen] = useState(false);
   const [isPledgeAgreed, setIsPledgeAgreed] = useState(false);
   const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
+  const [reservationDialogOpen, setReservationDialogOpen] = useState(false);
+  const [resultDialog, setResultDialog] = useState<{ type: "success" | "limit" | "error"; message: string } | null>(null);
 
-  const { data: models = [], isLoading, isError } = useModels();
+  const { data: serverModels = [], isLoading: modelsLoading, isError: modelsError } = useModels();
   const { mutate: createReservation, isPending: isCreatingReservation } = useDoReserve();
+  const previewServerModels = serverModels.filter((item) => item.type === "EQUIPMENT" && item.visibleToUsers);
+  const models = preview ? (previewServerModels.length > 0 ? serverModels : PREVIEW_MODELS) : serverModels;
+  const isLoading = preview ? modelsLoading && serverModels.length === 0 : modelsLoading;
+  const isError = preview ? false : modelsError;
 
   const equipmentList = useMemo(() => {
     return models.filter(
@@ -88,6 +101,21 @@ const Lend = ({ embedded = false }: { embedded?: boolean }) => {
     equipmentList.find((item: ModelItem) => item.modelId === selectedModelId) ??
     null;
 
+  useEffect(() => {
+    if (!preview) return;
+    if (["confirm", "pledge", "success", "limit", "failure"].includes(previewState)) setSelectedModelId(equipmentList[0]?.modelId ?? PREVIEW_MODELS[0].modelId);
+    setReservationDialogOpen(previewState === "confirm");
+    setPledgeDialogOpen(previewState === "pledge");
+    setIsPledgeAgreed(previewState === "success");
+    setResultDialog(previewState === "success"
+      ? { type: "success", message: RESERVATION_SUCCESS_MESSAGE }
+      : previewState === "limit"
+        ? { type: "limit", message: "한 학기에는 기자재를 1대만 예약하거나 대여할 수 있습니다." }
+      : previewState === "failure"
+        ? { type: "error", message: "선택한 기자재의 예약 가능 수량이 부족합니다." }
+        : null);
+  }, [equipmentList, preview, previewState]);
+
   const handleSelectModel = (modelId: number, checked: boolean) => {
     setSelectedModelId(checked ? modelId : null);
     setIsPledgeAgreed(false);
@@ -99,13 +127,19 @@ const Lend = ({ embedded = false }: { embedded?: boolean }) => {
       return;
     }
 
+    if (preview) {
+      setReservationDialogOpen(false);
+      setResultDialog({ type: "success", message: RESERVATION_SUCCESS_MESSAGE });
+      return;
+    }
+
     createReservation(
       { modelId: selectedModelId, admissionToken: getReservationAdmission() },
       {
         onSuccess: () => {
           clearReservationAdmission();
-          toast("대여 신청이 완료되었습니다.");
-          navigate("/lending-state");
+          setReservationDialogOpen(false);
+          setResultDialog({ type: "success", message: RESERVATION_SUCCESS_MESSAGE });
         },
         onError: (error) => {
           const message = error instanceof Error ? error.message : "대여 신청에 실패했습니다.";
@@ -113,7 +147,9 @@ const Lend = ({ embedded = false }: { embedded?: boolean }) => {
             clearReservationAdmission();
             navigate("/reservation", { replace: true });
           }
-          toast(message);
+          setReservationDialogOpen(false);
+          const isSemesterLimit = message.includes("동일 기자재 유형") || message.includes("1개만 예약/대여") || message.includes("한 학기에는");
+          setResultDialog({ type: isSemesterLimit ? "limit" : "error", message });
         },
       },
     );
@@ -146,13 +182,14 @@ const Lend = ({ embedded = false }: { embedded?: boolean }) => {
         </div>
 
         <div className="mt-4">
-          <AlertDialog>
+          <AlertDialog open={reservationDialogOpen} onOpenChange={setReservationDialogOpen}>
             <AlertDialogTrigger asChild>
               <div className="flex justify-end mb-4">
                 <button
                   type="button"
                   disabled={!selectedModelId || isCreatingReservation}
                   className="bg-[#060a0c] hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-sm text-white border border-neutral-400 rounded-md px-3 py-1"
+                  onClick={() => setReservationDialogOpen(true)}
                 >
                   대여
                 </button>
@@ -420,6 +457,44 @@ const Lend = ({ embedded = false }: { embedded?: boolean }) => {
                 확인
               </AlertDialogAction>
             </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={resultDialog !== null} onOpenChange={(open) => { if (!open) setResultDialog(null); }}>
+          <AlertDialogContent className="max-w-lg border-white/15 bg-[#0c1217] p-0 text-white shadow-[0_28px_100px_rgba(0,0,0,0.55)]">
+            <div className="px-8 pb-8 pt-9 text-center">
+            <div className={`mx-auto flex h-12 w-12 items-center justify-center rounded-full text-xl font-bold ${resultDialog?.type === "success" ? "bg-emerald-400/15 text-emerald-400" : resultDialog?.type === "limit" ? "bg-amber-400/15 text-amber-300" : "bg-red-400/15 text-red-400"}`}>
+              {resultDialog?.type === "success" ? "✓" : "!"}
+            </div>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="mt-3 text-center text-2xl text-white">{resultDialog?.type === "success" ? "예약이 완료되었습니다" : resultDialog?.type === "limit" ? "학기당 예약 가능 수량을 초과했습니다" : "예약 신청이 완료되지 않았습니다"}</AlertDialogTitle>
+            </AlertDialogHeader>
+            {resultDialog?.type === "success" ? (
+              <div className="mt-7 text-left">
+                <div className="grid grid-cols-[110px_1fr] gap-y-4 border-y border-white/10 px-2 py-5 text-sm">
+                  <span className="text-neutral-500">수령 기한</span><strong className="font-semibold text-white">영업일 기준 3일 이내</strong>
+                  <span className="text-neutral-500">수령 장소</span><strong className="font-semibold leading-6 text-white">공학관 206호<br />컴퓨터공학부 과사무실</strong>
+                </div>
+                <div className="mt-4 border border-red-400/25 bg-red-400/[0.08] px-4 py-3 text-sm leading-6 text-red-300">
+                  기한 내 수령하지 않을 경우 예약은 자동으로 취소됩니다.
+                </div>
+                <p className="mt-4 text-center text-sm text-neutral-500">예약 내용은 등록된 이메일로 전송되었습니다.</p>
+              </div>
+            ) : resultDialog?.type === "limit" ? (
+              <div className="mt-7 text-left">
+                <div className="border-y border-white/10 px-2 py-5">
+                  <p className="text-sm font-semibold text-white">한 학기 1인 1기자재 이용 원칙</p>
+                  <p className="mt-2 text-sm leading-6 text-neutral-400">한 학기에는 노트북과 태블릿 PC 중 한 종류만 예약하거나 대여할 수 있습니다.</p>
+                </div>
+                <div className="mt-4 border border-amber-300/20 bg-amber-300/[0.07] px-4 py-3 text-sm leading-6 text-amber-200">
+                  다른 기자재를 예약하려면 기존 예약을 먼저 취소해 주세요. 이미 수령한 기자재는 반납 처리 후 예약할 수 있습니다.
+                </div>
+              </div>
+            ) : <AlertDialogDescription className="mt-5 whitespace-pre-line text-center leading-6 text-neutral-400">{resultDialog?.message}</AlertDialogDescription>}
+            <AlertDialogFooter className="sm:justify-center">
+              <AlertDialogAction onClick={() => { setResultDialog(null); if (!preview && resultDialog?.type === "success") navigate("/lending-state"); }} className="mt-3 min-w-32 bg-white text-black hover:bg-neutral-200">확인</AlertDialogAction>
+            </AlertDialogFooter>
+            </div>
           </AlertDialogContent>
         </AlertDialog>
       </div>
