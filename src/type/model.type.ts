@@ -10,6 +10,11 @@ export interface ModelItem {
   visibleToUsers: boolean;
   courseName: string | null;
   availableQty: number;
+  infoSummary?: string | null;
+  recommendedFor?: string | null;
+  specifications?: string | null;
+  referenceUrl?: string | null;
+  imageUrls?: string[];
 }
 
 export interface ModelsResponse {

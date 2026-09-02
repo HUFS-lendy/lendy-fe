@@ -42,6 +42,7 @@ import KitOffering from "./pages/ta/students/kitOffering";
 import ReservationWaiting from "./pages/ReservationWaiting";
 import RentalHistory from "./pages/admin/rental/RentalHistory";
 import ReservationPreviewManage from "./pages/admin/limit/ReservationPreviewManage";
+import EquipmentGuide from "./pages/EquipmentGuide";
 
 const router = createBrowserRouter([
   {
@@ -82,6 +83,7 @@ const router = createBrowserRouter([
       { element: <EmailChange />, path: "/email-change" },
       { element: <Notice />, path: "/notice" },
       { element: <AnnouncementList />, path: "/announcements" },
+      { element: <EquipmentGuide />, path: "/equipment-guide" },
       { element: <NoticeDetail />, path: "/announcements/:noticeId" },
       { element: <Otp />, path: "/otp" },
       {

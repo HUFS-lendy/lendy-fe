@@ -322,20 +322,13 @@ const ManualRental = () => {
                             setSelectedModelId(value ? Number(value) : null);
                             setSelectedItemId("");
                           }}
-                          items={models.map(
-                            (model: {
-                              modelId: number;
-                              name: string;
-                              displayName?: string;
-                              subName?: string;
-                            }) => ({
+                          items={models.map((model) => ({
                               value: String(model.modelId),
                               label:
                                 model.displayName && model.subName
                                   ? `${model.displayName} / ${model.subName}`
                                   : model.displayName || model.subName || model.name,
-                            }),
-                          )}
+                          }))}
                           placeholder="기기 선택"
                           searchPlaceholder="기기 검색"
                           emptyText="검색에 맞는 기기가 없습니다."

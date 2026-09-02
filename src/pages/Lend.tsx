@@ -8,14 +8,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "../components/ui/breadcrumb";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/table";
 import { Checkbox } from "../components/ui/checkbox";
 import { Label } from "../components/ui/label";
 import {
@@ -27,23 +19,53 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "../components/ui/alert-dialog";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "../components/ui/pagination";
 import { toast } from "sonner";
 import { useModels } from "../api/model.api";
 import type { ModelItem } from "../type/model.type";
 import { useDoReserve } from "../api/reservationUser.api";
 import { clearReservationAdmission, getReservationAdmission } from "../lib/reservationAdmission";
 
-const ITEMS_PER_PAGE = 10;
+type EquipmentGroupKey = "GALAXY_BOOK" | "GALAXY_TAB" | "IPAD" | "LENOVO" | "OTHER";
+const EQUIPMENT_GROUPS: Array<{ key: EquipmentGroupKey; title: string; description: string }> = [
+  { key: "GALAXY_BOOK", title: "갤럭시 북", description: "프로그래밍 및 문서 작업용 노트북" },
+  { key: "GALAXY_TAB", title: "갤럭시 탭", description: "S Pen을 활용할 수 있는 안드로이드 태블릿" },
+  { key: "IPAD", title: "아이패드", description: "강의 자료 열람 및 학습용 태블릿" },
+  { key: "LENOVO", title: "레노버 노트북", description: "기본 학업 및 문서 작업용 노트북" },
+  { key: "OTHER", title: "기타 기자재", description: "그 밖의 대여 가능 기자재" },
+];
+const equipmentText = (item: ModelItem) => `${item.name} ${item.displayName || ""} ${item.subName || ""}`.toLowerCase();
+const equipmentGroup = (item: ModelItem): EquipmentGroupKey => {
+  const value = equipmentText(item);
+  if (value.includes("ipad") || value.includes("air 2") || value.includes("air 3")) return "IPAD";
+  if (value.includes("s3 9.7") || value.includes("s8") || value.includes("galaxy tab") || value.includes("갤럭시 탭")) return "GALAXY_TAB";
+  if (value.includes("thinkpad") || value.includes("s440") || value.includes("e460") || value.includes("레노버")) return "LENOVO";
+  if (value.includes("galaxy book") || value.includes("갤럭시 북") || value.includes("nt951") || value.includes("nt961") || value.includes("i5형") || value.includes("16형")) return "GALAXY_BOOK";
+  return "OTHER";
+};
+const equipmentRank = (item: ModelItem) => {
+  const value = equipmentText(item);
+  if (value.includes("book3") || value.includes("nt961") || value.includes("16형")) return 100;
+  if (value.includes("book2") || value.includes("nt951") || value.includes("i5형")) return 90;
+  if (value.includes("s8")) return 80;
+  if (value.includes("s3")) return 70;
+  if (value.includes("air 3")) return 60;
+  if (value.includes("air 2")) return 50;
+  if (value.includes("e460")) return 40;
+  if (value.includes("s440")) return 30;
+  return 0;
+};
+const reservationModelName = (item: ModelItem, group: EquipmentGroupKey) => {
+  const value = equipmentText(item);
+  if (group === "GALAXY_BOOK") {
+    if (value.includes("book3") || value.includes("nt961") || value.includes("16형")) return "갤럭시 북 3 Pro 16형";
+    if (value.includes("book2") || value.includes("nt951") || value.includes("i5형")) return "갤럭시 북 2 Pro i5형";
+  }
+  if (group === "GALAXY_TAB") return value.includes("s8") ? "S8" : value.includes("s3") ? "S3" : item.subName || item.name;
+  if (group === "IPAD") return value.includes("air 3") ? "Air 3" : value.includes("air 2") ? "Air 2" : item.subName || item.name;
+  if (group === "LENOVO") return value.includes("e460") ? "ThinkPad E460" : value.includes("s440") ? "ThinkPad S440" : item.subName || item.name;
+  return item.subName || item.displayName || item.name;
+};
 export type ReservationPreviewState = "selection" | "confirm" | "pledge" | "success" | "limit" | "failure";
 const RESERVATION_SUCCESS_MESSAGE = "예약하신 기자재는 영업일 기준 3일 이내에 컴퓨터공학부 과사무실(공학관 206호)에서 수령해 주시기 바랍니다.\n기한 내 수령하지 않을 경우 예약은 자동으로 취소됩니다.\n예약 내용은 이메일로 전송되었습니다.";
 const PREVIEW_MODELS: ModelItem[] = [
@@ -58,7 +80,6 @@ const Lend = ({ embedded = false, preview = false, previewState = "selection" }:
   const [pledgeDialogOpen, setPledgeDialogOpen] = useState(false);
   const [isPledgeAgreed, setIsPledgeAgreed] = useState(false);
   const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
-  const [currentPage, setCurrentPage] = useState(0);
   const [reservationDialogOpen, setReservationDialogOpen] = useState(false);
   const [resultDialog, setResultDialog] = useState<{ type: "success" | "limit" | "error"; message: string } | null>(null);
 
@@ -75,27 +96,10 @@ const Lend = ({ embedded = false, preview = false, previewState = "selection" }:
     );
   }, [models]);
 
-  const totalPages = Math.ceil(equipmentList.length / ITEMS_PER_PAGE);
-
-  const paginatedEquipmentList = useMemo(() => {
-    const startIndex = currentPage * ITEMS_PER_PAGE;
-    return equipmentList.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [equipmentList, currentPage]);
-
-  const pageNumbers = useMemo(() => {
-    return Array.from({ length: totalPages }, (_, index) => index);
-  }, [totalPages]);
-
-  useEffect(() => {
-    if (currentPage >= totalPages && totalPages > 0) {
-      setCurrentPage(totalPages - 1);
-    }
-  }, [currentPage, totalPages]);
-
-  const handlePageChange = (page: number) => {
-    if (page < 0 || page >= totalPages) return;
-    setCurrentPage(page);
-  };
+  const groupedEquipment = useMemo(() => EQUIPMENT_GROUPS.map((group) => ({
+    ...group,
+    items: equipmentList.filter((item) => equipmentGroup(item) === group.key).sort((a, b) => equipmentRank(b) - equipmentRank(a)),
+  })).filter((group) => group.items.length > 0), [equipmentList]);
 
   const selectedEquipment =
     equipmentList.find((item: ModelItem) => item.modelId === selectedModelId) ??
@@ -177,24 +181,28 @@ const Lend = ({ embedded = false, preview = false, previewState = "selection" }:
       </div>}
 
       <div className={embedded ? "" : "pt-8"}>
-        <div className="font-bold text-white text-3xl pb-8">
-          기자재 대여 신청
+        <div className="flex items-center justify-between pb-8">
+          <div className="font-bold text-white text-3xl">기자재 대여 신청</div>
+          <a href="/equipment-guide" target="_blank" className="rounded-md border border-neutral-600 px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white">
+            모델 비교 안내
+          </a>
         </div>
 
         <div className="mt-4">
           <AlertDialog open={reservationDialogOpen} onOpenChange={setReservationDialogOpen}>
-            <AlertDialogTrigger asChild>
-              <div className="flex justify-end mb-4">
+              <div className="mb-5 flex min-h-11 items-center justify-between rounded-lg border border-neutral-800 bg-[#0b1014] px-4 py-2">
+                <p className="text-sm text-neutral-400">
+                  {selectedEquipment ? <><span className="mr-2 text-neutral-500">선택한 기자재</span><strong className="text-white">{reservationModelName(selectedEquipment, equipmentGroup(selectedEquipment))}</strong></> : "대여할 기자재 한 종류를 선택해주세요."}
+                </p>
                 <button
                   type="button"
                   disabled={!selectedModelId || isCreatingReservation}
-                  className="bg-[#060a0c] hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-sm text-white border border-neutral-400 rounded-md px-3 py-1"
+                  className="ml-4 shrink-0 cursor-pointer rounded-md bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-30"
                   onClick={() => setReservationDialogOpen(true)}
                 >
-                  대여
+                  선택 완료
                 </button>
               </div>
-            </AlertDialogTrigger>
 
             <AlertDialogContent>
               <AlertDialogHeader>
@@ -207,10 +215,7 @@ const Lend = ({ embedded = false, preview = false, previewState = "selection" }:
                     <div className="mb-4 text-black">
                       선택 항목:{" "}
                       <strong>
-                        {selectedEquipment.displayName}
-                        {selectedEquipment.subName
-                          ? ` / ${selectedEquipment.subName}`
-                          : ""}
+                        {reservationModelName(selectedEquipment, equipmentGroup(selectedEquipment))}
                       </strong>
                     </div>
                   )}
@@ -263,138 +268,29 @@ const Lend = ({ embedded = false, preview = false, previewState = "selection" }:
             </AlertDialogContent>
           </AlertDialog>
 
-          <Table className="text-white text-center border border-neutral-700">
-            <TableHeader className="text-center border-b bg-[#11141b] hover:bg-[#11141b] border-neutral-700">
-              <TableRow>
-                <TableHead></TableHead>
-                <TableHead className="text-white text-center">
-                  기기 분류
-                </TableHead>
-                <TableHead className="text-white text-center">모델명</TableHead>
-                <TableHead className="text-white text-center">
-                  상세 안내
-                </TableHead>
-                <TableHead className="text-white text-center">
-                  잔여 수량
-                </TableHead>
-              </TableRow>
-            </TableHeader>
+          {isLoading && <div className="rounded-xl border border-neutral-800 py-16 text-center text-neutral-400">기자재 목록을 불러오는 중입니다.</div>}
+          {isError && <div className="rounded-xl border border-red-400/30 py-16 text-center text-red-400">기자재 목록을 불러오지 못했습니다.</div>}
+          {!isLoading && !isError && equipmentList.length === 0 && <div className="rounded-xl border border-neutral-800 py-16 text-center text-neutral-400">대여 가능한 기자재가 없습니다.</div>}
 
-            <TableBody className="cursor-pointer">
-              {isLoading && (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center">
-                    로딩 중...
-                  </TableCell>
-                </TableRow>
-              )}
-
-              {isError && (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center text-red-400">
-                    기자재 목록을 불러오지 못했습니다.
-                  </TableCell>
-                </TableRow>
-              )}
-
-              {!isLoading &&
-                !isError &&
-                paginatedEquipmentList.map((item: ModelItem) => (
-                  <TableRow
-                    key={item.modelId}
-                    onClick={() => {
-                      setSelectedModelId((prev) =>
-                        prev === item.modelId ? null : item.modelId,
-                      );
-                      setIsPledgeAgreed(false);
-                    }}
-                  >
-                    <TableCell>
-                      <Checkbox
-                        className="border-neutral-400"
-                        checked={selectedModelId === item.modelId}
-                        onCheckedChange={(checked) =>
-                          handleSelectModel(item.modelId, checked === true)
-                        }
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </TableCell>
-                    <TableCell>{item.displayName}</TableCell>
-                    <TableCell>{item.subName || "-"}</TableCell>
-                    <TableCell className="max-w-[420px] text-left">
-                      <div className="truncate">{item.description || "-"}</div>
-                    </TableCell>
-                    <TableCell>{item.availableQty}</TableCell>
-                  </TableRow>
-                ))}
-
-              {!isLoading && !isError && equipmentList.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center">
-                    대여 가능한 기자재가 없습니다.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-
-          {totalPages > 1 ? (
-            <div className="my-6">
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(currentPage - 1);
-                      }}
-                      className={`border bg-black text-white hover:bg-neutral-800 hover:text-white ${
-                        currentPage === 0
-                          ? "pointer-events-none opacity-50 border-neutral-700"
-                          : "cursor-pointer border-none"
-                      }`}
-                    />
-                  </PaginationItem>
-
-                  {pageNumbers.map((pageNumber) => (
-                    <PaginationItem key={pageNumber}>
-                      <PaginationLink
-                        href="#"
-                        isActive={pageNumber === currentPage}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handlePageChange(pageNumber);
-                        }}
-                        className={`cursor-pointer border text-white hover:bg-neutral-800 hover:text-white ${
-                          pageNumber === currentPage
-                            ? "bg-black border-white text-white"
-                            : "bg-transparent border-neutral-700 text-white"
-                        }`}
-                      >
-                        {pageNumber + 1}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-
-                  <PaginationItem>
-                    <PaginationNext
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(currentPage + 1);
-                      }}
-                      className={`border bg-black text-white hover:bg-neutral-800 hover:text-white ${
-                        currentPage >= totalPages - 1
-                          ? "pointer-events-none opacity-50 border-neutral-700"
-                          : "cursor-pointer border-none"
-                      }`}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
-          ) : null}
+          {!isLoading && !isError && <div className="space-y-4">
+            {groupedEquipment.map((group) => <section key={group.key} className="overflow-hidden rounded-lg border border-neutral-700/90 bg-[#090d10] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+              <div className="flex min-h-14 items-center justify-between border-b border-neutral-700 bg-[#11171c] px-5 py-3">
+                <div className="flex min-w-0 items-center gap-4"><span className="h-7 w-1 rounded-full bg-neutral-200" aria-hidden="true" /><h2 className="shrink-0 text-lg font-bold text-white">{group.title}</h2><p className="truncate text-xs text-neutral-400">{group.description}</p></div>
+                <span className="ml-4 shrink-0 rounded-full bg-white/[0.06] px-2.5 py-1 text-[11px] text-neutral-400">{group.items.length}개 모델</span>
+              </div>
+              <div>
+                {group.items.map((item) => {
+                  const selected = selectedModelId === item.modelId;
+                  return <div key={item.modelId} onClick={() => { setSelectedModelId(selected ? null : item.modelId); setIsPledgeAgreed(false); }} className={`grid min-h-[58px] cursor-pointer grid-cols-[40px_minmax(0,1fr)_88px] items-center border-b border-neutral-800/90 px-4 py-2.5 transition-colors last:border-b-0 md:grid-cols-[48px_minmax(180px,0.9fr)_minmax(240px,1.4fr)_112px] md:px-5 ${selected ? "bg-white/[0.1] shadow-[inset_3px_0_0_#fff]" : "odd:bg-white/[0.012] hover:bg-white/[0.045]"}`}>
+                    <Checkbox className="border-neutral-400 data-[state=checked]:border-white data-[state=checked]:bg-white data-[state=checked]:text-black" checked={selected} onCheckedChange={(checked) => handleSelectModel(item.modelId, checked === true)} onClick={(e) => e.stopPropagation()} />
+                    <div className="min-w-0"><p className="truncate text-[15px] font-semibold text-white">{reservationModelName(item, group.key)}</p></div>
+                    <p className="hidden truncate border-l border-neutral-800 px-5 text-sm font-medium text-white md:block">{item.description || "상세 정보 준비 중"}</p>
+                    <div className="justify-self-end text-right text-[15px] font-bold text-white"><span>잔여 </span><span>{item.availableQty}대</span></div>
+                  </div>;
+                })}
+              </div>
+            </section>)}
+          </div>}
         </div>
 
         <AlertDialog open={pledgeDialogOpen} onOpenChange={setPledgeDialogOpen}>
