@@ -139,14 +139,39 @@ export const useUpdateModelInfo = () => {
 };
 
 export const uploadModelInfoImage = async (file: File) => {
+  const preparedFile = await optimizeModelImage(file);
   const form = new FormData();
-  form.append("file", file);
+  form.append("file", preparedFile);
   const { data } = await apiClient.post<{ data: { url: string } }>(
     "/api/admin/notices/images",
     form,
   );
   return data.data.url;
 };
+
+const optimizeModelImage = (file: File): Promise<File> => new Promise((resolve) => {
+  if (file.type === "image/gif") { resolve(file); return; }
+  const url = URL.createObjectURL(file);
+  const image = new Image();
+  image.onload = () => {
+    const maxSide = 1600;
+    const scale = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+    const context = canvas.getContext("2d");
+    if (!context) { URL.revokeObjectURL(url); resolve(file); return; }
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob((blob) => {
+      URL.revokeObjectURL(url);
+      resolve(blob ? new File([blob], `${file.name.replace(/\.[^.]+$/, "")}.jpg`, { type: "image/jpeg" }) : file);
+    }, "image/jpeg", 0.86);
+  };
+  image.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+  image.src = url;
+});
 
 // 모델 삭제
 export const useDeleteModel = () => {

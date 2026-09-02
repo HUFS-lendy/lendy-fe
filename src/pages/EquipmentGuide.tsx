@@ -36,6 +36,7 @@ const performanceRank = (item: ModelItem) => {
 
 const EquipmentCard = ({ item }: { item: ModelItem }) => {
   const [imageIndex, setImageIndex] = useState(0);
+  const [failedImages, setFailedImages] = useState<Set<string>>(() => new Set());
   const info = getEquipmentInfo(item);
   const specs = parseSpecifications(info.specifications);
   const isTablet = `${item.categoryName} ${info.title}`.toLowerCase().includes("tab") || info.title.toLowerCase().includes("ipad");
@@ -44,8 +45,8 @@ const EquipmentCard = ({ item }: { item: ModelItem }) => {
   return (
     <article className="overflow-hidden rounded-2xl border border-neutral-800 bg-[#0c1115] transition-transform duration-200 hover:-translate-y-1">
       <div className="relative flex h-56 items-center justify-center bg-[#f5f6f7] p-7">
-        {info.imageUrls.length ? (
-          <img src={info.imageUrls[imageIndex]} alt={`${info.title} 제품 이미지 ${imageIndex + 1}`} className="h-full w-full object-contain" />
+        {info.imageUrls.length && !failedImages.has(info.imageUrls[imageIndex]) ? (
+          <img src={info.imageUrls[imageIndex]} alt={`${info.title} 제품 이미지 ${imageIndex + 1}`} onError={() => setFailedImages((current) => new Set(current).add(info.imageUrls[imageIndex]))} className="h-full w-full object-contain" />
         ) : (
           <div className="flex flex-col items-center gap-4 text-neutral-400">
             {isTablet ? <Tablet size={74} strokeWidth={1.1} /> : <Laptop size={88} strokeWidth={1.1} />}
