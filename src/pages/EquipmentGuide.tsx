@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Laptop, Tablet, ChevronLeft, ChevronRight } from "lucide-react";
 import { useModels } from "../api/model.api";
 import type { ModelItem } from "../type/model.type";
-import { getEquipmentInfo, parseSpecifications } from "../lib/equipmentInfo";
+import { getEquipmentInfo, mergeRentalGroupModels, parseSpecifications } from "../lib/equipmentInfo";
 
 type FilterKey = "ALL" | "IPAD" | "GALAXY_TAB" | "GALAXY_BOOK" | "LENOVO";
 const filters: Array<{ key: FilterKey; label: string }> = [
@@ -76,8 +76,10 @@ const EquipmentCard = ({ item }: { item: ModelItem }) => {
 const EquipmentGuide = () => {
   const { data: models = [], isLoading } = useModels();
   const [filter, setFilter] = useState<FilterKey>("ALL");
-  const equipment = useMemo(() => models
+  const equipment = useMemo(() => mergeRentalGroupModels(models
     .filter((item) => item.type === "EQUIPMENT" && item.visibleToUsers)
+  )
+    .filter((item) => item.infoVisible !== false)
     .filter((item) => filter === "ALL" || classify(item) === filter)
     .sort((a, b) => performanceRank(b) - performanceRank(a)), [models, filter]);
   return <main className="min-h-screen bg-[#060a0c] px-6 pb-28 pt-36 text-white">

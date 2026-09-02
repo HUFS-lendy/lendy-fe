@@ -117,6 +117,8 @@ export const useModels = () => {
 
 export type ModelInfoInput = {
   modelId: number;
+  infoVisible: boolean;
+  rentalGroupKey: string;
   infoBadgeLabel: string;
   infoSummary: string;
   recommendedFor: string;

@@ -25,6 +25,7 @@ import { useModels } from "../api/model.api";
 import type { ModelItem } from "../type/model.type";
 import { useDoReserve } from "../api/reservationUser.api";
 import { clearReservationAdmission, getReservationAdmission } from "../lib/reservationAdmission";
+import { mergeRentalGroupModels } from "../lib/equipmentInfo";
 
 type EquipmentGroupKey = "GALAXY_BOOK" | "GALAXY_TAB" | "IPAD" | "LENOVO" | "OTHER";
 const EQUIPMENT_GROUPS: Array<{ key: EquipmentGroupKey; title: string; description: string }> = [
@@ -91,9 +92,9 @@ const Lend = ({ embedded = false, preview = false, previewState = "selection" }:
   const isError = preview ? false : modelsError;
 
   const equipmentList = useMemo(() => {
-    return models.filter(
+    return mergeRentalGroupModels(models.filter(
       (item: ModelItem) => item.type === "EQUIPMENT" && item.visibleToUsers,
-    );
+    ));
   }, [models]);
 
   const groupedEquipment = useMemo(() => EQUIPMENT_GROUPS.map((group) => ({
@@ -138,7 +139,7 @@ const Lend = ({ embedded = false, preview = false, previewState = "selection" }:
     }
 
     createReservation(
-      { modelId: selectedModelId, admissionToken: getReservationAdmission() },
+      { modelId: selectedModelId, modelGroupKey: selectedEquipment?.rentalGroupKey, admissionToken: getReservationAdmission() },
       {
         onSuccess: () => {
           clearReservationAdmission();

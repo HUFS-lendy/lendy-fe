@@ -48,15 +48,17 @@ export const useDoReserve = () => {
   return useMutation({
     mutationFn: async ({
       modelId,
+      modelGroupKey,
       admissionToken,
     }: {
       modelId: number;
+      modelGroupKey?: string | null;
       admissionToken?: string | null;
     }) => {
       try {
         const doReserveRes = await apiClient.post<ApiResponse<unknown>>(
           "/api/reservations",
-          { modelId },
+          { modelId, modelGroupKey },
           admissionToken
             ? { headers: { "X-Reservation-Admission": admissionToken } }
             : undefined,

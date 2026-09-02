@@ -10,6 +10,8 @@ export interface ModelItem {
   visibleToUsers: boolean;
   courseName: string | null;
   availableQty: number;
+  infoVisible?: boolean;
+  rentalGroupKey?: string | null;
   infoBadgeLabel?: string | null;
   infoSummary?: string | null;
   recommendedFor?: string | null;
