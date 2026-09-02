@@ -119,6 +119,7 @@ export type ModelInfoInput = {
   modelId: number;
   infoVisible: boolean;
   rentalGroupKey: string;
+  studentDisplayName: string;
   infoBadgeLabel: string;
   infoSummary: string;
   recommendedFor: string;

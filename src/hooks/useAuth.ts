@@ -80,6 +80,8 @@ const useAuth = () => {
       const response =
         await apiClient.post<ApiResponse<AccessTokenResponse>>(
           "/api/auth/refresh",
+          undefined,
+          { headers: { "X-Lendy-Client": "web" } },
         );
 
       const accessToken = response.data.data?.accessToken;
@@ -102,7 +104,7 @@ const useAuth = () => {
 
   const logout = useCallback(async (): Promise<{ message?: string }> => {
     try {
-      await apiClient.post("/api/auth/logout");
+      await apiClient.post("/api/auth/logout", undefined, { headers: { "X-Lendy-Client": "web" } });
 
       logoutStore();
 

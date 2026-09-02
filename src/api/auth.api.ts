@@ -48,7 +48,7 @@ export const useSignUp = () => {
     }: SignUpRequest): Promise<ApiResponse<SignUpData | null>> => {
       try {
         const res = await apiClient.post<ApiResponse<SignUpData | null>>(
-          "/api/auth/signup",
+          "/api/admin/users",
           { studentId, username, password, email },
         );
         return checkApiSuccess(res.data, "회원가입 중 오류가 발생했습니다.");

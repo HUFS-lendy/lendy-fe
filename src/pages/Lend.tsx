@@ -57,10 +57,11 @@ const equipmentRank = (item: ModelItem) => {
   return 0;
 };
 const reservationModelName = (item: ModelItem, group: EquipmentGroupKey) => {
+  if (item.studentDisplayName?.trim()) return item.studentDisplayName.trim();
   const value = equipmentText(item);
   if (group === "GALAXY_BOOK") {
-    if (value.includes("book3") || value.includes("nt961") || value.includes("16형")) return "갤럭시 북 3 Pro 16형";
-    if (value.includes("book2") || value.includes("nt951") || value.includes("i5형")) return "갤럭시 북 2 Pro i5형";
+    if (value.includes("book3") || value.includes("nt961") || value.includes("16형")) return "갤럭시 북 3 Pro";
+    if (value.includes("book2") || value.includes("nt951") || value.includes("i5형")) return "갤럭시 북 2 Pro";
   }
   if (group === "GALAXY_TAB") return value.includes("s8") ? "S8" : value.includes("s3") ? "S3" : item.subName || item.name;
   if (group === "IPAD") return value.includes("air 3") ? "Air 3" : value.includes("air 2") ? "Air 2" : item.subName || item.name;
