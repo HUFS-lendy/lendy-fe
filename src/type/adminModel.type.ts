@@ -17,6 +17,7 @@ export type ModelItem = {
   lostQty: number;
   createdAt: string;
   updatedAt: string;
+  infoBadgeLabel: string | null;
   infoSummary: string | null;
   recommendedFor: string | null;
   specifications: string | null;
