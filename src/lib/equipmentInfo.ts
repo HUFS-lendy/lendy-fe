@@ -103,3 +103,18 @@ export const parseSpecifications = (value: string) => value.split("\n").filter(B
   const index = line.indexOf(":");
   return index < 0 ? { label: "사양", value: line } : { label: line.slice(0, index).trim(), value: line.slice(index + 1).trim() };
 });
+
+export const mergeRentalGroupModels = (models: ModelItem[]): ModelItem[] => {
+  const grouped = new Map<string, ModelItem[]>();
+  const standalone: ModelItem[] = [];
+  models.forEach((model) => {
+    const key = model.rentalGroupKey?.trim();
+    if (!key) { standalone.push(model); return; }
+    grouped.set(key, [...(grouped.get(key) || []), model]);
+  });
+  const merged = Array.from(grouped.values()).map((members) => {
+    const representative = members.find((model) => model.infoVisible !== false) || members[0];
+    return { ...representative, availableQty: members.reduce((sum, model) => sum + model.availableQty, 0) };
+  });
+  return [...standalone, ...merged];
+};

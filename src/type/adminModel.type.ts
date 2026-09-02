@@ -17,6 +17,8 @@ export type ModelItem = {
   lostQty: number;
   createdAt: string;
   updatedAt: string;
+  infoVisible: boolean;
+  rentalGroupKey: string | null;
   infoBadgeLabel: string | null;
   infoSummary: string | null;
   recommendedFor: string | null;
