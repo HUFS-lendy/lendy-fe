@@ -43,6 +43,7 @@ import ReservationWaiting from "./pages/ReservationWaiting";
 import RentalHistory from "./pages/admin/rental/RentalHistory";
 import ReservationPreviewManage from "./pages/admin/limit/ReservationPreviewManage";
 import EquipmentGuide from "./pages/EquipmentGuide";
+import SecurityMonitoring from "./pages/admin/security/SecurityMonitoring";
 
 const router = createBrowserRouter([
   {
@@ -102,6 +103,7 @@ const router = createBrowserRouter([
           { path: "set-limit", element: <SetLimit /> },
           { path: "view-limit", element: <ViewLimit /> },
           { path: "reservation-preview", element: <ReservationPreviewManage /> },
+          { path: "security-monitoring", element: <SecurityMonitoring /> },
           { path: "category", element: <Category /> },
           { path: "check-in", element: <CheckIn /> },
           { path: "manual-rental", element: <ManualRental /> },

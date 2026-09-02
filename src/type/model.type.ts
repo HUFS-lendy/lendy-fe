@@ -12,6 +12,7 @@ export interface ModelItem {
   availableQty: number;
   infoVisible?: boolean;
   rentalGroupKey?: string | null;
+  studentDisplayName?: string | null;
   infoBadgeLabel?: string | null;
   infoSummary?: string | null;
   recommendedFor?: string | null;

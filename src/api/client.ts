@@ -102,6 +102,8 @@ apiClient.interceptors.response.use(
       const refreshRes =
         await apiClient.post<ApiResponse<AccessTokenResponse>>(
           "/api/auth/refresh",
+          undefined,
+          { headers: { "X-Lendy-Client": "web" } },
         );
 
       const accessToken = refreshRes.data.data?.accessToken;

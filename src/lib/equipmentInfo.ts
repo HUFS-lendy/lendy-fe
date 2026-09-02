@@ -37,7 +37,7 @@ const presets: Array<{ matches: string[]; info: Omit<EquipmentInfo, "imageUrls">
   {
     matches: ["nt951xed", "i5형", "book2 pro"],
     info: {
-      title: "Galaxy Book2 Pro 15.6",
+      title: "갤럭시 북 2 Pro",
       model: "NT951XED 계열",
       summary: "수업과 일반적인 개발 작업에 사용할 수 있는 15.6형 노트북입니다.",
       recommendedFor: "문서 작성, 프로그래밍 수업, 일반 개발 환경",
@@ -48,7 +48,7 @@ const presets: Array<{ matches: string[]; info: Omit<EquipmentInfo, "imageUrls">
   {
     matches: ["nt961xfg", "16형", "book3 pro"],
     info: {
-      title: "Galaxy Book3 Pro 16",
+      title: "갤럭시 북 3 Pro",
       model: "NT961XFG-K0B/C",
       summary: "프로그래밍과 다중 작업에 사용할 수 있는 16형 노트북입니다.",
       recommendedFor: "프로그래밍, 팀 프로젝트, 멀티태스킹, 큰 화면이 필요한 작업",
@@ -80,7 +80,7 @@ const presets: Array<{ matches: string[]; info: Omit<EquipmentInfo, "imageUrls">
   },
 ];
 
-export const getEquipmentInfo = (item: Pick<ModelItem, "name" | "displayName" | "subName" | "description" | "infoSummary" | "recommendedFor" | "specifications" | "referenceUrl" | "imageUrls">): EquipmentInfo => {
+export const getEquipmentInfo = (item: Pick<ModelItem, "name" | "displayName" | "subName" | "description" | "studentDisplayName" | "infoSummary" | "recommendedFor" | "specifications" | "referenceUrl" | "imageUrls">): EquipmentInfo => {
   const haystack = [item.name, item.displayName, item.subName].filter(Boolean).join(" ").toLowerCase();
   const preset = presets.find(({ matches }) => matches.some((value) => haystack.includes(value.toLowerCase())))?.info;
   const thinkPad = haystack.includes("thinkpad") || haystack.includes("s440") || haystack.includes("e460");
@@ -90,6 +90,7 @@ export const getEquipmentInfo = (item: Pick<ModelItem, "name" | "displayName" | 
   const base = preset || fallback;
   return {
     ...base,
+    title: item.studentDisplayName?.trim() || base.title,
     summary: item.infoSummary || base.summary,
     recommendedFor: item.recommendedFor || base.recommendedFor,
     specifications: item.specifications || base.specifications,

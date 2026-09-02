@@ -19,6 +19,7 @@ export type ModelItem = {
   updatedAt: string;
   infoVisible: boolean;
   rentalGroupKey: string | null;
+  studentDisplayName: string | null;
   infoBadgeLabel: string | null;
   infoSummary: string | null;
   recommendedFor: string | null;

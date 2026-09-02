@@ -8,6 +8,7 @@ import {
   ClipboardCheck,
   CalendarClock,
   Megaphone,
+  ShieldCheck,
 } from "lucide-react";
 import {
   Sidebar,
@@ -83,6 +84,11 @@ const items: NavItem[] = [
     title: "공지사항",
     icon: Megaphone,
     children: [{ title: "공지사항 관리", url: "/admin/notices" }],
+  },
+  {
+    title: "시스템 보안",
+    icon: ShieldCheck,
+    children: [{ title: "보안 모니터링", url: "/admin/security-monitoring" }],
   },
   {
     title: "학기 설정",
