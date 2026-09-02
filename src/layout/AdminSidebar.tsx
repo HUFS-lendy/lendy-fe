@@ -53,6 +53,7 @@ const items: NavItem[] = [
     defaultOpen: true,
     children: [
       { title: "기자재 현황", url: "/admin/devices" },
+      { title: "기자재 안내 관리", url: "/admin/devices/manage" },
       { title: "대여 기록 관리", url: "/admin/rental-history" },
     ],
   },

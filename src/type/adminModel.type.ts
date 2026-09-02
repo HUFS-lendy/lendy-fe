@@ -17,4 +17,9 @@ export type ModelItem = {
   lostQty: number;
   createdAt: string;
   updatedAt: string;
+  infoSummary: string | null;
+  recommendedFor: string | null;
+  specifications: string | null;
+  referenceUrl: string | null;
+  imageUrls: string[];
 };

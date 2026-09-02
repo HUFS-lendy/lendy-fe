@@ -9,6 +9,7 @@ const Header = () => {
   const items = [
     { label: "홈", href: "/" },
     { label: "대여 신청", href: "/reservation" },
+    { label: "기자재 안내", href: "/equipment-guide" },
     { label: "마이페이지", href: "/mypage" },
     { label: "유의사항", href: "/notice" },
     { label: "공지사항", href: "/announcements" },

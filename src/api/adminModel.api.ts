@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "./client";
+import type { ModelItem } from "../type/adminModel.type";
 
 type CreateOrUpdateModelRequest = {
   categoryName: string;
@@ -108,10 +109,42 @@ const fetchModels = async () => {
 };
 
 export const useModels = () => {
-  return useQuery({
+  return useQuery<ModelItem[]>({
     queryKey: ["models"],
     queryFn: fetchModels,
   });
+};
+
+export type ModelInfoInput = {
+  modelId: number;
+  infoSummary: string;
+  recommendedFor: string;
+  specifications: string;
+  referenceUrl: string;
+  imageUrls: string[];
+};
+
+export const useUpdateModelInfo = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ modelId, ...input }: ModelInfoInput) =>
+      apiClient.patch(`/api/admin/models/${modelId}/info`, input),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["models"] }),
+      ]);
+    },
+  });
+};
+
+export const uploadModelInfoImage = async (file: File) => {
+  const form = new FormData();
+  form.append("file", file);
+  const { data } = await apiClient.post<{ data: { url: string } }>(
+    "/api/admin/notices/images",
+    form,
+  );
+  return data.data.url;
 };
 
 // 모델 삭제
