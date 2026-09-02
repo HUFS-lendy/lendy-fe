@@ -56,7 +56,7 @@ const EquipmentCard = ({ item }: { item: ModelItem }) => {
           <button aria-label="이전 이미지" onClick={() => move(-1)} className="absolute left-4 rounded-full bg-black/60 p-2 text-white"><ChevronLeft /></button>
           <button aria-label="다음 이미지" onClick={() => move(1)} className="absolute right-4 rounded-full bg-black/60 p-2 text-white"><ChevronRight /></button>
         </>}
-        <span className="absolute left-5 top-5 rounded-full bg-black px-3 py-1 text-xs font-semibold text-white">{item.categoryName}</span>
+        <span className="absolute left-5 top-5 rounded-full bg-black px-3 py-1 text-xs font-semibold text-white">{item.infoBadgeLabel?.trim() || item.categoryName}</span>
       </div>
       {info.imageUrls.length > 1 && <div className="flex justify-center gap-2 bg-[#f5f6f7] pb-5">{info.imageUrls.map((_, index) => <button key={index} aria-label={`${index + 1}번 이미지`} onClick={() => setImageIndex(index)} className={`h-2 rounded-full transition-all ${index === imageIndex ? "w-6 bg-black" : "w-2 bg-neutral-300"}`} />)}</div>}
       <div className="p-6">

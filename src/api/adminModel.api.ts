@@ -117,6 +117,7 @@ export const useModels = () => {
 
 export type ModelInfoInput = {
   modelId: number;
+  infoBadgeLabel: string;
   infoSummary: string;
   recommendedFor: string;
   specifications: string;

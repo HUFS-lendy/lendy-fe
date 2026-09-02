@@ -10,6 +10,7 @@ export interface ModelItem {
   visibleToUsers: boolean;
   courseName: string | null;
   availableQty: number;
+  infoBadgeLabel?: string | null;
   infoSummary?: string | null;
   recommendedFor?: string | null;
   specifications?: string | null;
