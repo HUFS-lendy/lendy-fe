@@ -9,7 +9,9 @@ import {
   useRentKitAssignments,
   useReturnKitAssignments,
 } from "../../../api/ta.kitAssignment.api";
+import { useCourseEnrollments } from "../../../api/ta.kitEnrollment.api";
 import type { KitAssignment, KitAssignmentSortBy } from "../../../type/ta.kitAssignmnet.type";
+import type { CourseEnrollment } from "../../../type/ta.kitEnrollment.type";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -58,10 +60,16 @@ const KitOffering = () => {
 
   const {
     data: assignments = [],
-    isLoading,
-    isError,
-    error,
+    isLoading: isAssignmentsLoading,
+    isError: isAssignmentsError,
+    error: assignmentsError,
   } = useKitAssignments(courseOfferingId);
+  const {
+    data: enrollments = [],
+    isLoading: isEnrollmentsLoading,
+    isError: isEnrollmentsError,
+    error: enrollmentsError,
+  } = useCourseEnrollments(courseOfferingId);
   const { mutate: generateKitAssignments, isPending: isGenerating } =
     useGenerateKitAssignments();
   const { mutate: regenerateKitAssignments, isPending: isRegenerating } =
@@ -109,6 +117,51 @@ const KitOffering = () => {
   const returnedCount = assignments.filter(
     (assignment) => normalizeStatus(assignment.status) === "RETURNED",
   ).length;
+  const assignmentByUserId = useMemo(
+    () => new Map(assignments.map((assignment) => [assignment.userId, assignment])),
+    [assignments],
+  );
+  const enrollmentUserIds = useMemo(
+    () => new Set(enrollments.map((enrollment) => enrollment.userId)),
+    [enrollments],
+  );
+  const studentRows = useMemo(() => {
+    const rows: Array<{
+      key: string;
+      enrollment?: CourseEnrollment;
+      assignment?: KitAssignment;
+      username: string;
+      studentId: string;
+    }> = enrollments.map((enrollment) => ({
+      key: `enrollment-${enrollment.enrollmentId}`,
+      enrollment,
+      assignment: assignmentByUserId.get(enrollment.userId),
+      username: enrollment.username,
+      studentId: enrollment.studentId,
+    }));
+
+    assignments.forEach((assignment) => {
+      if (enrollmentUserIds.has(assignment.userId)) return;
+      rows.push({
+        key: `assignment-${assignment.kitAssignmentId}`,
+        assignment,
+        username: assignment.username,
+        studentId: assignment.studentId,
+      });
+    });
+
+    return rows.sort((left, right) => {
+      if (assignmentSortBy === "NAME") {
+        const nameOrder = left.username.localeCompare(right.username, "ko");
+        if (nameOrder !== 0) return nameOrder;
+      }
+      return left.studentId.localeCompare(right.studentId, "ko", { numeric: true });
+    });
+  }, [assignmentByUserId, assignmentSortBy, assignments, enrollmentUserIds, enrollments]);
+  const unassignedCount = studentRows.filter((row) => !row.assignment).length;
+  const isLoading = isAssignmentsLoading || isEnrollmentsLoading;
+  const isError = isAssignmentsError || isEnrollmentsError;
+  const error = enrollmentsError ?? assignmentsError;
 
   const formatDateTime = (date?: string) => {
     if (!date) return "-";
@@ -317,7 +370,7 @@ const KitOffering = () => {
           <div>
             <h1 className="text-3xl font-bold">KIT 배정 목록</h1>
             <p className="mt-2 text-sm text-gray-400">
-              선택한 KIT 강의 운영의 전체 키트 배정 목록입니다.
+              선택한 KIT 강의 운영의 전체 수강생과 키트 배정 현황입니다.
             </p>
           </div>
 
@@ -561,9 +614,10 @@ const KitOffering = () => {
           </div>
         </div>
 
-        <div className="mt-8 grid grid-cols-4 gap-3">
+        <div className="mt-8 grid grid-cols-5 gap-3">
           {[
-            ["전체 배정", assignments.length],
+            ["전체 수강생", studentRows.length],
+            ["미배정", unassignedCount],
             ["배부 대기", assignedCount],
             ["대여 중", rentedCount],
             ["반납 완료", returnedCount],
@@ -641,46 +695,44 @@ const KitOffering = () => {
                       : "KIT 배정 목록 조회 중 오류가 발생했습니다."}
                   </TableCell>
                 </TableRow>
-              ) : assignments.length === 0 ? (
+              ) : studentRows.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={7}
                     className="text-center py-8 text-gray-400"
                   >
-                    조회된 KIT 배정 정보가 없습니다.
+                    등록된 수강생이 없습니다.
                   </TableCell>
                 </TableRow>
               ) : (
-                assignments.map((assignment) => (
-                  <TableRow key={assignment.kitAssignmentId}>
+                studentRows.map((row) => {
+                  const assignment = row.assignment;
+                  return (
+                  <TableRow key={row.key}>
                     <TableCell>
                       <Checkbox
-                        checked={selectedAssignmentIdSet.has(
-                          assignment.kitAssignmentId,
-                        )}
-                        disabled={isProcessing}
+                        checked={assignment ? selectedAssignmentIdSet.has(assignment.kitAssignmentId) : false}
+                        disabled={isProcessing || !assignment}
                         onCheckedChange={(checked) =>
-                          handleSelectAssignment(
-                            assignment.kitAssignmentId,
-                            checked === true,
-                          )
+                          assignment && handleSelectAssignment(assignment.kitAssignmentId, checked === true)
                         }
-                        aria-label={`${assignment.username} 선택`}
+                        aria-label={`${row.username} 선택`}
                       />
                     </TableCell>
-                    <TableCell>{assignment.username}</TableCell>
-                    <TableCell>{assignment.studentId}</TableCell>
-                    <TableCell>{assignment.serial}</TableCell>
+                    <TableCell>{row.username}</TableCell>
+                    <TableCell>{row.studentId}</TableCell>
+                    <TableCell>{assignment?.serial ?? "-"}</TableCell>
                     <TableCell>
-                      <span className={getStatusClassName(assignment.status)}>
-                        {getStatusName(assignment.status)}
+                      <span className={assignment ? getStatusClassName(assignment.status) : "font-semibold text-neutral-400"}>
+                        {assignment ? getStatusName(assignment.status) : "미배정"}
                       </span>
                     </TableCell>
                     <TableCell>
-                      {formatDateTime(assignment.assignedAt)}
+                      {formatDateTime(assignment?.assignedAt)}
                     </TableCell>
                   </TableRow>
-                ))
+                  );
+                })
               )}
             </TableBody>
           </Table>
