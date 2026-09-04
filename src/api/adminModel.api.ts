@@ -164,13 +164,14 @@ const optimizeModelImage = (file: File): Promise<File> => new Promise((resolve) 
     canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
     const context = canvas.getContext("2d");
     if (!context) { URL.revokeObjectURL(url); resolve(file); return; }
-    context.fillStyle = "#ffffff";
-    context.fillRect(0, 0, canvas.width, canvas.height);
     context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const supportsTransparency = file.type === "image/png" || file.type === "image/webp";
+    const outputType = supportsTransparency ? "image/webp" : "image/jpeg";
+    const extension = supportsTransparency ? "webp" : "jpg";
     canvas.toBlob((blob) => {
       URL.revokeObjectURL(url);
-      resolve(blob ? new File([blob], `${file.name.replace(/\.[^.]+$/, "")}.jpg`, { type: "image/jpeg" }) : file);
-    }, "image/jpeg", 0.86);
+      resolve(blob ? new File([blob], `${file.name.replace(/\.[^.]+$/, "")}.${extension}`, { type: outputType }) : file);
+    }, outputType, 0.88);
   };
   image.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
   image.src = url;
