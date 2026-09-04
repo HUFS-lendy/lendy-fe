@@ -86,9 +86,9 @@ const items: NavItem[] = [
     children: [{ title: "공지사항 관리", url: "/admin/notices" }],
   },
   {
-    title: "시스템 보안",
+    title: "운영 관리",
     icon: ShieldCheck,
-    children: [{ title: "보안 모니터링", url: "/admin/security-monitoring" }],
+    children: [{ title: "운영 모니터링", url: "/admin/security-monitoring" }],
   },
   {
     title: "학기 설정",
