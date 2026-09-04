@@ -44,7 +44,7 @@ const EquipmentCard = ({ item }: { item: ModelItem }) => {
 
   return (
     <article className="overflow-hidden rounded-2xl border border-neutral-800 bg-[#0c1115] transition-transform duration-200 hover:-translate-y-1">
-      <div className="relative flex h-56 items-center justify-center bg-[#f5f6f7] p-7">
+      <div className="relative flex h-56 items-center justify-center bg-white p-7">
         {info.imageUrls.length && !failedImages.has(info.imageUrls[imageIndex]) ? (
           <img src={info.imageUrls[imageIndex]} alt={`${info.title} 제품 이미지 ${imageIndex + 1}`} onError={() => setFailedImages((current) => new Set(current).add(info.imageUrls[imageIndex]))} className="h-full w-full object-contain" />
         ) : (
@@ -59,7 +59,7 @@ const EquipmentCard = ({ item }: { item: ModelItem }) => {
         </>}
         <span className="absolute left-5 top-5 rounded-full bg-black px-3 py-1 text-xs font-semibold text-white">{item.infoBadgeLabel?.trim() || item.categoryName}</span>
       </div>
-      {info.imageUrls.length > 1 && <div className="flex justify-center gap-2 bg-[#f5f6f7] pb-5">{info.imageUrls.map((_, index) => <button key={index} aria-label={`${index + 1}번 이미지`} onClick={() => setImageIndex(index)} className={`h-2 rounded-full transition-all ${index === imageIndex ? "w-6 bg-black" : "w-2 bg-neutral-300"}`} />)}</div>}
+      {info.imageUrls.length > 1 && <div className="flex justify-center gap-2 bg-white pb-5">{info.imageUrls.map((_, index) => <button key={index} aria-label={`${index + 1}번 이미지`} onClick={() => setImageIndex(index)} className={`h-2 rounded-full transition-all ${index === imageIndex ? "w-6 bg-black" : "w-2 bg-neutral-300"}`} />)}</div>}
       <div className="p-6">
         <p className="text-sm text-neutral-500">{info.model}</p>
         <h2 className="mt-1 text-xl font-bold text-white">{info.title}</h2>
