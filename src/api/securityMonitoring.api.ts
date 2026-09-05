@@ -15,6 +15,12 @@ export type Overview = {
 export type Inventory = { groupKey:string; displayName:string; total:number; available:number; reserved:number; rented:number; unavailable:number; recentDemand:{ attempts:number; success:number; soldOut:number; failure:number } };
 export type Readiness = { checkedAt:string; ready:boolean; passed:number; total:number; checks:{ code:string; title:string; passed:boolean; required:boolean; detail:string }[] };
 export type SecurityEvent = { occurredAt:string; type:string; subject:string };
+export type OperationsIssue = { id:string; firstSeen:string; lastSeen:string; severity:string; code:string; evidence:string; occurrences:number; acknowledged:boolean };
+export type AlertDelivery = { enabled:boolean; recipient:string; pending:number; dropped:number; lastSentAt:string|null; lastFailureAt:string|null; retention:string };
+export const useOperationsIssues = () => useQuery({ queryKey:["operations-issues"], queryFn:()=>data<OperationsIssue[]>("/api/admin/operations/issues"), refetchInterval:10000 });
+export const useAlertDelivery = () => useQuery({ queryKey:["operations-alert-delivery"], queryFn:()=>data<AlertDelivery>("/api/admin/operations/alert-delivery"), refetchInterval:10000 });
+export const acknowledgeIssue = (id:string) => apiClient.post(`/api/admin/operations/issues/${encodeURIComponent(id)}/acknowledge`);
+export const testOperationsAlert = () => apiClient.post("/api/admin/operations/alert-delivery/test");
 
 const data = async <T,>(url:string):Promise<T> => (await apiClient.get(url)).data.data;
 export const useOperationsOverview = () => useQuery({ queryKey:["operations-overview"], queryFn:()=>data<Overview>("/api/admin/operations/overview"), refetchInterval:5000 });
