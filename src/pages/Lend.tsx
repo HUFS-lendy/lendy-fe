@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { LoaderCircle } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -24,7 +25,7 @@ import { toast } from "sonner";
 import { useModels } from "../api/model.api";
 import type { ModelItem } from "../type/model.type";
 import { useDoReserve } from "../api/reservationUser.api";
-import { clearReservationAdmission, getReservationAdmission } from "../lib/reservationAdmission";
+import { clearReservationAdmission } from "../lib/reservationAdmission";
 import { mergeRentalGroupModels } from "../lib/equipmentInfo";
 
 type EquipmentGroupKey = "GALAXY_BOOK" | "GALAXY_TAB" | "IPAD" | "LENOVO" | "OTHER";
@@ -68,7 +69,7 @@ const reservationModelName = (item: ModelItem, group: EquipmentGroupKey) => {
   if (group === "LENOVO") return value.includes("e460") ? "ThinkPad E460" : value.includes("s440") ? "ThinkPad S440" : item.subName || item.name;
   return item.subName || item.displayName || item.name;
 };
-export type ReservationPreviewState = "selection" | "confirm" | "pledge" | "success" | "limit" | "failure";
+export type ReservationPreviewState = "flow" | "selection" | "confirm" | "pledge" | "processing" | "success" | "limit" | "failure";
 const RESERVATION_SUCCESS_MESSAGE = "예약하신 기자재는 영업일 기준 3일 이내에 컴퓨터공학부 과사무실(공학관 206호)에서 수령해 주시기 바랍니다.\n기한 내 수령하지 않을 경우 예약은 자동으로 취소됩니다.\n예약 내용은 이메일로 전송되었습니다.";
 const PREVIEW_MODELS: ModelItem[] = [
   { modelId: 9001, categoryId: 1, categoryName: "노트북", type: "EQUIPMENT", name: "GRAM", displayName: "노트북", subName: "LG gram", description: "수업 및 프로젝트용 노트북", visibleToUsers: true, courseName: null, availableQty: 12 },
@@ -84,6 +85,7 @@ const Lend = ({ embedded = false, preview = false, previewState = "selection" }:
   const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
   const [reservationDialogOpen, setReservationDialogOpen] = useState(false);
   const [resultDialog, setResultDialog] = useState<{ type: "success" | "limit" | "error"; message: string } | null>(null);
+  const [previewProcessing, setPreviewProcessing] = useState(false);
 
   const { data: serverModels = [], isLoading: modelsLoading, isError: modelsError } = useModels();
   const { mutate: createReservation, isPending: isCreatingReservation } = useDoReserve();
@@ -109,7 +111,9 @@ const Lend = ({ embedded = false, preview = false, previewState = "selection" }:
 
   useEffect(() => {
     if (!preview) return;
-    if (["confirm", "pledge", "success", "limit", "failure"].includes(previewState)) setSelectedModelId(equipmentList[0]?.modelId ?? PREVIEW_MODELS[0].modelId);
+    const firstModelId = equipmentList[0]?.modelId ?? PREVIEW_MODELS[0].modelId;
+    setPreviewProcessing(previewState === "processing");
+    if (["confirm", "pledge", "processing", "success", "limit", "failure"].includes(previewState)) setSelectedModelId(firstModelId);
     setReservationDialogOpen(previewState === "confirm");
     setPledgeDialogOpen(previewState === "pledge");
     setIsPledgeAgreed(previewState === "success");
@@ -120,6 +124,23 @@ const Lend = ({ embedded = false, preview = false, previewState = "selection" }:
       : previewState === "failure"
         ? { type: "error", message: "선택한 기자재의 예약 가능 수량이 부족합니다." }
         : null);
+    if (previewState !== "flow") return;
+
+    setSelectedModelId(null);
+    setReservationDialogOpen(false);
+    setPledgeDialogOpen(false);
+    setIsPledgeAgreed(false);
+    setResultDialog(null);
+    setPreviewProcessing(false);
+    const timers = [
+      window.setTimeout(() => setSelectedModelId(firstModelId), 500),
+      window.setTimeout(() => setReservationDialogOpen(true), 1100),
+      window.setTimeout(() => setPledgeDialogOpen(true), 1900),
+      window.setTimeout(() => { setIsPledgeAgreed(true); setPledgeDialogOpen(false); }, 2800),
+      window.setTimeout(() => { setReservationDialogOpen(false); setPreviewProcessing(true); }, 3500),
+      window.setTimeout(() => { setPreviewProcessing(false); setResultDialog({ type: "success", message: RESERVATION_SUCCESS_MESSAGE }); }, 4500),
+    ];
+    return () => timers.forEach(window.clearTimeout);
   }, [equipmentList, preview, previewState]);
 
   const handleSelectModel = (modelId: number, checked: boolean) => {
@@ -135,12 +156,16 @@ const Lend = ({ embedded = false, preview = false, previewState = "selection" }:
 
     if (preview) {
       setReservationDialogOpen(false);
-      setResultDialog({ type: "success", message: RESERVATION_SUCCESS_MESSAGE });
+      setPreviewProcessing(true);
+      window.setTimeout(() => {
+        setPreviewProcessing(false);
+        setResultDialog({ type: "success", message: RESERVATION_SUCCESS_MESSAGE });
+      }, 900);
       return;
     }
 
     createReservation(
-      { modelId: selectedModelId, modelGroupKey: selectedEquipment?.rentalGroupKey, admissionToken: getReservationAdmission() },
+      { modelId: selectedModelId, modelGroupKey: selectedEquipment?.rentalGroupKey },
       {
         onSuccess: () => {
           clearReservationAdmission();
@@ -396,6 +421,16 @@ const Lend = ({ embedded = false, preview = false, previewState = "selection" }:
           </AlertDialogContent>
         </AlertDialog>
       </div>
+      {(isCreatingReservation || previewProcessing) && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/75 backdrop-blur-sm">
+          <div className="w-[360px] border border-white/15 bg-[#0b1015] px-8 py-9 text-center text-white shadow-2xl">
+            <LoaderCircle className="mx-auto h-9 w-9 animate-spin" />
+            <p className="mt-5 text-lg font-semibold">예약 요청을 처리하고 있습니다</p>
+            <p className="mt-2 text-sm leading-6 text-neutral-400">요청 순서에 따라 재고를 확인하고 있습니다.<br />화면을 닫거나 새로고침하지 마세요.</p>
+            <div className="mt-6 h-1 overflow-hidden bg-white/10"><div className="h-full w-2/3 animate-pulse bg-white" /></div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

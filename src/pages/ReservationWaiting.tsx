@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
-import { CalendarClock, Clock3, Laptop, LogOut, UserRound } from "lucide-react";
+import { CalendarClock, Clock3, Laptop, LoaderCircle, LogOut, UserRound } from "lucide-react";
 import Logo from "../assets/cse-logo.png";
 import { getReservationQueueStatus, joinReservationQueue } from "../api/reservationUser.api";
-import { clearReservationAdmission, saveReservationAdmission } from "../lib/reservationAdmission";
+import { clearReservationAdmission } from "../lib/reservationAdmission";
 import type { ReservationQueueData } from "../type/reservationUser.type";
 import useAuth from "../hooks/useAuth";
 import Lend, { type ReservationPreviewState } from "./Lend";
@@ -18,7 +18,7 @@ const timeText = (date: Date) => `${pad(date.getHours())}:${pad(date.getMinutes(
 const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
   const [searchParams] = useSearchParams();
   const requestedStage = searchParams.get("stage") ?? "countdown";
-  const previewStage = ["hidden", "countdown", "before-open", "waiting", "selection", "confirm", "pledge", "success", "limit", "failure"].includes(requestedStage) ? requestedStage : "countdown";
+  const previewStage = ["flow", "hidden", "countdown", "before-open", "selection", "confirm", "pledge", "processing", "success", "limit", "failure"].includes(requestedStage) ? requestedStage : "countdown";
   const { logout } = useAuth();
   const { data: me } = useMe();
   const { data: academicTerms = [] } = useAcademicTerms(preview);
@@ -28,15 +28,13 @@ const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
   const [admitted, setAdmitted] = useState(false);
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [previewWaitSeconds, setPreviewWaitSeconds] = useState(8);
   const serverOffset = useRef(0);
 
   const applyStatus = useCallback((data: ReservationQueueData) => {
     serverOffset.current = new Date(data.serverTime).getTime() - Date.now();
     setServerNow(new Date(data.serverTime));
     setQueue(data);
-    if (data.status === "READY" && data.admissionToken) {
-      if (!preview) saveReservationAdmission(data.admissionToken, data.admissionExpiresInSeconds);
+    if (data.status === "READY") {
       setAdmitted(true);
     }
     if (data.status === "DISABLED" || data.status === "CLOSED") {
@@ -61,13 +59,13 @@ const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
       const openAt = new Date(now.getTime() + 15 * 60 * 1000);
       setError(null);
       setAdmitted(false);
-      setView(previewStage === "countdown" || previewStage === "hidden" ? "TIME" : "RESERVATION");
+      setView(previewStage === "countdown" || previewStage === "hidden" || previewStage === "flow" ? "TIME" : "RESERVATION");
       applyStatus({
-        status: previewStage === "hidden" ? "NOT_VISIBLE" : ["countdown", "before-open"].includes(previewStage) ? "BEFORE_OPEN" : previewStage === "waiting" ? "WAITING" : "READY",
-        position: previewStage === "waiting" ? 37 : null,
-        estimatedWaitSeconds: Math.ceil(37 / 5),
-        admissionToken: ["selection", "confirm", "pledge", "success", "limit", "failure"].includes(previewStage) ? "preview-admission" : null,
-        admissionExpiresInSeconds: 300,
+        status: previewStage === "hidden" ? "NOT_VISIBLE" : ["countdown", "before-open"].includes(previewStage) ? "BEFORE_OPEN" : "DISABLED",
+        position: null,
+        estimatedWaitSeconds: 0,
+        admissionToken: null,
+        admissionExpiresInSeconds: 0,
         serverTime: now.toISOString(),
         reservationQueueVisibleAt: now.toISOString(),
         reservationOpenAt: openAt.toISOString(),
@@ -82,9 +80,7 @@ const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
         const data = await getReservationQueueStatus();
         if (!cancelled) {
           applyStatus(data);
-          if (data.status === "WAITING") {
-            nextDelay = 1250 + Math.floor(Math.random() * 1000);
-          } else if (data.status === "NOT_VISIBLE" && data.reservationQueueVisibleAt) {
+          if (data.status === "NOT_VISIBLE" && data.reservationQueueVisibleAt) {
             const secondsLeft = Math.max(
               0,
               (new Date(data.reservationQueueVisibleAt).getTime() - new Date(data.serverTime).getTime()) / 1000,
@@ -114,14 +110,15 @@ const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
   }, [applyStatus, preview, previewStage]);
 
   useEffect(() => {
-    if (!preview || queue?.status !== "WAITING") return;
-    if (previewWaitSeconds <= 0) {
-      applyStatus({ ...queue, status: "READY", position: null, estimatedWaitSeconds: 0, admissionToken: "preview-admission", admissionExpiresInSeconds: 300 });
-      return;
-    }
-    const timer = window.setTimeout(() => setPreviewWaitSeconds((seconds) => seconds - 1), 1000);
-    return () => window.clearTimeout(timer);
-  }, [applyStatus, preview, previewWaitSeconds, queue]);
+    if (!preview || previewStage !== "flow") return;
+    const start = window.setTimeout(() => setJoining(true), 1200);
+    const enter = window.setTimeout(() => {
+      setAdmitted(true);
+      setView("RESERVATION");
+      setJoining(false);
+    }, 2200);
+    return () => { window.clearTimeout(start); window.clearTimeout(enter); };
+  }, [preview, previewStage]);
 
   const openAt = queue?.reservationOpenAt ? new Date(queue.reservationOpenAt) : null;
   const configuredReservationOpenAt = academicTerms.find((term) => term.active)?.reservationOpenAt
@@ -134,25 +131,31 @@ const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
   const queueVisibleAt = preview
     ? configuredQueueVisibleAt ? new Date(configuredQueueVisibleAt) : null
     : queue?.reservationQueueVisibleAt ? new Date(queue.reservationQueueVisibleAt) : null;
-  const canEnter = queue?.status !== "BEFORE_OPEN" && queue !== null;
   const enterReservation = async () => {
-    setView("RESERVATION");
-    if (preview) {
-      if (queue?.status === "BEFORE_OPEN") return;
-      setPreviewWaitSeconds(8);
-      setQueue((current) => current ? {
-        ...current,
-        status: "WAITING",
-        position: 37,
-        estimatedWaitSeconds: 8,
-      } : current);
+    const reachedOpenTime = openAt !== null && serverNow !== null && serverNow.getTime() >= openAt.getTime();
+    if (queue?.status === "BEFORE_OPEN" && !reachedOpenTime) {
+      setView("RESERVATION");
       return;
     }
-    if (!canEnter || joining) return;
+    if (preview) {
+      setJoining(true);
+      window.setTimeout(() => { setAdmitted(true); setView("RESERVATION"); setJoining(false); }, 700);
+      return;
+    }
+    if (!queue || queue.status === "NOT_VISIBLE" || queue.status === "CLOSED" || joining) return;
     setJoining(true);
     setError(null);
     try {
-      applyStatus(await joinReservationQueue());
+      const startedAt = Date.now();
+      const result = await joinReservationQueue();
+      applyStatus(result);
+      if (result.status === "DISABLED" || result.status === "READY") {
+        const remaining = Math.max(0, 450 - (Date.now() - startedAt));
+        await new Promise((resolve) => window.setTimeout(resolve, remaining));
+        setView("RESERVATION");
+        return;
+      }
+      setView("RESERVATION");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "입장 요청에 실패했습니다.");
     } finally {
@@ -174,7 +177,7 @@ const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
     <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 border border-emerald-400/30 bg-[#10171c] px-4 py-3 shadow-2xl">
       <span className="text-xs font-semibold text-emerald-400">관리자 시뮬레이션</span>
       <select value={previewStage} onChange={(event) => { window.location.search = `?stage=${event.target.value}`; }} className="border border-white/20 bg-[#060a0c] px-3 py-1.5 text-sm text-white outline-none">
-        <option value="hidden">서비스 공개 전</option><option value="countdown">예약 시작 전 서버시간</option><option value="before-open">예약 시작 전 메뉴 선택</option><option value="waiting">대기열 입장</option><option value="selection">기자재 선택</option><option value="confirm">예약 확인</option><option value="pledge">서약 조항</option><option value="success">예약 완료</option><option value="limit">학기당 1대 제한</option><option value="failure">예약 실패</option>
+        <option value="flow">전체 자동 시뮬레이션</option><option value="hidden">서비스 공개 전</option><option value="countdown">예약 시작 전 서버시간</option><option value="before-open">예약 시작 전 메뉴 선택</option><option value="selection">기자재 선택</option><option value="confirm">예약 확인</option><option value="pledge">서약 조항</option><option value="processing">예약 요청 처리</option><option value="success">예약 완료</option><option value="limit">학기당 1대 제한</option><option value="failure">예약 실패</option>
       </select>
       <button type="button" className="text-xs text-neutral-400 hover:text-white" onClick={() => window.close()}>닫기</button>
     </div>
@@ -319,26 +322,22 @@ const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
                 </div>
               </div>
             )}
-            {!admitted && queue && queue.status !== "BEFORE_OPEN" && (
-              <div className="flex min-h-[70vh] items-center justify-center">
-                <div className="w-full max-w-lg border border-white/15 bg-[#0b1015] px-10 py-12 text-center shadow-[0_24px_80px_rgba(0,0,0,0.4)]">
-                  <img src={Logo} alt="컴퓨터공학부 로고" className="mx-auto h-16 w-16" />
-                  <p className="mt-6 text-xs tracking-[0.16em] text-neutral-500">RESERVATION QUEUE</p>
-                  <h1 className="mt-3 text-2xl font-semibold">잠시 후 예약 화면으로 이동합니다</h1>
-                  <div className="mx-auto mt-8 grid max-w-sm grid-cols-2 divide-x divide-white/10 border-y border-white/10 py-5">
-                    <div><p className="text-3xl font-semibold tabular-nums">{queue.position?.toLocaleString() ?? "-"}</p><p className="mt-2 text-xs text-neutral-500">현재 대기 순번</p></div>
-                    <div><p className="text-3xl font-semibold tabular-nums">{preview ? previewWaitSeconds : queue.estimatedWaitSeconds ?? 0}<span className="ml-1 text-base">초</span></p><p className="mt-2 text-xs text-neutral-500">예상 입장 시간</p></div>
-                  </div>
-                  <p className="mt-7 text-sm text-neutral-400">순서가 되면 자동으로 예약 화면에 입장합니다.</p>
-                </div>
-              </div>
-            )}
             {admitted && <Lend embedded preview={preview} previewState={previewStage as ReservationPreviewState} />}
           </section>
         )}
 
         {error && <p className="mt-6 text-sm text-red-400">{error}</p>}
       </main>
+      {joining && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="w-[340px] border border-white/15 bg-[#0b1015] px-8 py-9 text-center shadow-2xl">
+            <LoaderCircle className="mx-auto h-8 w-8 animate-spin text-white" />
+            <p className="mt-5 text-lg font-semibold">예약 페이지로 이동 중입니다</p>
+            <p className="mt-2 text-sm text-neutral-400">잠시만 기다려 주세요.</p>
+            <div className="mt-6 h-1 overflow-hidden bg-white/10"><div className="h-full w-2/3 animate-pulse bg-white" /></div>
+          </div>
+        </div>
+      )}
       {previewToolbar}
     </div>
   );
