@@ -67,4 +67,5 @@ export interface ReservationQueueData {
   serverTime: string;
   reservationQueueVisibleAt: string | null;
   reservationOpenAt: string | null;
+  reservationQueueCloseAt?: string | null;
 }

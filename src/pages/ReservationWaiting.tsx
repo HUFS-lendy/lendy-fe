@@ -218,7 +218,13 @@ const ReservationWaiting = ({ preview = false }: { preview?: boolean }) => {
     );
   }
 
-  if (!preview && admitted && view === "RESERVATION") {
+  // The server-time page window is independent of admission throttling and rental eligibility.
+  const timePageEnded = queue?.status === "DISABLED"
+    && !!queue.reservationQueueCloseAt
+    && !!serverNow
+    && serverNow.getTime() >= new Date(queue.reservationQueueCloseAt).getTime();
+
+  if (!preview && ((admitted && view === "RESERVATION") || timePageEnded)) {
     return <Lend />;
   }
 
