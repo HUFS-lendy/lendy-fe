@@ -386,7 +386,7 @@ const Devices = () => {
                 <AlertDialogTitle>기자재 엑셀 일괄 등록</AlertDialogTitle>
                 <AlertDialogDescription>
                   엑셀 파일을 선택한 뒤 먼저 미리보기를 실행하고, 결과 확인 후
-                  실제 등록을 진행합니다.
+                  실제 등록을 진행합니다. 파일에 없는 기존 기자재와 대여 이력은 삭제하지 않습니다.
                 </AlertDialogDescription>
               </AlertDialogHeader>
   

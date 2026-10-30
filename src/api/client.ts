@@ -61,6 +61,18 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     if (!error.response) return Promise.reject(error);
 
+    // Preserve Axios metadata while exposing actionable server messages to callers.
+    const response = error.response.data as Partial<ApiResponse<unknown>> | undefined;
+    if (response?.code === "VALIDATION_ERROR" && response.data && typeof response.data === "object") {
+      const messages = Object.values(response.data).filter(
+        (message): message is string => typeof message === "string" && !!message.trim(),
+      );
+      if (messages.length) error.message = [...new Set(messages)].join("\n");
+      else if (response.message) error.message = response.message;
+    } else if (typeof response?.message === "string" && response.message.trim()) {
+      error.message = response.message;
+    }
+
     const originalRequest = error.config as RetriableRequestConfig | undefined;
 
     if (!originalRequest) return Promise.reject(error);

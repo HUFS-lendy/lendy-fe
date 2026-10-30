@@ -71,6 +71,7 @@ const Device = () => {
   const [editState, setEditState] = useState<ItemState>("BREAKDOWN");
 
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isOccupancyDialogOpen, setIsOccupancyDialogOpen] = useState(false);
   const [occupancyItemId, setOccupancyItemId] = useState<number | null>(null);
 
@@ -256,6 +257,12 @@ const Device = () => {
       return;
     }
 
+    if (isDeleting) return;
+    if (!canManuallyChangeState(selectedItem.state)) {
+      toast.error("예약·대여 중인 기자재는 예약 취소 또는 반납 처리 후 삭제해주세요.");
+      return;
+    }
+
     deleteAdminItem(
       {
         itemId: selectedItem.itemId,
@@ -264,6 +271,7 @@ const Device = () => {
       {
         onSuccess: (res) => {
           toast.success(res.message ?? "기자재가 삭제되었습니다.");
+          setIsDeleteDialogOpen(false);
           setSelectedItemId(null);
         },
         onError: (error) => {
@@ -502,7 +510,7 @@ const Device = () => {
               </AlertDialogContent>
             </AlertDialog>
 
-            <AlertDialog>
+            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
               <AlertDialogTrigger asChild>
                 <button
                   type="button"
@@ -524,7 +532,7 @@ const Device = () => {
                       : "삭제할 기자재를 선택해주세요."}
                   </AlertDialogTitle>
                   <AlertDialogDescription>
-                    기자재를 삭제하면 다시 되돌릴 수 없습니다.
+                    이력이 없는 기자재만 삭제할 수 있으며 되돌릴 수 없습니다. 예약·대여·키트 배정 이력이 있는 고장 기자재는 수정에서 상태를 ‘고장’으로 변경해주세요.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
 
@@ -548,7 +556,7 @@ const Device = () => {
 
         <div className="mb-4 flex items-center justify-between">
           <div className="text-sm text-neutral-400">
-            항목을 하나 선택한 뒤 수정/삭제할 수 있습니다.
+            고장난 기자재는 선택 후 수정 → 고장으로 변경하면 대여 대상에서 제외됩니다.
           </div>
           <button
             type="button"

@@ -146,6 +146,11 @@ const ManualRental = () => {
     setSelectedUserId(null);
   };
 
+  useEffect(() => {
+    setCurrentPage(0);
+    setSelectedUserId(null);
+  }, [keyword, rolesParam, statesParam]);
+
   const selectedUser =
     users.find((user) => user.userId === selectedUserId) ?? null;
 

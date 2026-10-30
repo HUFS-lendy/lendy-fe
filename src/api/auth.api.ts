@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { apiClient } from "./client";
 
@@ -47,7 +47,9 @@ const checkApiSuccess = <T>(
 };
 
 export const useSignUp = () => {
+  const queryClient = useQueryClient();
   return useMutation({
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin_users"] }),
     mutationFn: async ({
       studentId,
       username,
