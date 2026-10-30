@@ -67,7 +67,7 @@ test('user rental page never exposes fake edit or reservation deletion; returned
 });
 
 test('signup blocks invalid password lengths and accepts a seven-digit employee ID', async () => {
-  for (const length of [7, 8, 20, 21]) {
+  for (const length of [6, 7, 8, 20, 21]) {
     const values = ['2025129', '테스트교수', 'p'.repeat(length), 'test@example.com', false];
     let index = 0;
     const calls = [];
@@ -85,12 +85,12 @@ test('signup blocks invalid password lengths and accepts a seven-digit employee 
     }).default;
     const form = nodes(Page()).find(n => n.type === 'form');
     await form.props.onSubmit({ preventDefault() {} });
-    if (length === 8 || length === 20) {
+    if (length === 7 || length === 8 || length === 20) {
       assert.equal(calls.length, 1);
       assert.equal(calls[0].studentId, '2025129');
     } else {
       assert.equal(calls.length, 0);
-      assert.ok(messages.some(message => message.includes('8~20')));
+      assert.ok(messages.some(message => message.includes('7~20')));
     }
   }
 });

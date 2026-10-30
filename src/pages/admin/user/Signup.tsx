@@ -59,8 +59,8 @@ const SignUp = () => {
       return;
     }
 
-    if (password.length < 8 || password.length > 20) {
-      toast.error("비밀번호는 8~20자로 입력해주세요.");
+    if (password.length < 7 || password.length > 20) {
+      toast.error("비밀번호는 7~20자로 입력해주세요.");
       return;
     }
 
@@ -147,7 +147,7 @@ const SignUp = () => {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     required
-                    placeholder="8~20자로 입력해주세요."
+                    placeholder="7~20자로 입력해주세요."
                     aria-describedby="password-help"
                     autoComplete="new-password"
                     value={password}
@@ -164,7 +164,7 @@ const SignUp = () => {
                   </button>
                 </div>
                 <p id="password-help" className="text-sm text-neutral-400">
-                  비밀번호는 8~20자로 입력해주세요.
+                  비밀번호는 7~20자로 입력해주세요.
                 </p>
               </div>
 
