@@ -104,6 +104,11 @@ export const useManualRental = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["check-in"] });
       queryClient.invalidateQueries({ queryKey: ["reservations"] });
+      for (const key of ["user_rentals", "admin_returns", "admin_rental_history",
+        "admin_items", "admin_item_occupancy", "admin_item_history", "item-available",
+        "models", "model-by-id", "myRentals"]) {
+        queryClient.invalidateQueries({ queryKey: [key] });
+      }
     },
   });
 };
@@ -148,6 +153,11 @@ export const useCreateRental = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["check-in"] });
       queryClient.invalidateQueries({ queryKey: ["reservations"] });
+      for (const key of ["user_rentals", "admin_returns", "admin_rental_history",
+        "admin_items", "admin_item_occupancy", "admin_item_history", "item-available",
+        "models", "model-by-id", "myRentals"]) {
+        queryClient.invalidateQueries({ queryKey: [key] });
+      }
     },
   });
 };
@@ -184,10 +194,13 @@ export const useReturnReservation = () => {
     },
     onSuccess: (data) => {
       toast.success(data.message ?? "기자재가 반납 처리되었습니다.");
-      queryClient.invalidateQueries({ queryKey: ["user_rentals"] });
-      queryClient.invalidateQueries({ queryKey: ["admin_returns"] });
       queryClient.invalidateQueries({ queryKey: ["check-in"] });
       queryClient.invalidateQueries({ queryKey: ["reservations"] });
+      for (const key of ["user_rentals", "admin_returns", "admin_rental_history",
+        "admin_items", "admin_item_occupancy", "admin_item_history", "item-available",
+        "models", "model-by-id", "myRentals"]) {
+        queryClient.invalidateQueries({ queryKey: [key] });
+      }
     },
     onError: (error) => {
       toast.error(getReturnRentalApiErrorMessage(error));

@@ -111,6 +111,9 @@ export const useCreateAdminItem = () => {
         queryKey: ["item-available", variables.modelId],
       });
       queryClient.invalidateQueries({ queryKey: ["models"] });
+      queryClient.invalidateQueries({ queryKey: ["model-by-id"] });
+      queryClient.invalidateQueries({ queryKey: ["admin_item_occupancy"] });
+      queryClient.invalidateQueries({ queryKey: ["admin_item_history"] });
     },
   });
 };
@@ -135,6 +138,9 @@ export const useUpdateAdminItem = () => {
         queryKey: ["item-available", variables.modelId],
       });
       queryClient.invalidateQueries({ queryKey: ["models"] });
+      queryClient.invalidateQueries({ queryKey: ["model-by-id"] });
+      queryClient.invalidateQueries({ queryKey: ["admin_item_occupancy"] });
+      queryClient.invalidateQueries({ queryKey: ["admin_item_history"] });
     },
   });
 };
@@ -164,6 +170,9 @@ export const useDeleteAdminItem = () => {
         queryKey: ["item-available", variables.modelId],
       });
       queryClient.invalidateQueries({ queryKey: ["models"] });
+      queryClient.invalidateQueries({ queryKey: ["model-by-id"] });
+      queryClient.invalidateQueries({ queryKey: ["admin_item_occupancy"] });
+      queryClient.invalidateQueries({ queryKey: ["admin_item_history"] });
     },
   });
 };
@@ -188,6 +197,9 @@ export const useRegisterItemsByExcel = () => {
     onSuccess: (_data, variables) => {
       if (variables.isConfirm) {
         queryClient.invalidateQueries({ queryKey: ["models"] });
+        queryClient.invalidateQueries({ queryKey: ["model-by-id"] });
+        queryClient.invalidateQueries({ queryKey: ["admin_item_occupancy"] });
+        queryClient.invalidateQueries({ queryKey: ["admin_item_history"] });
         queryClient.invalidateQueries({ queryKey: ["admin_items"] });
         queryClient.invalidateQueries({ queryKey: ["item-available"] });
       }

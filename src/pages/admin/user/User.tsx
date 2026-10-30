@@ -27,18 +27,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../../../components/ui/alert-dialog";
-import { Input } from "../../../components/ui/input";
-import { DeviceCategoryCombobox } from "../../../components/ui/DeviceCategory";
 import { Checkbox } from "../../../components/ui/checkbox";
-import { DeviceStateCombobox } from "../../../components/ui/DeviceStateCombobox";
 import { toast } from "sonner";
 import { useFetchUser } from "../../../api/admin.api";
 import { useUserRentals } from "../../../api/adminUser.api";
 import { useReturnReservation } from "../../../api/adminRental.api";
-import { useDeleteReservations } from "../../../api/adminReservation.api";
 
 const User = () => {
-  const [categoryName, setCategoryName] = useState("");
   const [selectedRentalId, setSelectedRentalId] = useState<number | null>(null);
   const { userId } = useParams<{ userId: string }>();
   const numericUserId = Number(userId);
@@ -47,8 +42,6 @@ const User = () => {
   const { data: rentals = [] } = useUserRentals(numericUserId);
   const { mutate: returnReservation, isPending: isReturning } =
     useReturnReservation();
-  const { mutate: deleteReservation, isPending: isDeleting } =
-    useDeleteReservations();
 
   const selectedRental = useMemo(
     () =>
@@ -56,8 +49,10 @@ const User = () => {
     [rentals, selectedRentalId],
   );
 
+  const canReturn = !!selectedRental && selectedRental.status !== "RETURNED";
+
   const handleReturnRental = () => {
-    if (!selectedRental) {
+    if (!selectedRental || !canReturn || isReturning) {
       toast("반납할 대여 기록을 선택해주세요.");
       return;
     }
@@ -70,19 +65,6 @@ const User = () => {
         },
       },
     );
-  };
-
-  const handleDeleteRental = () => {
-    if (!selectedRental) {
-      toast("삭제할 대여 기록을 선택해주세요.");
-      return;
-    }
-
-    deleteReservation(selectedRental.rentalId, {
-      onSuccess: () => {
-        setSelectedRentalId(null);
-      },
-    });
   };
 
   return (
@@ -123,130 +105,14 @@ const User = () => {
         </div>
       </div>
 
+      <p className="py-3 text-sm text-neutral-400">대여 기록은 이력 보존을 위해 수정·삭제하지 않습니다. 현재 대여 중인 기자재만 반납 처리할 수 있습니다.</p>
       <div className="flex space-x-4 justify-end">
-        <div>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <button
-                type="button"
-                disabled={!selectedRental}
-                className={`text-sm px-3 py-1 rounded-sm border ${selectedRental ? "hover:bg-neutral-800 cursor-pointer border-neutral-400 text-neutral-200" : "cursor-not-allowed border-neutral-700 text-neutral-600"}`}
-              >
-                수정
-              </button>
-            </AlertDialogTrigger>
-
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  {selectedRental
-                    ? `${selectedRental.semester} ${selectedRental.modelName} 내용 수정`
-                    : "대여 내용 수정"}
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  기기 대여 내용을 수정해보세요.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-
-              <div>
-                <Table className="text-center border border-neutral-200">
-                  <TableBody>
-                    <TableRow className="border-neutral-200 hover:bg-white">
-                      <TableCell className="w-1/6 bg-neutral-300">
-                        대여 ID
-                      </TableCell>
-                      <TableCell className="text-left px-6">
-                        {selectedRental?.rentalId ?? ""}
-                      </TableCell>
-                    </TableRow>
-
-                    <TableRow className="border-neutral-200 hover:bg-white">
-                      <TableCell className="w-1/6 bg-neutral-300">
-                        분류
-                      </TableCell>
-                      <TableCell className="text-left px-4">
-                        <DeviceCategoryCombobox
-                          value={categoryName}
-                          onChange={setCategoryName}
-                        />
-                      </TableCell>
-                    </TableRow>
-
-                    <TableRow className="border-neutral-200 hover:bg-white">
-                      <TableCell className="w-1/6 bg-neutral-300">
-                        기기명
-                      </TableCell>
-                      <TableCell className="text-left px-4">
-                        <Input
-                          className="text-sm"
-                          readOnly
-                          value={selectedRental?.modelName ?? ""}
-                        />
-                      </TableCell>
-                    </TableRow>
-
-                    <TableRow className="border-neutral-200 hover:bg-white">
-                      <TableCell className="w-1/6 bg-neutral-300">
-                        코드번호
-                      </TableCell>
-                      <TableCell className="text-left px-4">
-                        <Input
-                          className="text-sm"
-                          value={selectedRental?.itemSerial ?? ""}
-                          readOnly
-                        />
-                      </TableCell>
-                    </TableRow>
-
-                    <TableRow className="border-neutral-200 hover:bg-white">
-                      <TableCell className="w-1/6 bg-neutral-300">
-                        대여 학기
-                      </TableCell>
-                      <TableCell className="text-left px-4">
-                        <Input
-                          className="text-sm"
-                          value={selectedRental?.semester ?? ""}
-                          placeholder="yyyy-1"
-                          readOnly
-                        />
-                      </TableCell>
-                    </TableRow>
-
-                    <TableRow className="border-neutral-200 hover:bg-white">
-                      <TableCell className="w-1/6 bg-neutral-300">
-                        대여 상태
-                      </TableCell>
-                      <TableCell className="text-left px-4">
-                        <DeviceStateCombobox />
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-
-              <AlertDialogFooter className="mt-4">
-                <AlertDialogCancel className="cursor-pointer">
-                  취소
-                </AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() =>
-                    toast("사용자의 해당 대여 내용이 수정되었습니다.")
-                  }
-                  className="hover:bg-neutral-700 font-bold cursor-pointer"
-                >
-                  수정
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <button
               type="button"
-              disabled={!selectedRental}
-              className={`text-sm px-3 py-1 rounded-sm border ${selectedRental ? "hover:bg-neutral-800 cursor-pointer border-neutral-400 text-neutral-200" : "cursor-not-allowed border-neutral-700 text-neutral-600"}`}
+              disabled={!canReturn || isReturning}
+              className={`text-sm px-3 py-1 rounded-sm border ${canReturn ? "hover:bg-neutral-800 cursor-pointer border-neutral-400 text-neutral-200" : "cursor-not-allowed border-neutral-700 text-neutral-600"}`}
             >
               반납
             </button>
@@ -270,50 +136,10 @@ const User = () => {
               </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleReturnRental}
-                disabled={!selectedRental || isReturning}
+                disabled={!canReturn || isReturning}
                 className="bg-neutral-900 hover:bg-neutral-700 font-bold cursor-pointer"
               >
                 {isReturning ? "반납 처리 중..." : "반납"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <button
-              type="button"
-              disabled={!selectedRental}
-              className={`text-sm px-3 py-1 rounded-sm border ${selectedRental ? "cursor-pointer hover:bg-red-400 hover:text-black border-red-400 text-red-300" : "cursor-not-allowed border-neutral-700 text-neutral-600"}`}
-            >
-              삭제
-            </button>
-          </AlertDialogTrigger>
-
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle className="break-keep">
-                {selectedRental
-                  ? `${selectedRental.semester} ${selectedRental.modelName}(${selectedRental.itemSerial}) 대여 기록을 삭제하시겠습니까?`
-                  : "삭제할 대여 기록을 선택해주세요."}
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                {selectedRental
-                  ? "대여 기록은 삭제하면 다시 되돌릴 수 없습니다."
-                  : "테이블에서 삭제할 대여 기록을 선택해주세요."}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-
-            <AlertDialogFooter>
-              <AlertDialogCancel className="cursor-pointer">
-                취소
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteRental}
-                disabled={!selectedRental || isDeleting}
-                className="bg-red-600 hover:bg-red-500 font-bold cursor-pointer"
-              >
-                {isDeleting ? "삭제 중..." : "삭제"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

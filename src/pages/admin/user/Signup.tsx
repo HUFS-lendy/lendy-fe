@@ -14,7 +14,7 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const { mutateAsync: doSignUp } = useSignUp();
+  const { mutateAsync: doSignUp, isPending } = useSignUp();
 
   const navigate = useNavigate();
 
@@ -37,13 +37,20 @@ const SignUp = () => {
   const handleSignUp = async (e?: React.FormEvent<HTMLFormElement>) => {
     e?.preventDefault();
 
+    if (isPending) return;
+
     if (!username.trim()) {
       toast("이름을 입력해주세요.");
       return;
     }
 
-    if (!studentId.trim()) {
-      toast("학번을 입력해주세요.");
+    if (username.trim().length < 2 || username.trim().length > 20) {
+      toast.error("이름은 2~20자로 입력해주세요.");
+      return;
+    }
+
+    if (studentId.trim().length < 4 || studentId.trim().length > 20) {
+      toast.error("학번 또는 사번은 4~20자로 입력해주세요. 7자리 사번도 사용할 수 있습니다.");
       return;
     }
 
@@ -52,17 +59,27 @@ const SignUp = () => {
       return;
     }
 
+    if (password.length < 8 || password.length > 20) {
+      toast.error("비밀번호는 8~20자로 입력해주세요.");
+      return;
+    }
+
     if (!email.trim()) {
       toast("이메일을 입력해주세요.");
       return;
     }
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      toast.error("올바른 이메일 주소를 입력해주세요.");
+      return;
+    }
+
     try {
       const res = await doSignUp({
-        studentId,
-        username,
+        studentId: studentId.trim(),
+        username: username.trim(),
         password,
-        email,
+        email: email.trim(),
       });
       toast.success(res.message ?? "회원가입 되었습니다.");
       navigate("/admin/users");
@@ -84,7 +101,7 @@ const SignUp = () => {
 
       <Card className="w-full max-w-sm bg-[#060a0c] text-white border-none">
         <CardContent>
-          <form onSubmit={handleSignUp}>
+          <form id="signup-form" onSubmit={handleSignUp} noValidate>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
                 <Label className="pb-1 text-md" htmlFor="username">
@@ -102,16 +119,20 @@ const SignUp = () => {
 
               <div className="grid gap-2">
                 <Label className="pb-1 text-md" htmlFor="studentId">
-                  학번 (아이디)
+                  학번 / 사번 (아이디)
                 </Label>
                 <Input
                   id="studentId"
                   className="border border-neutral-400 text-sm"
-                  placeholder="학번을 입력해주세요."
+                  placeholder="학번 또는 사번을 입력해주세요."
+                  aria-describedby="student-id-help"
                   required
                   value={studentId}
                   onChange={handleStudentId}
                 />
+                <p id="student-id-help" className="text-sm text-neutral-400">
+                  4~20자 · 교수님은 7자리 사번으로도 등록할 수 있습니다.
+                </p>
               </div>
 
               <div className="grid gap-2">
@@ -126,19 +147,25 @@ const SignUp = () => {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     required
-                    placeholder="비밀번호를 입력해주세요."
+                    placeholder="8~20자로 입력해주세요."
+                    aria-describedby="password-help"
+                    autoComplete="new-password"
                     value={password}
                     onChange={handlePassword}
                   />
 
                   <button
                     type="button"
+                    aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 cursor-pointer"
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
+                <p id="password-help" className="text-sm text-neutral-400">
+                  비밀번호는 8~20자로 입력해주세요.
+                </p>
               </div>
 
               <div className="grid gap-2">
@@ -155,18 +182,18 @@ const SignUp = () => {
                 />
               </div>
             </div>
-
-            <button type="submit" className="hidden" />
           </form>
         </CardContent>
 
         <CardFooter className="flex-col gap-2 mt-12 mb-12">
-          <div
-            onClick={() => handleSignUp()}
-            className="w-full border bg-neutral-900 border-neutral-400 hover:bg-neutral-800 rounded-sm text-center py-1 cursor-pointer"
+          <button
+            type="submit"
+            form="signup-form"
+            disabled={isPending}
+            className="w-full border bg-neutral-900 border-neutral-400 hover:bg-neutral-800 rounded-sm text-center py-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            회원가입
-          </div>
+            {isPending ? "등록 중..." : "회원가입"}
+          </button>
         </CardFooter>
       </Card>
     </div>

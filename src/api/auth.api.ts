@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { apiClient } from "./client";
 
@@ -24,8 +24,16 @@ type SignUpData = {
 };
 
 const getAuthApiErrorMessage = (error: unknown, fallbackMessage: string) => {
-  if (isAxiosError<ApiResponse<null>>(error))
-    return error.response?.data?.message ?? fallbackMessage;
+  if (isAxiosError<ApiResponse<Record<string, unknown> | null>>(error)) {
+    const response = error.response?.data;
+    if (response?.code === "VALIDATION_ERROR" && response.data) {
+      const messages = Object.values(response.data).filter(
+        (message): message is string => typeof message === "string" && !!message.trim(),
+      );
+      if (messages.length) return [...new Set(messages)].join("\n");
+    }
+    return response?.message || fallbackMessage;
+  }
   if (error instanceof Error) return error.message;
   return fallbackMessage;
 };
@@ -39,7 +47,9 @@ const checkApiSuccess = <T>(
 };
 
 export const useSignUp = () => {
+  const queryClient = useQueryClient();
   return useMutation({
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin_users"] }),
     mutationFn: async ({
       studentId,
       username,
